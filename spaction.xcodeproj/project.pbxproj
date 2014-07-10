@@ -23,7 +23,7 @@
 		755ED7BF196EC0BF003DFDBC /* libspot.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755ED7BE196EC0BF003DFDBC /* libspot.dylib */; };
 		755ED7C0196EC0FD003DFDBC /* libspot.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755ED7BE196EC0BF003DFDBC /* libspot.dylib */; };
 		755ED7C2196EC4C7003DFDBC /* spaction.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 75AFC89A196EAE3D00BAE38C /* spaction.dylib */; };
-		75AFC8A0196EAE3D00BAE38C /* spaction.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 75AFC89F196EAE3D00BAE38C /* spaction.1 */; };
+		75AFC8A0196EAE3D00BAE38C /* spaction.1 in Copy Files */ = {isa = PBXBuildFile; fileRef = 75AFC89F196EAE3D00BAE38C /* spaction.1 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -37,19 +37,21 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
-		75AFC898196EAE3D00BAE38C /* CopyFiles */ = {
+		75AFC898196EAE3D00BAE38C /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
-				75AFC8A0196EAE3D00BAE38C /* spaction.1 in CopyFiles */,
+				75AFC8A0196EAE3D00BAE38C /* spaction.1 in Copy Files */,
 			);
+			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4AB890DC196EE51200F7BB44 /* cpplint.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = cpplint.py; sourceTree = "<group>"; };
 		755CEA32196EB78C00DD3677 /* libbdd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbdd.dylib; path = "$(PROJECT_DIR)/dependencies/spot/lib/libbdd.dylib"; sourceTree = "<group>"; };
 		755CEA35196EB78C00DD3677 /* libspotdve2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspotdve2.dylib; path = "$(PROJECT_DIR)/dependencies/spot/lib/libspotdve2.dylib"; sourceTree = "<group>"; };
 		755CEA3F196EBA8C00DD3677 /* spactiontest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = spactiontest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -149,6 +151,7 @@
 		75AFC891196EAE3D00BAE38C = {
 			isa = PBXGroup;
 			children = (
+				4AB890DC196EE51200F7BB44 /* cpplint.py */,
 				75AFC89C196EAE3D00BAE38C /* spaction */,
 				755CEA3A196EB79B00DD3677 /* libraries */,
 				755CEA40196EBA8C00DD3677 /* spactiontest */,
@@ -177,6 +180,23 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXLegacyTarget section */
+		4AB890DE196F047900F7BB44 /* checkstyle */ = {
+			isa = PBXLegacyTarget;
+			buildArgumentsString = "-c \"$(PROJECT_DIR)/cpplint.py spaction/include/*.h spaction/src/*.cc spactiontest/*.cpp\"";
+			buildConfigurationList = 4AB890DF196F047900F7BB44 /* Build configuration list for PBXLegacyTarget "checkstyle" */;
+			buildPhases = (
+			);
+			buildToolPath = /bin/sh;
+			buildWorkingDirectory = "$(PROJECT_DIR)";
+			dependencies = (
+			);
+			name = checkstyle;
+			passBuildSettingsInEnvironment = 1;
+			productName = checkstyle;
+		};
+/* End PBXLegacyTarget section */
+
 /* Begin PBXNativeTarget section */
 		755CEA3E196EBA8C00DD3677 /* spactiontest */ = {
 			isa = PBXNativeTarget;
@@ -201,7 +221,7 @@
 			buildPhases = (
 				75AFC896196EAE3D00BAE38C /* Sources */,
 				75AFC897196EAE3D00BAE38C /* Frameworks */,
-				75AFC898196EAE3D00BAE38C /* CopyFiles */,
+				75AFC898196EAE3D00BAE38C /* Copy Files */,
 			);
 			buildRules = (
 			);
@@ -235,6 +255,7 @@
 			targets = (
 				75AFC899196EAE3D00BAE38C /* spaction */,
 				755CEA3E196EBA8C00DD3677 /* spactiontest */,
+				4AB890DE196F047900F7BB44 /* checkstyle */,
 			);
 		};
 /* End PBXProject section */
@@ -265,6 +286,31 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		4AB890E0196F047900F7BB44 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEBUGGING_SYMBOLS = YES;
+				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		4AB890E1196F047900F7BB44 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		755CEA46196EBA8C00DD3677 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -412,6 +458,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4AB890DF196F047900F7BB44 /* Build configuration list for PBXLegacyTarget "checkstyle" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4AB890E0196F047900F7BB44 /* Debug */,
+				4AB890E1196F047900F7BB44 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		755CEA45196EBA8C00DD3677 /* Build configuration list for PBXNativeTarget "spactiontest" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
