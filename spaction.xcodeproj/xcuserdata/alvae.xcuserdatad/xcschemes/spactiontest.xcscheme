@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "75AFC899196EAE3D00BAE38C"
-               BuildableName = "spaction.dylib"
-               BlueprintName = "spaction"
+               BlueprintIdentifier = "755CEA3E196EBA8C00DD3677"
+               BuildableName = "spactiontest"
+               BlueprintName = "spactiontest"
                ReferencedContainer = "container:spaction.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,9 +32,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "75AFC899196EAE3D00BAE38C"
-            BuildableName = "spaction.dylib"
-            BlueprintName = "spaction"
+            BlueprintIdentifier = "755CEA3E196EBA8C00DD3677"
+            BuildableName = "spactiontest"
+            BlueprintName = "spactiontest"
             ReferencedContainer = "container:spaction.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -51,9 +51,9 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "75AFC899196EAE3D00BAE38C"
-            BuildableName = "spaction.dylib"
-            BlueprintName = "spaction"
+            BlueprintIdentifier = "755CEA3E196EBA8C00DD3677"
+            BuildableName = "spactiontest"
+            BlueprintName = "spactiontest"
             ReferencedContainer = "container:spaction.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -69,9 +69,9 @@
       <BuildableProductRunnable>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "75AFC899196EAE3D00BAE38C"
-            BuildableName = "spaction.dylib"
-            BlueprintName = "spaction"
+            BlueprintIdentifier = "755CEA3E196EBA8C00DD3677"
+            BuildableName = "spactiontest"
+            BlueprintName = "spactiontest"
             ReferencedContainer = "container:spaction.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
