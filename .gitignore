@@ -1,0 +1,10 @@
+*.aux
+*.cb
+*.cb2
+*.synctex.gz
+*.out
+*~
+*.swp
+*.log
+.DS_Store
+*.class
