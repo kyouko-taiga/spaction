@@ -50,8 +50,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		755CEA32196EB78C00DD3677 /* libbdd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbdd.dylib; path = ../spot/lib/libbdd.dylib; sourceTree = "<group>"; };
-		755CEA35196EB78C00DD3677 /* libspotdve2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspotdve2.dylib; path = ../spot/lib/libspotdve2.dylib; sourceTree = "<group>"; };
+		755CEA32196EB78C00DD3677 /* libbdd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbdd.dylib; path = "$(PROJECT_DIR)/dependencies/spot/lib/libbdd.dylib"; sourceTree = "<group>"; };
+		755CEA35196EB78C00DD3677 /* libspotdve2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspotdve2.dylib; path = "$(PROJECT_DIR)/dependencies/spot/lib/libspotdve2.dylib"; sourceTree = "<group>"; };
 		755CEA3F196EBA8C00DD3677 /* spactiontest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = spactiontest; sourceTree = BUILT_PRODUCTS_DIR; };
 		755CEA41196EBA8C00DD3677 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		755CEA43196EBA8C00DD3677 /* spactiontest.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = spactiontest.1; sourceTree = "<group>"; };
@@ -69,7 +69,7 @@
 		755CEA55196EBB6C00DD3677 /* printer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = printer.cc; sourceTree = "<group>"; };
 		755CEA56196EBB6C00DD3677 /* spotcheck.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = spotcheck.cc; sourceTree = "<group>"; };
 		755CEA57196EBB6C00DD3677 /* unop.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = unop.cc; sourceTree = "<group>"; };
-		755ED7BE196EC0BF003DFDBC /* libspot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspot.dylib; path = ../spot/lib/libspot.dylib; sourceTree = "<group>"; };
+		755ED7BE196EC0BF003DFDBC /* libspot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspot.dylib; path = "$(PROJECT_DIR)/dependencies/spot/lib/libspot.dylib"; sourceTree = "<group>"; };
 		75AFC89A196EAE3D00BAE38C /* spaction.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = spaction.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		75AFC89F196EAE3D00BAE38C /* spaction.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = spaction.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -286,7 +286,6 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/dependencies/spot/lib",
-					/Users/alvae/Documents/xcode/spot/lib,
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -327,9 +326,10 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(PROJECT_DIR)/dependencies/boost/",
-					"$(PROJECT_DIR)/dependencies/spot/include/",
-					"$(PROJECT_DIR)/dependencies/spot/include/spot/",
+					"$(PROJECT_DIR)/dependencies/boost",
+					"$(PROJECT_DIR)/dependencies/boost/boost",
+					"$(PROJECT_DIR)/dependencies/spot/include",
+					"$(PROJECT_DIR)/dependencies/spot/include/spot",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
@@ -367,9 +367,10 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(PROJECT_DIR)/dependencies/boost/",
-					"$(PROJECT_DIR)/dependencies/spot/include/",
-					"$(PROJECT_DIR)/dependencies/spot/include/spot/",
+					"$(PROJECT_DIR)/dependencies/boost",
+					"$(PROJECT_DIR)/dependencies/boost/boost",
+					"$(PROJECT_DIR)/dependencies/spot/include",
+					"$(PROJECT_DIR)/dependencies/spot/include/spot",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				SDKROOT = macosx;
