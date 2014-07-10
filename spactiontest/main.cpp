@@ -41,6 +41,7 @@ int main(int argc, char* argv[]) {
 
     if (!model) {
         exit_code = 1;
+        // \todo remove GOTO and use an exception
         goto safe_exit;
     }
 

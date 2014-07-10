@@ -28,7 +28,7 @@ cltl_formula * unop::clone() const {
     return new unop(_type, _son);
 }
 
-std::string unop::dump () const {
+std::string unop::dump() const {
     std::string res;
     switch (_type) {
         case NEXT:
@@ -39,7 +39,7 @@ std::string unop::dump () const {
             break;
     }
     res += " (";
-    res += _son->dump ();
+    res += _son->dump();
     res += ")";
     return res;
 }

@@ -15,9 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __spaction__constant_h__
-#define __spaction__constant_h__
+#ifndef SPACTION_INCLUDE_CONSTANT_H_
+#define SPACTION_INCLUDE_CONSTANT_H_
 
+#include <string>
 #include "cltl.h"
 
 class constant : public cltl_formula {
@@ -34,10 +35,10 @@ class constant : public cltl_formula {
 
     inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
 
-    std::string dump () const;
+    std::string dump() const;
 
  private:
     bool _data;
 };
 
-#endif // define __spaction__constant_h__
+#endif  // SPACTION_INCLUDE_CONSTANT_H_
