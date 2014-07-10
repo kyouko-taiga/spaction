@@ -17,37 +17,29 @@
 
 #include "unop.h"
 
-unop::unop (unop_type t, const cltl_formula * s)
-: type_ (t)
-, son_ (s->clone ())
-{}
-
-unop::~unop ()
-{
-  delete son_;
+unop::unop(unop_type t, const cltl_formula *s) : _type(t), _son(s->clone()) {
 }
 
-cltl_formula *
-unop::clone () const
-{
-  return new unop (type_, son_);
+unop::~unop() {
+    delete _son;
 }
 
-std::string
-unop::dump () const
-{
-  std::string res;
-  switch (type_)
-  {
-    case NEXT:
-      res = "X";
-      break;
-    case NOT:
-      res = "!";
-      break;
-  }
-  res += " (";
-  res += son_->dump ();
-  res += ")";
-  return res;
+cltl_formula * unop::clone() const {
+    return new unop(_type, _son);
+}
+
+std::string unop::dump () const {
+    std::string res;
+    switch (_type) {
+        case NEXT:
+            res = "X";
+            break;
+        case NOT:
+            res = "!";
+            break;
+    }
+    res += " (";
+    res += _son->dump ();
+    res += ")";
+    return res;
 }

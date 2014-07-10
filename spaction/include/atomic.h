@@ -15,30 +15,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __spaction_atomic_h__
-#define __spaction_atomic_h__
+#ifndef SPACTION_INCLUDE_ATOMIC_H_
+#define SPACTION_INCLUDE_ATOMIC_H_
 
 #include <string>
 #include "cltl.h"
 
 class atomic : public cltl_formula {
-public:
-  atomic (const std::string & d): data_ (d) {}
-  ~atomic () {}
-  
-  atomic (const atomic &) = delete;
-  atomic & operator= (const atomic &) = delete;
-  
-  cltl_formula * clone () const;
-  
-  std::string get () const { return data_; }
-  
-  void accept (cltl_visitor & v) const override
-  { v.visit (this); }
-  
-  std::string dump () const;
-private:
-  std::string data_;
+ public:
+    explicit atomic(const std::string &data): _data(data) {}
+    ~atomic() {}
+
+    atomic(const atomic &) = delete;
+    atomic &operator= (const atomic &) = delete;
+
+    cltl_formula * clone() const;
+
+    std::string get() const { return _data; }
+
+    inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
+
+    std::string dump() const;
+
+ private:
+    std::string _data;
 };
 
-#endif // define __spaction_atomic_h__
+#endif  // SPACTION_INCLUDE_ATOMIC_H_

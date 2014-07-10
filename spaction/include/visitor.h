@@ -16,11 +16,11 @@
 // limitations under the License.language governing permissions and
 // limitations under the License.
 
-#ifndef __spaction__visitor_h__
-#define __spaction__visitor_h__
+#ifndef SPACTION_INCLUDE_VISITOR_H_
+#define SPACTION_INCLUDE_VISITOR_H_
 
 #include "cltl.h"
 
-cltl_formula * instantiate (const cltl_formula *, int);
+cltl_formula *instantiate(const cltl_formula *formula, int n);
 
-#endif // define __spaction__visitor_h__
+#endif  // SPACTION_INCLUDE_VISITOR_H_

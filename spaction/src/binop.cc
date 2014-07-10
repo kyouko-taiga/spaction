@@ -17,58 +17,46 @@
 
 #include "binop.h"
 
-#include <iostream>
-
-binop::binop (binop_type t,
-              const cltl_formula * l,
-              const cltl_formula * r)
-: type_ (t)
-, l_ (l->clone ())
-, r_ (r->clone ())
-{}
-
-binop::~binop ()
-{
-  delete l_;
-  delete r_;
+binop::binop(binop_type type, const cltl_formula *left, const cltl_formula *right) :
+    _type(type), _left(left->clone()), _right(right->clone()) {
 }
 
-cltl_formula *
-binop::clone () const
-{
-  return new binop (type_, l_, r_);
+binop::~binop() {
+    delete _left;
+    delete _right;
 }
 
-std::string
-binop::dump () const
-{
-  std::string res;
-  res += "(";
-  res += l_->dump ();
-  res += ") ";
-  switch (get_type ())
-  {
-    case AND:
-      res += "&&";
-      break;
-    case OR:
-      res += "||";
-      break;
-    case UNTIL:
-      res += "U";
-      break;
-    case RELEASE:
-      res += "R";
-      break;
-    case COST_UNTIL:
-      res += "UN";
-      break;
-    case COST_RELEASE:
-      res += "RN";
-      break;
-  }
-  res += " (";
-  res += r_->dump ();
-  res += ")";
-  return res;
+cltl_formula *binop::clone() const {
+    return new binop (_type, _left, _right);
+}
+
+std::string binop::dump() const {
+    std::string res;
+    res += "(";
+    res += _left->dump();
+    res += ") ";
+    switch (get_type()) {
+        case AND:
+            res += "&&";
+            break;
+        case OR:
+            res += "||";
+            break;
+        case UNTIL:
+            res += "U";
+            break;
+        case RELEASE:
+            res += "R";
+            break;
+        case COST_UNTIL:
+            res += "UN";
+            break;
+        case COST_RELEASE:
+            res += "RN";
+            break;
+    }
+    res += " (";
+    res += _right->dump();
+    res += ")";
+    return res;
 }

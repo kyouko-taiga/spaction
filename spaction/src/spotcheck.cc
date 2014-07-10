@@ -15,8 +15,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "spotcheck.h"
-
 #include <fstream>
 
 #include <ltlparse/public.hh>
@@ -25,92 +23,82 @@
 #include <tgbaalgos/simulation.hh>
 #include <tgbaalgos/dotty.hh>
 
+#include "spotcheck.h"
 #include "visitor.h"
 
-bool
-spot_check (const cltl_formula * f, int n,
-            const std::string & filename)
-{
-  std::string ltl_string;
-  {
-    cltl_formula * tmp = instantiate (f, n);
-    ltl_string = tmp->dump ();
-    delete tmp;
-  }
-  
-  spot::ltl::parse_error_list pel;
-  
-  const spot::ltl::formula* formula = spot::ltl::parse (ltl_string, pel);
-  if (spot::ltl::format_parse_errors (std::cerr, ltl_string, pel))
-  {
-    formula->destroy ();
-    exit(1);
-  }
-  
-  // simplify formula
-  spot::ltl::ltl_simplifier_options simplify_opt;
-  spot::ltl::ltl_simplifier simplifier (simplify_opt);
-  formula = simplifier.simplify (formula);
-  
-  // bdd dictionnary
-  spot::bdd_dict bdddict;
-  
-  // build the automaton
-  const spot::tgba * tgba = spot::ltl_to_tgba_fm (formula, &bdddict);
-  
-  // simplify the automaton
-  {
-    // use scc_filter_states for sba, and scc_filter for tgba
-    const spot::tgba * tt = spot::scc_filter (tgba);
+bool spot_check(const cltl_formula *formula, int n, const std::string &filename) {
+    std::string ltl_string;
+    {
+        cltl_formula *tmp = instantiate(formula, n);
+        ltl_string = tmp->dump();
+        delete tmp;
+    }
+
+    spot::ltl::parse_error_list pel;
+
+    const spot::ltl::formula *ltl_formula = spot::ltl::parse(ltl_string, pel);
+    if (spot::ltl::format_parse_errors(std::cerr, ltl_string, pel)) {
+        ltl_formula->destroy();
+        exit(1);
+    }
+
+    // simplify formula
+    spot::ltl::ltl_simplifier_options simplify_opt;
+    spot::ltl::ltl_simplifier simplifier(simplify_opt);
+    ltl_formula = simplifier.simplify(ltl_formula);
+
+    // bdd dictionnary
+    spot::bdd_dict bdddict;
+
+    // build the automaton
+    const spot::tgba *tgba = spot::ltl_to_tgba_fm(ltl_formula, &bdddict);
+
+    // simplify the automaton
+    {
+        // use scc_filter_states for sba, and scc_filter for tgba
+        const spot::tgba *tt = spot::scc_filter(tgba);
+        delete tgba;
+        tgba = tt;
+        tt = iterated_simulations(tgba);
+        delete tgba;
+        tgba = tt;
+    }
+
+    // output formula in text
+    std::cerr << "formula is " << formula->dump() << std::endl;
+
+    // output automata in .dot
+    if (filename != "") {
+        std::ofstream out(filename + ".dot");
+        spot::dotty_reachable(out, tgba, false);
+        out.close();
+    }
+
+    // \todo check against the model
+
+    // free tgba
     delete tgba;
-    tgba = tt;
-    tt = iterated_simulations (tgba);
-    delete tgba;
-    tgba = tt;
-  }
-  
-  // output formula in text
-  std::cerr << "formula is " << formula->dump () << std::endl;
-  
-  // output automata in .dot
-  if (filename != "")
-  {
-    std::ofstream out (filename + ".dot");
-    spot::dotty_reachable (out, tgba, false);
-    out.close ();
-  }
-  
-  
-  // \todo check against the model
-  
-  // free tgba
-  delete tgba;
-  // free formula
-  formula->destroy ();
-  
-  // \todo return the result
-  return true;
+    // free formula
+    ltl_formula->destroy();
+
+    // \todo return the result
+    return true;
 }
 
-int
-find_bound (const cltl_formula * f)
-{
-  // \todo safe checks to detect int overflow
-  int res = 0;
-  // increase
-  do
-  {
-    if (! res)
-      res = 1;
-    else
-      res *= 2;
-  } while (spot_check (f, res));
-  // decrease
-  do
-  {
-    // \todo a dichotomic search could also be done here
-    res--;
-  } while (! spot_check (f, res));
-  return res;
-}
+int find_bound(const cltl_formula * f) {
+    // \todo safe checks to detect int overflow
+    int res = 0;
 
+    // increase
+    do {
+        if (!res) res = 1;
+        else      res *= 2;
+    } while (spot_check(f, res));
+
+    // decrease
+    do {
+        // \todo a dichotomic search could also be done here
+        res--;
+    } while (!spot_check(f, res));
+    return res;
+}

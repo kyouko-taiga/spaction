@@ -15,52 +15,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __spaction__binop_h__
-#define __spaction__binop_h__
+#ifndef SPACTION_INCLUDE_BINOP_H_
+#define SPACTION_INCLUDE_BINOP_H_
 
+#include <string>
 #include "cltl.h"
 
 typedef enum {
-  AND,
-  OR,
-  UNTIL,
-  RELEASE,
-  COST_UNTIL,
-  COST_RELEASE
-}
-binop_type;
+    AND,
+    OR,
+    UNTIL,
+    RELEASE,
+    COST_UNTIL,
+    COST_RELEASE
+} binop_type;
 
 class binop : public cltl_formula {
-public:
-  binop (binop_type, const cltl_formula *, const cltl_formula *);
-  ~binop ();
-  
-  binop (const binop &) = delete;
-  binop & operator= (const binop &) = delete;
-  
-  cltl_formula * clone () const;
-  
-  void accept (cltl_visitor & v) const override
-  { v.visit (this); }
-  
-  std::string dump () const;
-  
-  binop_type get_type () const { return type_; }
-  
-  const cltl_formula * left () const
-  {
-    return l_;
-  }
-  
-  const cltl_formula * right () const
-  {
-    return r_;
-  }
+ public:
+    explicit binop(binop_type type, const cltl_formula *left, const cltl_formula *right);
+    ~binop();
 
-private:
-  binop_type type_;
-  const cltl_formula * l_;
-  const cltl_formula * r_;
+    binop(const binop &op) = delete;
+    binop &operator= (const binop &op) = delete;
+
+    cltl_formula *clone() const;
+
+    inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
+
+    std::string dump() const;
+
+    binop_type get_type() const { return _type; }
+
+    inline const cltl_formula *left() const { return _left; }
+
+    inline const cltl_formula *right() const { return _right; }
+
+ private:
+    binop_type _type;
+    const cltl_formula *_left;
+    const cltl_formula *_right;
 };
 
-#endif // define __spaction__binop_h__
+#endif  // SPACTION_INCLUDE_BINOP_H_

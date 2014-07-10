@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __spaction__cltl_h__
-#define __spaction__cltl_h__
+#ifndef SPACTION_INCLUDE_CLTL_H_
+#define SPACTION_INCLUDE_CLTL_H_
 
 #include <string>
 
@@ -27,28 +27,28 @@ class costop;
 class unop;
 
 class cltl_visitor {
-public:
-  virtual ~cltl_visitor () = 0;
-  
-  virtual void visit (const atomic * node) = 0;
-  virtual void visit (const constant * node) = 0;
-  virtual void visit (const binop * node) = 0;
-  virtual void visit (const unop * node) = 0;
+ public:
+    virtual ~cltl_visitor() = 0;
+
+    virtual void visit(const atomic *node) = 0;
+    virtual void visit(const constant *node) = 0;
+    virtual void visit(const binop *node) = 0;
+    virtual void visit(const unop *node) = 0;
 };
 
 /**
  *  A class to represent a Cost LTL formula
  */
 class cltl_formula {
-public:
-  virtual ~cltl_formula () = 0;
-  
-  virtual void accept (cltl_visitor &) const = 0;
-  
-  virtual std::string dump () const = 0;
-  
-  virtual cltl_formula * clone () const = 0;
-//  virtual cltl_formula * destroy () const = 0;
+ public:
+    virtual ~cltl_formula() = 0;
+
+    virtual void accept(cltl_visitor& visitor) const = 0;
+
+    virtual std::string dump() const = 0;
+
+    virtual cltl_formula *clone() const = 0;
+    // virtual cltl_formula *destroy() const = 0;
 };
 
-#endif // define __spaction__cltl_h__
+#endif  // SPACTION_INCLUDE_CLTL_H_

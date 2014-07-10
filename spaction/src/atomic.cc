@@ -17,16 +17,10 @@
 
 #include "atomic.h"
 
-#include <iostream>
-
-cltl_formula *
-atomic::clone () const
-{
-  return new atomic (data_);
+cltl_formula *atomic::clone() const {
+  return new atomic(_data);
 }
 
-std::string
-atomic::dump () const
-{
-  return "\"" + data_ + "\"";
+std::string atomic::dump() const {
+  return "\"" + _data + "\"";
 }

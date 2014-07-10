@@ -15,38 +15,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __spaction__unop_h__
-#define __spaction__unop_h__
+#ifndef SPACTION_INCLUDE_UNOP_H_
+#define SPACTION_INCLUDE_UNOP_H_
 
+#include <string>
 #include "cltl.h"
 
 typedef enum {
-  NOT,
-  NEXT
-}
-unop_type;
+    NOT,
+    NEXT
+} unop_type;
 
 class unop : public cltl_formula {
-public:
-  unop (unop_type, const cltl_formula *);
-  ~unop ();
-  
-  unop (const unop &) = delete;
-  unop & operator= (const unop &) = delete;
-  
-  cltl_formula * clone () const;
-  
-  void accept (cltl_visitor & v) const override
-  { v.visit (this); }
-  
-  std::string dump () const;
-  
-  unop_type get_type () const { return type_; }
-  const cltl_formula * sub () const { return son_; }
+ public:
+    unop(unop_type, const cltl_formula *formula);
+    ~unop();
 
-private:
-  unop_type type_;
-  const cltl_formula * son_;
+    unop(const unop &op) = delete;
+    unop &operator= (const unop &op) = delete;
+
+    cltl_formula *clone() const;
+
+    inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
+
+    std::string dump() const;
+
+    unop_type get_type() const { return _type; }
+    const cltl_formula *sub() const { return _son; }
+
+ private:
+    unop_type _type;
+    const cltl_formula * _son;
 };
 
-#endif // define __spaction__unop_h__
+#endif  // SPACTION_INCLUDE_UNOP_H_

@@ -16,55 +16,49 @@
 // limitations under the License.
 
 #include <iostream>
+#include <iface/dve2/dve2.hh>
 
 #include "cltl.h"
-
 #include "atomic.h"
 #include "constant.h"
 #include "binop.h"
 #include "unop.h"
-
 #include "spotcheck.h"
-
-#include <iface/dve2/dve2.hh>
 
 // this file is strongly inspired from spot/iface/dve2/dve2check.cc
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
     int exit_code = 0;
 
-    cltl_formula * f = new binop (COST_UNTIL,
-                                  new atomic ("wait"),
-                                  new atomic ("CS"));
+    cltl_formula *f = new binop(COST_UNTIL, new atomic("wait"), new atomic("CS"));
 
-    std::cout << f->dump () << std::endl;
+    std::cout << f->dump() << std::endl;
 
     spot::ltl::atomic_prop_set ap;
-    spot::bdd_dict * dict = new spot::bdd_dict();
-    spot::kripke * model = nullptr;
+    spot::bdd_dict *dict = new spot::bdd_dict();
+    spot::kripke *model = nullptr;
     // model = spot::load_dve2(argv[1], dict, &ap/*, deadf, compress_states, true*/);
 
-    if (!model)
-    {
+    if (!model) {
         exit_code = 1;
         goto safe_exit;
     }
 
-    spot_check (f, 0, "g0");
-    spot_check (f, 1, "g1");
-    spot_check (f, 2, "g2");
+    spot_check(f, 0, "g0");
+    spot_check(f, 1, "g1");
+    spot_check(f, 2, "g2");
 
-    //  cltl_formula * g0 = instantiate (f, 0);
-    //  std::cout << g0->dump () << std::endl;
-    //  cltl_formula * g1 = instantiate (f, 1);
-    //  std::cout << g1->dump () << std::endl;
-    //  cltl_formula * g2 = instantiate (f, 2);
-    //  std::cout << g2->dump () << std::endl;
+    // cltl_formula *g0 = instantiate(f, 0);
+    // std::cout << g0->dump() << std::endl;
+    // cltl_formula *g1 = instantiate(f, 1);
+    // std::cout << g1->dump() << std::endl;
+    // cltl_formula *g2 = instantiate(f, 2);
+    // std::cout << g2->dump() << std::endl;
 
 safe_exit:
     delete model;
     delete dict;
     delete f;
-    
+
     return exit_code;
 }

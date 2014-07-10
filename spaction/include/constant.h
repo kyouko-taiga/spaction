@@ -21,24 +21,23 @@
 #include "cltl.h"
 
 class constant : public cltl_formula {
-public:
-  constant (bool b): data_ (b) {}
-  ~constant () {}
-  
-  constant (const constant &) = delete;
-  constant & operator= (const constant &) = delete;
-  
-  cltl_formula * clone () const;
-  
-  bool get () const { return data_; }
-  
-  void accept (cltl_visitor & v) const override
-  { v.visit (this); }
-  
-  std::string dump () const;
-  
-private:
-  bool data_;
+ public:
+    explicit constant(bool b): _data(b) {}
+    ~constant() {}
+
+    constant(const constant &) = delete;
+    constant &operator= (const constant &) = delete;
+
+    cltl_formula *clone() const;
+
+    inline bool get() const { return _data; }
+
+    inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
+
+    std::string dump () const;
+
+ private:
+    bool _data;
 };
 
 #endif // define __spaction__constant_h__

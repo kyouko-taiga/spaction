@@ -15,17 +15,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef __spaction__spotcheck_h__
-#define __spaction__spotcheck_h__
+#ifndef SPACTION_INCLUDE_SPOTCHECK_H_
+#define SPACTION_INCLUDE_SPOTCHECK_H_
 
 #include <string>
 
 class cltl_formula;
 
 // \todo expose this?
-bool spot_check (const cltl_formula *, int n,
-                 const std::string & filename = "");
+bool spot_check(const cltl_formula *formula, int n, const std::string &filename = "");
 
-int find_bound (const cltl_formula *);
+int find_bound(const cltl_formula *formula);
 
-#endif // define __spaction__spotcheck_h__
+#endif  // SPACTION_INCLUDE_SPOTCHECK_H_

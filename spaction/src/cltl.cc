@@ -17,6 +17,6 @@
 
 #include "cltl.h"
 
-cltl_visitor::~cltl_visitor () {}
+cltl_visitor::~cltl_visitor() {}
 
-cltl_formula::~cltl_formula () {}
+cltl_formula::~cltl_formula() {}

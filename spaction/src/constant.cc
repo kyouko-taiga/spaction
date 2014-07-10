@@ -17,17 +17,10 @@
 
 #include "constant.h"
 
-cltl_formula *
-constant::clone () const
-{
-  return new constant (data_);
+cltl_formula *constant::clone() const {
+    return new constant(_data);
 }
 
-std::string
-constant::dump () const
-{
-  if (data_)
-    return "true";
-  else
-    return "false";
+std::string constant::dump() const {
+    return _data ? "true" : "false";
 }
