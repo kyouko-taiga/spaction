@@ -43,6 +43,6 @@ class constant : public cltl_formula {
     bool _data;
 };
 
-}  // spaction
+}  // namespace spaction
 
 #endif  // SPACTION_INCLUDE_CONSTANT_H_

@@ -42,7 +42,7 @@ class atomic : public cltl_formula {
  private:
     std::string _data;
 };
- 
+
 }  // namespace spaction
 
 #endif  // SPACTION_INCLUDE_ATOMIC_H_
