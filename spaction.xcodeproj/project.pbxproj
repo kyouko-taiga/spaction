@@ -72,6 +72,7 @@
 		755CEA56196EBB6C00DD3677 /* spotcheck.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = spotcheck.cc; sourceTree = "<group>"; };
 		755CEA57196EBB6C00DD3677 /* unop.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = unop.cc; sourceTree = "<group>"; };
 		755ED7BE196EC0BF003DFDBC /* libspot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspot.dylib; path = "$(PROJECT_DIR)/dependencies/spot/lib/libspot.dylib"; sourceTree = "<group>"; };
+		759343D31970051200DD5475 /* CostRegisterAutomata.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CostRegisterAutomata.h; sourceTree = "<group>"; };
 		75AFC89A196EAE3D00BAE38C /* spaction.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = spaction.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		75AFC89F196EAE3D00BAE38C /* spaction.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = spaction.1; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -123,6 +124,7 @@
 		755CEA48196EBB6C00DD3677 /* include */ = {
 			isa = PBXGroup;
 			children = (
+				759343D21970051200DD5475 /* cra */,
 				755CEA49196EBB6C00DD3677 /* atomic.h */,
 				755CEA4A196EBB6C00DD3677 /* binop.h */,
 				755CEA4B196EBB6C00DD3677 /* cltl.h */,
@@ -146,6 +148,14 @@
 				755CEA57196EBB6C00DD3677 /* unop.cc */,
 			);
 			path = src;
+			sourceTree = "<group>";
+		};
+		759343D21970051200DD5475 /* cra */ = {
+			isa = PBXGroup;
+			children = (
+				759343D31970051200DD5475 /* CostRegisterAutomata.h */,
+			);
+			path = cra;
 			sourceTree = "<group>";
 		};
 		75AFC891196EAE3D00BAE38C = {
@@ -411,6 +421,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Debug;
 		};
@@ -451,6 +462,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = "";
 			};
 			name = Release;
 		};
@@ -466,7 +478,7 @@
 					"$(PROJECT_DIR)/dependencies/spot/lib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/spaction/include/";
 			};
 			name = Debug;
 		};
@@ -482,7 +494,7 @@
 					"$(PROJECT_DIR)/dependencies/spot/lib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				USER_HEADER_SEARCH_PATHS = "";
+				USER_HEADER_SEARCH_PATHS = "$(SRCROOT)/spaction/include/";
 			};
 			name = Release;
 		};
@@ -496,6 +508,7 @@
 				4AB890E1196F047900F7BB44 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		755CEA45196EBA8C00DD3677 /* Build configuration list for PBXNativeTarget "spactiontest" */ = {
 			isa = XCConfigurationList;
