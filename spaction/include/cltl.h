@@ -20,6 +20,8 @@
 
 #include <string>
 
+namespace spaction {
+
 class atomic;
 class constant;
 class binop;
@@ -50,5 +52,7 @@ class cltl_formula {
     virtual cltl_formula *clone() const = 0;
     // virtual cltl_formula *destroy() const = 0;
 };
+
+}  // namespace spaction
 
 #endif  // SPACTION_INCLUDE_CLTL_H_

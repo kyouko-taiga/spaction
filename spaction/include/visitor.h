@@ -21,6 +21,10 @@
 
 #include "cltl.h"
 
+namespace spaction {
+
 cltl_formula *instantiate(const cltl_formula *formula, int n);
+
+}  // namespace spaction
 
 #endif  // SPACTION_INCLUDE_VISITOR_H_

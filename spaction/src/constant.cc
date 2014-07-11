@@ -17,6 +17,8 @@
 
 #include "constant.h"
 
+namespace spaction {
+
 cltl_formula *constant::clone() const {
     return new constant(_data);
 }
@@ -24,3 +26,5 @@ cltl_formula *constant::clone() const {
 std::string constant::dump() const {
     return _data ? "true" : "false";
 }
+
+}  // namespace spaction

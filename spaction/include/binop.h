@@ -21,6 +21,8 @@
 #include <string>
 #include "cltl.h"
 
+namespace spaction {
+
 typedef enum {
     AND,
     OR,
@@ -55,5 +57,7 @@ class binop : public cltl_formula {
     const cltl_formula *_left;
     const cltl_formula *_right;
 };
+
+}  // namespace spaction
 
 #endif  // SPACTION_INCLUDE_BINOP_H_

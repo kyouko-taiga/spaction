@@ -23,6 +23,8 @@
 #include "binop.h"
 #include "unop.h"
 
+namespace spaction {
+
 class instant : public cltl_visitor {
  public:
     explicit instant(int n): n(n), res(nullptr) {}
@@ -107,3 +109,5 @@ cltl_formula *instantiate(const cltl_formula *formula, int n) {
     cltl_formula * res = visitor.get_result();
     return res;
 }
+
+}  // namespace spaction

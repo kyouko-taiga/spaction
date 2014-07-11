@@ -21,6 +21,8 @@
 #include <string>
 #include "cltl.h"
 
+namespace spaction {
+
 class atomic : public cltl_formula {
  public:
     explicit atomic(const std::string &data): _data(data) {}
@@ -40,5 +42,7 @@ class atomic : public cltl_formula {
  private:
     std::string _data;
 };
+ 
+}  // namespace spaction
 
 #endif  // SPACTION_INCLUDE_ATOMIC_H_

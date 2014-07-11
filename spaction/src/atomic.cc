@@ -17,6 +17,8 @@
 
 #include "atomic.h"
 
+namespace spaction {
+
 cltl_formula *atomic::clone() const {
   return new atomic(_data);
 }
@@ -24,3 +26,5 @@ cltl_formula *atomic::clone() const {
 std::string atomic::dump() const {
   return "\"" + _data + "\"";
 }
+
+}  // namespace spaction

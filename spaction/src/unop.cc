@@ -17,6 +17,8 @@
 
 #include "unop.h"
 
+namespace spaction {
+
 unop::unop(unop_type t, const cltl_formula *s) : _type(t), _son(s->clone()) {
 }
 
@@ -43,3 +45,5 @@ std::string unop::dump() const {
     res += ")";
     return res;
 }
+
+}  // namespace spaction

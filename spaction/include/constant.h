@@ -21,6 +21,8 @@
 #include <string>
 #include "cltl.h"
 
+namespace spaction {
+
 class constant : public cltl_formula {
  public:
     explicit constant(bool b): _data(b) {}
@@ -40,5 +42,7 @@ class constant : public cltl_formula {
  private:
     bool _data;
 };
+
+}  // spaction
 
 #endif  // SPACTION_INCLUDE_CONSTANT_H_

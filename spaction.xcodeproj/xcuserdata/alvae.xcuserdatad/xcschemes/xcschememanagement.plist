@@ -4,6 +4,11 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>checkstyle.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
 		<key>spaction.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -17,6 +22,11 @@
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>4AB890DE196F047900F7BB44</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>755CEA3E196EBA8C00DD3677</key>
 		<dict>
 			<key>primary</key>

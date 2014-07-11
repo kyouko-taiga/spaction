@@ -26,6 +26,8 @@
 #include "spotcheck.h"
 #include "visitor.h"
 
+namespace spaction {
+
 bool spot_check(const cltl_formula *formula, int n, const std::string &filename) {
     std::string ltl_string;
     {
@@ -102,3 +104,5 @@ int find_bound(const cltl_formula * f) {
     } while (!spot_check(f, res));
     return res;
 }
+
+}  // namespace spaction

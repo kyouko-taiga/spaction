@@ -20,11 +20,15 @@
 
 #include <string>
 
+namespace spaction {
+
 class cltl_formula;
 
 // \todo expose this?
 bool spot_check(const cltl_formula *formula, int n, const std::string &filename = "");
 
 int find_bound(const cltl_formula *formula);
+
+}  // namespace spaction
 
 #endif  // SPACTION_INCLUDE_SPOTCHECK_H_

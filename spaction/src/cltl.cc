@@ -17,6 +17,10 @@
 
 #include "cltl.h"
 
+namespace spaction {
+
 cltl_visitor::~cltl_visitor() {}
 
 cltl_formula::~cltl_formula() {}
+
+}  // namespace spaction

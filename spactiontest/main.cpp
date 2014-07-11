@@ -28,6 +28,7 @@
 // this file is strongly inspired from spot/iface/dve2/dve2check.cc
 
 int main(int argc, char* argv[]) {
+    using namespace spaction;
     int exit_code = 0;
 
     cltl_formula *f = new binop(COST_UNTIL, new atomic("wait"), new atomic("CS"));

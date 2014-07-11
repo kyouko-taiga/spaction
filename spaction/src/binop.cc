@@ -17,6 +17,8 @@
 
 #include "binop.h"
 
+namespace spaction {
+
 binop::binop(binop_type type, const cltl_formula *left, const cltl_formula *right) :
     _type(type), _left(left->clone()), _right(right->clone()) {
 }
@@ -60,3 +62,5 @@ std::string binop::dump() const {
     res += ")";
     return res;
 }
+
+}  // namespace spaction

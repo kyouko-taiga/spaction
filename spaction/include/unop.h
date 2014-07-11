@@ -21,6 +21,8 @@
 #include <string>
 #include "cltl.h"
 
+namespace spaction {
+
 typedef enum {
     NOT,
     NEXT
@@ -47,5 +49,7 @@ class unop : public cltl_formula {
     unop_type _type;
     const cltl_formula * _son;
 };
+
+}  // namespace spaction
 
 #endif  // SPACTION_INCLUDE_UNOP_H_
