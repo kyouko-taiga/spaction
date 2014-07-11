@@ -183,7 +183,7 @@
 /* Begin PBXLegacyTarget section */
 		4AB890DE196F047900F7BB44 /* checkstyle */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "-c \"$(PROJECT_DIR)/cpplint.py --linelength=100 spaction/include/*.h spaction/src/*.cc spactiontest/*.cpp\"";
+			buildArgumentsString = "-c \"$(PROJECT_DIR)/cpplint.py --linelength=100 spaction/include/*.h spaction/src/*.cc spactiontest/*.cpp 2>&1 > /dev/null | sed 's/: /: warning: /' \"";
 			buildConfigurationList = 4AB890DF196F047900F7BB44 /* Build configuration list for PBXLegacyTarget "checkstyle" */;
 			buildPhases = (
 			);
@@ -202,6 +202,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 755CEA45196EBA8C00DD3677 /* Build configuration list for PBXNativeTarget "spactiontest" */;
 			buildPhases = (
+				4AB890E3196FCA0200F7BB44 /* ShellScript */,
 				755CEA3B196EBA8C00DD3677 /* Sources */,
 				755CEA3C196EBA8C00DD3677 /* Frameworks */,
 				755CEA3D196EBA8C00DD3677 /* CopyFiles */,
@@ -219,6 +220,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 75AFC8A3196EAE3D00BAE38C /* Build configuration list for PBXNativeTarget "spaction" */;
 			buildPhases = (
+				4AB890E2196FC87700F7BB44 /* ShellScript */,
 				75AFC896196EAE3D00BAE38C /* Sources */,
 				75AFC897196EAE3D00BAE38C /* Frameworks */,
 				75AFC898196EAE3D00BAE38C /* Copy Files */,
@@ -259,6 +261,35 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		4AB890E2196FC87700F7BB44 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "$PROJECT_DIR/cpplint.py --linelength=100 spaction/include/*.h spaction/src/*.cc 2>&1 > /dev/null | sed 's/: /: warning: (style) /'";
+		};
+		4AB890E3196FCA0200F7BB44 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "$PROJECT_DIR/cpplint.py --linelength=100 spactiontest/*.cpp 2>&1 > /dev/null | sed 's/: /: warning: (style) /'";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		755CEA3B196EBA8C00DD3677 /* Sources */ = {
