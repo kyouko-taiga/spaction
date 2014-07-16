@@ -1,0 +1,11 @@
+This requires Divine installed in the PATH.
+On MAC OS (10.9), getting Divine to compile is a bit cumbersome.
+The method described below should work.
+It uses a patched version by LTSmin team.
+It requires gcc 4.8 (tested with 4.8.2 installed through macport).
+No other version of gcc was tried, but clang (built-in Apple version of 10.9) was and it miserably failed.
+
+git clone http://fmt.cs.utwente.nl/tools/scm/divine2.git
+cd divine2
+mkdir _build && cd _build
+cmake .. -DCMAKE_CXX_COMPILER={absolute path to g++4.8} -DCMAKE_C_COMPILER={absolute path to gcc4.8} -DGUI=OFF -DRX_PATH= -DMURPHI=OFF -DCMAKE_INSTALL_PREFIX={prefix to install, should be in path when running spaction} -DHOARD=OFF
