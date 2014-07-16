@@ -40,11 +40,11 @@ class binop : public cltl_formula {
     binop(const binop &op) = delete;
     binop &operator= (const binop &op) = delete;
 
-    cltl_formula *clone() const;
+    cltl_formula *clone() const override;
 
     inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
 
-    std::string dump() const;
+    std::string dump() const override;
 
     binop_type get_type() const { return _type; }
 

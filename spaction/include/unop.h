@@ -36,11 +36,11 @@ class unop : public cltl_formula {
     unop(const unop &op) = delete;
     unop &operator= (const unop &op) = delete;
 
-    cltl_formula *clone() const;
+    cltl_formula *clone() const override;
 
     inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
 
-    std::string dump() const;
+    std::string dump() const override;
 
     unop_type get_type() const { return _type; }
     const cltl_formula *sub() const { return _son; }

@@ -31,13 +31,13 @@ class atomic : public cltl_formula {
     atomic(const atomic &) = delete;
     atomic &operator= (const atomic &) = delete;
 
-    cltl_formula * clone() const;
+    cltl_formula * clone() const override;
 
     std::string get() const { return _data; }
 
     inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
 
-    std::string dump() const;
+    std::string dump() const override;
 
  private:
     std::string _data;

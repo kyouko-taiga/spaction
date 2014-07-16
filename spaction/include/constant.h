@@ -31,13 +31,13 @@ class constant : public cltl_formula {
     constant(const constant &) = delete;
     constant &operator= (const constant &) = delete;
 
-    cltl_formula *clone() const;
+    cltl_formula *clone() const override;
 
     inline bool get() const { return _data; }
 
     inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
 
-    std::string dump() const;
+    std::string dump() const override;
 
  private:
     bool _data;
