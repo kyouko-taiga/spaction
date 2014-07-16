@@ -23,7 +23,8 @@
 
 namespace spaction {
 
-cltl_formula *instantiate(const cltl_formula *formula, int n);
+cltl_formula *instantiate_inf(const cltl_formula *formula, int n);
+cltl_formula *instantiate_sup(const cltl_formula *formula, int n);
 
 }  // namespace spaction
 

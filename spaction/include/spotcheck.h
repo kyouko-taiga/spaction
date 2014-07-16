@@ -25,9 +25,11 @@ namespace spaction {
 class cltl_formula;
 
 // \todo expose this?
-bool spot_check(const cltl_formula *formula, int n, const std::string &filename = "");
+// the first argument should be a pure LTL formula, and will be checked with spot
+bool spot_check(const std::string &formula, const std::string &modelname);
 
-int find_bound(const cltl_formula *formula);
+unsigned int find_bound_min(const cltl_formula *formula, const std::string &modelname);
+unsigned int find_bound_max(const cltl_formula *formula, const std::string &modelname);
 
 }  // namespace spaction
 

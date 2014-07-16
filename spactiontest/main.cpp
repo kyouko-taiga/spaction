@@ -16,7 +16,6 @@
 // limitations under the License.
 
 #include <iostream>
-#include <iface/dve2/dve2.hh>
 
 #include "cltl.h"
 #include "atomic.h"
@@ -29,38 +28,22 @@
 
 int main(int argc, char* argv[]) {
     using namespace spaction;
-    int exit_code = 0;
 
-    cltl_formula *f = new binop(COST_UNTIL, new atomic("wait"), new atomic("CS"));
+    if (argc != 2) {
+        std::cerr << "wrong number of arguments" << std::endl;
+        std::cerr << "usage: spaction model.dve" << std::endl;
+        return 1;
+    }
+
+    // a test formula
+    cltl_formula *f = new binop(COST_UNTIL, new atomic("P_0.wait"), new atomic("P_0.CS"));
 
     std::cout << f->dump() << std::endl;
 
-    spot::ltl::atomic_prop_set ap;
-    spot::bdd_dict *dict = new spot::bdd_dict();
-    spot::kripke *model = nullptr;
-    // model = spot::load_dve2(argv[1], dict, &ap/*, deadf, compress_states, true*/);
+    int bound = find_bound_min(f, argv[1]);
+    std::cout << "the bound for " << f->dump() << " is " << bound << std::endl;
 
-    if (!model) {
-        exit_code = 1;
-        // \todo remove GOTO and use an exception
-        goto safe_exit;
-    }
-
-    spot_check(f, 0, "g0");
-    spot_check(f, 1, "g1");
-    spot_check(f, 2, "g2");
-
-    // cltl_formula *g0 = instantiate(f, 0);
-    // std::cout << g0->dump() << std::endl;
-    // cltl_formula *g1 = instantiate(f, 1);
-    // std::cout << g1->dump() << std::endl;
-    // cltl_formula *g2 = instantiate(f, 2);
-    // std::cout << g2->dump() << std::endl;
-
-safe_exit:
-    delete model;
-    delete dict;
     delete f;
 
-    return exit_code;
+    return 0;
 }
