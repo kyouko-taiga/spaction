@@ -125,7 +125,7 @@ cltl_formula *instantiate_inf(const cltl_formula *formula, int n) {
 }
 
 class instant_sup : public cltl_visitor {
-public:
+ public:
     explicit instant_sup(int n): n(n), res(nullptr) {}
     ~instant_sup() { res->destroy(); }
 
@@ -200,16 +200,16 @@ public:
                 exit(1);
                 break;
         }
-        
+
         l->destroy();
         r->destroy();
     }
-    
+
     cltl_formula *get_result() const {
         return res->clone();
     }
-    
-private:
+
+ private:
     int n;
     cltl_formula *res;
 };
