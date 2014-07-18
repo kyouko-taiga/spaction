@@ -24,20 +24,23 @@
 namespace spaction {
 
 class atomic : public cltl_formula {
+    friend class cltl_factory;
  public:
-    explicit atomic(const std::string &data): _data(data) {}
-    ~atomic() {}
-
     atomic(const atomic &) = delete;
     atomic &operator= (const atomic &) = delete;
 
     cltl_formula * clone() const override;
+    void destroy() const override { delete this; }
 
     std::string get() const { return _data; }
 
     inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
 
     std::string dump() const override;
+
+ protected:
+    explicit atomic(const std::string &data): _data(data) {}
+    ~atomic() {}
 
  private:
     std::string _data;

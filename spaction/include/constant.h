@@ -24,20 +24,23 @@
 namespace spaction {
 
 class constant : public cltl_formula {
+    friend class cltl_factory;
  public:
-    explicit constant(bool b): _data(b) {}
-    ~constant() {}
-
     constant(const constant &) = delete;
     constant &operator= (const constant &) = delete;
 
     cltl_formula *clone() const override;
+    void destroy() const override { delete this; }
 
     inline bool get() const { return _data; }
 
     inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
 
     std::string dump() const override;
+
+ protected:
+    explicit constant(bool b): _data(b) {}
+    ~constant() {}
 
  private:
     bool _data;

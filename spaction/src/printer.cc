@@ -28,7 +28,7 @@ namespace spaction {
 class instant_inf : public cltl_visitor {
  public:
     explicit instant_inf(int n): n(n), res(nullptr) {}
-    ~instant_inf() { delete res; }
+    ~instant_inf() { res->destroy(); }
 
     void visit(const atomic *node) final {
         res = node->clone();
@@ -39,9 +39,16 @@ class instant_inf : public cltl_visitor {
     }
 
     void visit(const unop *node) final {
-        cltl_formula * tmp = instantiate_inf(node->sub(), n);
-        res = new unop(node->get_type(), tmp);
-        delete tmp;
+        cltl_formula *sub_instantiated = instantiate_inf(node->sub(), n);
+        switch (node->get_type()) {
+            case NEXT:
+                res = cltl_factory::make_next(sub_instantiated);
+                break;
+            case NOT:
+                res = cltl_factory::make_not(sub_instantiated);
+                break;
+        }
+        sub_instantiated->destroy();
     }
 
     void visit(const binop *node) final {
@@ -57,30 +64,36 @@ class instant_inf : public cltl_visitor {
 
         switch (node->get_type()) {
             case AND:
+                res = cltl_factory::make_and(l, r);
+                break;
             case OR:
+                res = cltl_factory::make_or(l, r);
+                break;
             case UNTIL:
+                res = cltl_factory::make_until(l, r);
+                break;
             case RELEASE:
-                res = new binop(node->get_type(), l, r);
+                res = cltl_factory::make_release(l, r);
                 break;
             case COST_UNTIL:
                 // a U{n=0} b -> a U b
                 // a U{n}   b -> (a U b) || (a U ((!a) && (X (a U{n-1} b))))
                 if (n == 0) {
-                    res = new binop(UNTIL, l, r);
+                    res = cltl_factory::make_until(l, r);
                 } else {
-                    ltmp = new binop(UNTIL, l, r);
-                    ltmp2 = new unop(NOT, l);
+                    ltmp = cltl_factory::make_until(l, r);
+                    ltmp2 = cltl_factory::make_not(l);
                     tmp3 = instantiate_inf(node, n-1);
-                    rtmp2 = new unop(NEXT, tmp3);
-                    tmp2 = new binop(AND, ltmp2, rtmp2);
-                    rtmp = new binop(UNTIL, l, tmp2);
-                    res = new binop(OR, ltmp, rtmp);
-                    delete rtmp;
-                    delete tmp2;
-                    delete rtmp2;
-                    delete tmp3;
-                    delete ltmp2;
-                    delete ltmp;
+                    rtmp2 = cltl_factory::make_next(tmp3);
+                    tmp2 = cltl_factory::make_and(ltmp2, rtmp2);
+                    rtmp = cltl_factory::make_until(l, tmp2);
+                    res = cltl_factory::make_or(ltmp, rtmp);
+                    rtmp->destroy();
+                    tmp2->destroy();
+                    rtmp2->destroy();
+                    tmp3->destroy();
+                    ltmp2->destroy();
+                    ltmp->destroy();
                 }
                 break;
             case COST_RELEASE:
@@ -91,8 +104,8 @@ class instant_inf : public cltl_visitor {
                 break;
         }
 
-        delete l;
-        delete r;
+        l->destroy();
+        r->destroy();
     }
 
     cltl_formula *get_result() const {
@@ -114,7 +127,7 @@ cltl_formula *instantiate_inf(const cltl_formula *formula, int n) {
 class instant_sup : public cltl_visitor {
 public:
     explicit instant_sup(int n): n(n), res(nullptr) {}
-    ~instant_sup() { delete res; }
+    ~instant_sup() { res->destroy(); }
 
     void visit(const atomic *node) final {
         res = node->clone();
@@ -125,9 +138,16 @@ public:
     }
 
     void visit(const unop *node) final {
-        cltl_formula * tmp = instantiate_sup(node->sub(), n);
-        res = new unop(node->get_type(), tmp);
-        delete tmp;
+        cltl_formula *sub_instantiated = instantiate_sup(node->sub(), n);
+        switch (node->get_type()) {
+            case NEXT:
+                res = cltl_factory::make_next(sub_instantiated);
+                break;
+            case NOT:
+                res = cltl_factory::make_not(sub_instantiated);
+                break;
+        }
+        sub_instantiated->destroy();
     }
 
     void visit(const binop *node) final {
@@ -143,28 +163,34 @@ public:
 
         switch (node->get_type()) {
             case AND:
+                res = cltl_factory::make_and(l, r);
+                break;
             case OR:
+                res = cltl_factory::make_or(l, r);
+                break;
             case UNTIL:
+                res = cltl_factory::make_until(l, r);
+                break;
             case RELEASE:
-                res = new binop(node->get_type(), l, r);
+                res = cltl_factory::make_release(l, r);
                 break;
             case COST_UNTIL:
                 // a U{n=0} b -> true U b
                 // a U{n}   b -> a U (!a && X (a U{n-1} b))
                 if (n == 0) {
-                    cltl_formula *ctrue = new constant(true);
-                    res = new binop(UNTIL, ctrue, r);
-                    delete ctrue;
+                    cltl_formula *ctrue = cltl_factory::make_constant(true);
+                    res = cltl_factory::make_until(ctrue, r);
+                    ctrue->destroy();
                 } else {
                     tmp3 = instantiate_sup(node, n-1);
-                    ltmp2 = new unop(NOT, l);
-                    rtmp2 = new unop(NEXT, tmp3);
-                    tmp2 = new binop(AND, ltmp2, rtmp2);
-                    res = new binop(UNTIL, l, tmp2);
-                    delete tmp3;
-                    delete tmp2;
-                    delete rtmp2;
-                    delete ltmp2;
+                    ltmp2 = cltl_factory::make_not(l);
+                    rtmp2 = cltl_factory::make_next(tmp3);
+                    tmp2 = cltl_factory::make_until(ltmp2, rtmp2);
+                    res = cltl_factory::make_until(l, tmp2);
+                    tmp3->destroy();
+                    tmp2->destroy();
+                    rtmp2->destroy();
+                    ltmp2->destroy();
                 }
                 break;
             case COST_RELEASE:
@@ -175,8 +201,8 @@ public:
                 break;
         }
         
-        delete l;
-        delete r;
+        l->destroy();
+        r->destroy();
     }
     
     cltl_formula *get_result() const {

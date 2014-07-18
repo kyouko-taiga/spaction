@@ -33,14 +33,13 @@ typedef enum {
 } binop_type;
 
 class binop : public cltl_formula {
+    friend class cltl_factory;
  public:
-    explicit binop(binop_type type, const cltl_formula *left, const cltl_formula *right);
-    ~binop();
-
     binop(const binop &op) = delete;
     binop &operator= (const binop &op) = delete;
 
     cltl_formula *clone() const override;
+    void destroy() const override { delete this; }
 
     inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
 
@@ -51,6 +50,10 @@ class binop : public cltl_formula {
     inline const cltl_formula *left() const { return _left; }
 
     inline const cltl_formula *right() const { return _right; }
+
+ protected:
+    explicit binop(binop_type type, const cltl_formula *left, const cltl_formula *right);
+    ~binop();
 
  private:
     binop_type _type;

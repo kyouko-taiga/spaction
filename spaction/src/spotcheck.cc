@@ -135,7 +135,7 @@ static bool spot_check_inf(const cltl_formula *formula, int n, const std::string
     {
         cltl_formula *tmp = instantiate_inf(formula, n);
         ltl_string = tmp->dump();
-        delete tmp;
+        tmp->destroy();
     }
     return spot_check(ltl_string, modelname);
 }
@@ -174,10 +174,10 @@ static bool spot_check_sup(const cltl_formula *formula, int n, const std::string
     std::string ltl_string;
     {
         cltl_formula *tmp = instantiate_sup(formula, n);
-        cltl_formula *tmp2 = new unop(NOT, tmp);
+        cltl_formula *tmp2 = cltl_factory::make_not(tmp);
         ltl_string = tmp2->dump();
-        delete tmp2;
-        delete tmp;
+        tmp2->destroy();
+        tmp->destroy();
     }
     return spot_check(ltl_string, modelname);
 }

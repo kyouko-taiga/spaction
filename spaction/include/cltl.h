@@ -42,15 +42,31 @@ class cltl_visitor {
  *  A class to represent a Cost LTL formula
  */
 class cltl_formula {
- public:
+ protected:
     virtual ~cltl_formula() = 0;
 
+ public:
     virtual void accept(cltl_visitor& visitor) const = 0;
 
     virtual std::string dump() const = 0;
 
     virtual cltl_formula *clone() const = 0;
-    // virtual cltl_formula *destroy() const = 0;
+    virtual void destroy() const = 0;
+};
+
+/// a factory for cost LTL formulae
+class cltl_factory {
+public:
+    static cltl_formula *make_atomic(const std::string &);
+    static cltl_formula *make_constant(bool);
+    static cltl_formula *make_next(const cltl_formula *);
+    static cltl_formula *make_not(const cltl_formula *);
+    static cltl_formula *make_and(const cltl_formula *, const cltl_formula *);
+    static cltl_formula *make_or(const cltl_formula *, const cltl_formula *);
+    static cltl_formula *make_until(const cltl_formula *, const cltl_formula *);
+    static cltl_formula *make_release(const cltl_formula *, const cltl_formula *);
+    static cltl_formula *make_costuntil(const cltl_formula *, const cltl_formula *);
+    static cltl_formula *make_costrelease(const cltl_formula *, const cltl_formula *);
 };
 
 }  // namespace spaction

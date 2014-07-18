@@ -24,8 +24,8 @@ binop::binop(binop_type type, const cltl_formula *left, const cltl_formula *righ
 }
 
 binop::~binop() {
-    delete _left;
-    delete _right;
+    _left->destroy();
+    _right->destroy();
 }
 
 cltl_formula *binop::clone() const {

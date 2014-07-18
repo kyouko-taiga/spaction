@@ -29,14 +29,13 @@ typedef enum {
 } unop_type;
 
 class unop : public cltl_formula {
+    friend class cltl_factory;
  public:
-    unop(unop_type, const cltl_formula *formula);
-    ~unop();
-
     unop(const unop &op) = delete;
     unop &operator= (const unop &op) = delete;
 
     cltl_formula *clone() const override;
+    void destroy() const override { delete this; }
 
     inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
 
@@ -44,6 +43,10 @@ class unop : public cltl_formula {
 
     unop_type get_type() const { return _type; }
     const cltl_formula *sub() const { return _son; }
+
+ protected:
+    explicit unop(unop_type, const cltl_formula *formula);
+    ~unop();
 
  private:
     unop_type _type;

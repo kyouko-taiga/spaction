@@ -23,7 +23,7 @@ unop::unop(unop_type t, const cltl_formula *s) : _type(t), _son(s->clone()) {
 }
 
 unop::~unop() {
-    delete _son;
+    _son->destroy();
 }
 
 cltl_formula * unop::clone() const {

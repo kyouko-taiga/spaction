@@ -36,14 +36,16 @@ int main(int argc, char* argv[]) {
     }
 
     // a test formula
-    cltl_formula *f = new binop(COST_UNTIL, new atomic("P_0.wait"), new atomic("P_0.CS"));
+    // \todo atoms are not properly deleted here
+    cltl_formula *f = cltl_factory::make_costuntil(cltl_factory::make_atomic("P_0.wait"),
+                                                   cltl_factory::make_atomic("P_0.CS"));
 
     std::cout << f->dump() << std::endl;
 
     int bound = find_bound_min(f, argv[1]);
     std::cout << "the bound for " << f->dump() << " is " << bound << std::endl;
 
-    delete f;
+    f->destroy();
 
     return 0;
 }
