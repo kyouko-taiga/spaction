@@ -18,6 +18,7 @@
 #include "spotcheck.h"
 
 #include <fstream>
+#include <sstream>
 
 #include <iface/dve2/dve2.hh>
 #include <ltlparse/public.hh>
@@ -34,7 +35,8 @@
 
 namespace spaction {
 
-bool spot_check(const std::string &ltl_string, const std::string &modelfile) {
+bool
+spot_check(const std::string &ltl_string, const std::string &modelfile) {
     // spot parsing of the instantiated formula
     spot::ltl::parse_error_list pel;
     const spot::ltl::formula *ltl_formula = spot::ltl::parse(ltl_string, pel);
@@ -73,6 +75,27 @@ bool spot_check(const std::string &ltl_string, const std::string &modelfile) {
     spot::tgba *product = new spot::tgba_product(model, property_automaton);
 
     trace << "product built" << std::endl;
+
+    // \debug
+    {
+        // output automaton in .dot
+        static int i = 0;
+        std::stringstream autname;
+        autname << "automaton_" << i << ".dot";
+        std::ofstream out(autname.str());
+        spot::dotty_reachable(out, property_automaton, false);
+        out.close();
+        // output kripke in .dot
+        out = std::ofstream("model.dot");
+        spot::dotty_reachable(out, model);
+        out.close();
+        // output product in .dot
+        std::stringstream prodname;
+        prodname << "product_" << i++ << ".dot";
+        out = std::ofstream(prodname.str());
+        spot::dotty_reachable(out, product);
+        out.close();
+    }
 
     // emptiness check of the product automaton
     const char* echeck_algo = "Cou99";
@@ -118,18 +141,13 @@ bool spot_check(const std::string &ltl_string, const std::string &modelfile) {
     trace << "result is " << !result << std::endl;
 
     trace << "done block" << std::endl;
-    // output automata in .dot
-//    if (filename != "") {
-//        std::ofstream out(filename + ".dot");
-//        spot::dotty_reachable(out, tgba, false);
-//        out.close();
-//    }
 
     // return the result
     return !result;
 }
 
-static bool spot_check_inf(const cltl_formula *formula, int n, const std::string &modelname) {
+static bool
+spot_check_inf(const cltl_formula *formula, int n, const std::string &modelname) {
     // instantiate the cost formula
     std::string ltl_string;
     {
@@ -140,7 +158,8 @@ static bool spot_check_inf(const cltl_formula *formula, int n, const std::string
     return spot_check(ltl_string, modelname);
 }
 
-unsigned int find_bound_min(const cltl_formula *f, const std::string &modelname) {
+unsigned int
+find_bound_min(const cltl_formula *f, const std::string &modelname) {
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
     unsigned int max = 0;
@@ -168,28 +187,26 @@ unsigned int find_bound_min(const cltl_formula *f, const std::string &modelname)
     return min;
 }
 
-static bool spot_check_sup(const cltl_formula *formula, int n, const std::string &modelname) {
-    std::cerr << "checking " << n << std::endl;
+static bool
+spot_check_sup(const cltl_formula *formula, int n, const std::string &modelname) {
     // instantiate the cost formula
     std::string ltl_string;
     {
         cltl_formula *tmp = instantiate_sup(formula, n);
-        cltl_formula *tmp2 = cltl_factory::make_not(tmp);
-        ltl_string = tmp2->dump();
-        tmp2->destroy();
+        ltl_string = tmp->dump();
         tmp->destroy();
     }
     return spot_check(ltl_string, modelname);
 }
 
-// \todo
-unsigned int find_bound_max(const cltl_formula *f, const std::string &modelname) {
+unsigned int
+find_bound_max(const cltl_formula *f, const std::string &modelname) {
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
     unsigned int max = 0;
     unsigned int min = 0;
 
-    if (!spot_check_sup(f, max, modelname))
+    if (spot_check_sup(f, max, modelname))
         return max;
 
     // increase
@@ -197,18 +214,18 @@ unsigned int find_bound_max(const cltl_formula *f, const std::string &modelname)
         // \todo safe checks to detect int overflow
         if (!max)   max = 1;
         else        max *= 2;
-    } while (spot_check_sup(f, max, modelname));
+    } while (!spot_check_sup(f, max, modelname));
 
     // decrease
     min = max / 2;
     while (min + 1 != max) {
         unsigned int tmp = (min + max) / 2;
-        if (spot_check_sup(f, tmp, modelname))
+        if (!spot_check_sup(f, tmp, modelname))
             min = tmp;
         else
             max = tmp;
     }
-    return max;
+    return min;
 }
 
 }  // namespace spaction

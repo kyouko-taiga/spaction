@@ -117,10 +117,11 @@ class instant_inf : public cltl_visitor {
     cltl_formula *res;
 };
 
-cltl_formula *instantiate_inf(const cltl_formula *formula, int n) {
+cltl_formula *
+instantiate_inf(const cltl_formula *formula, int n) {
     instant_inf visitor(n);
     formula->accept(visitor);
-    cltl_formula * res = visitor.get_result();
+    cltl_formula *res = visitor.get_result();
     return res;
 }
 
@@ -154,12 +155,13 @@ class instant_sup : public cltl_visitor {
         cltl_formula *l = instantiate_sup(node->left(), n);
         cltl_formula *r = instantiate_sup(node->right(), n);
 
-//        cltl_formula *ltmp = nullptr;
-//        cltl_formula *rtmp = nullptr;
-        cltl_formula *ltmp2 = nullptr;
-        cltl_formula *rtmp2 = nullptr;
-        cltl_formula *tmp2 = nullptr;
-        cltl_formula *tmp3 = nullptr;
+        cltl_formula *a_until_b = nullptr;
+        cltl_formula *x_aub = nullptr;
+        cltl_formula *not_a = nullptr;
+        cltl_formula *not_b = nullptr;
+        cltl_formula *a_and_nb = nullptr;
+        cltl_formula *not_a_and_not_b = nullptr;
+        cltl_formula *na_and_nb_and_x_aub = nullptr;
 
         switch (node->get_type()) {
             case AND:
@@ -176,21 +178,28 @@ class instant_sup : public cltl_visitor {
                 break;
             case COST_UNTIL:
                 // a U{n=0} b -> true U b
-                // a U{n}   b -> a U (!a && X (a U{n-1} b))
+                // doubtful: a U{n}   b -> a U (!a && X (a U{n-1} b))
+                // a U{n}   b -> (a && !b) U (!a && !b && X (a U{n-1} b))
                 if (n == 0) {
                     cltl_formula *ctrue = cltl_factory::make_constant(true);
                     res = cltl_factory::make_until(ctrue, r);
                     ctrue->destroy();
                 } else {
-                    tmp3 = instantiate_sup(node, n-1);
-                    ltmp2 = cltl_factory::make_not(l);
-                    rtmp2 = cltl_factory::make_next(tmp3);
-                    tmp2 = cltl_factory::make_until(ltmp2, rtmp2);
-                    res = cltl_factory::make_until(l, tmp2);
-                    tmp3->destroy();
-                    tmp2->destroy();
-                    rtmp2->destroy();
-                    ltmp2->destroy();
+                    a_until_b = instantiate_sup(node, n-1);
+                    x_aub = cltl_factory::make_next(a_until_b);
+                    not_a = cltl_factory::make_not(l);
+                    not_b = cltl_factory::make_not(r);
+                    not_a_and_not_b = cltl_factory::make_and(not_a, not_b);
+                    na_and_nb_and_x_aub = cltl_factory::make_and(not_a_and_not_b, x_aub);
+                    a_and_nb = cltl_factory::make_and(l, not_b);
+                    res = cltl_factory::make_until(a_and_nb, na_and_nb_and_x_aub);
+                    a_and_nb->destroy();
+                    na_and_nb_and_x_aub->destroy();
+                    not_a_and_not_b->destroy();
+                    not_b->destroy();
+                    not_a->destroy();
+                    x_aub->destroy();
+                    a_until_b->destroy();
                 }
                 break;
             case COST_RELEASE:
@@ -214,10 +223,11 @@ class instant_sup : public cltl_visitor {
     cltl_formula *res;
 };
 
-cltl_formula *instantiate_sup(const cltl_formula *formula, int n) {
+cltl_formula *
+instantiate_sup(const cltl_formula *formula, int n) {
     instant_sup visitor(n);
     formula->accept(visitor);
-    cltl_formula * res = visitor.get_result();
+    cltl_formula *res = visitor.get_result();
     return res;
 }
 
