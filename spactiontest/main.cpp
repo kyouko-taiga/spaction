@@ -39,6 +39,11 @@ int main(int argc, char* argv[]) {
     // \todo atoms are not properly deleted here
     cltl_formula *f = cltl_factory::make_costuntil(cltl_factory::make_atomic("P_0.wait"),
                                                    cltl_factory::make_atomic("P_0.CS"));
+    // G(wait -> F CS)
+//    cltl_formula *f = cltl_factory::make_not(cltl_factory::make_globally(
+//                                                  cltl_factory::make_imply(cltl_factory::make_atomic("P_0.wait"),
+//                                                                           cltl_factory::make_finally(
+//                                                                                                      cltl_factory::make_atomic("P_0.CS")))));
 
     std::cout << f->dump() << std::endl;
 
