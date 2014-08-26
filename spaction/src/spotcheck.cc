@@ -189,6 +189,7 @@ find_bound_min(const cltl_formula *f, const std::string &modelname) {
 
 static bool
 spot_check_sup(const cltl_formula *formula, int n, const std::string &modelname) {
+    std::cerr << "checking " << n << std::endl;
     // instantiate the cost formula
     std::string ltl_string;
     {
