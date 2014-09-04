@@ -25,7 +25,6 @@ namespace spaction {
 class atomic;
 class constant;
 class binop;
-class costop;
 class unop;
 
 class cltl_visitor {
