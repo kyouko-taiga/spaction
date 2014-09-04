@@ -55,7 +55,7 @@ class cltl_formula {
 
 /// a factory for cost LTL formulae
 class cltl_factory {
-public:
+ public:
     static cltl_formula *make_atomic(const std::string &);
     static cltl_formula *make_constant(bool);
     static cltl_formula *make_next(const cltl_formula *);
@@ -66,6 +66,11 @@ public:
     static cltl_formula *make_release(const cltl_formula *, const cltl_formula *);
     static cltl_formula *make_costuntil(const cltl_formula *, const cltl_formula *);
     static cltl_formula *make_costrelease(const cltl_formula *, const cltl_formula *);
+
+    static cltl_formula *make_imply(const cltl_formula *, const cltl_formula *);
+    static cltl_formula *make_globally(const cltl_formula *);
+    static cltl_formula *make_finally(const cltl_formula *);
+    static cltl_formula *make_costfinally(const cltl_formula *);
 };
 
 }  // namespace spaction

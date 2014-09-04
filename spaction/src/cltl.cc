@@ -77,4 +77,28 @@ cltl_factory::make_costrelease(const cltl_formula *l, const cltl_formula *r) {
     return new binop(COST_RELEASE, l, r);
 }
 
+cltl_formula *
+cltl_factory::make_imply(const spaction::cltl_formula *l, const spaction::cltl_formula *r) {
+    cltl_formula *lhs = make_not(l);
+    cltl_formula *res = make_or(lhs, r);
+    lhs->destroy();
+    return res;
+}
+
+cltl_formula *
+cltl_factory::make_finally(const cltl_formula *f) {
+    cltl_formula *ftrue = make_constant(true);
+    cltl_formula *result = make_until(ftrue, f);
+    ftrue->destroy();
+    return result;
+}
+
+cltl_formula *
+cltl_factory::make_globally(const cltl_formula *f) {
+    cltl_formula *ffalse = make_constant(false);
+    cltl_formula *result = make_release(ffalse, f);
+    ffalse->destroy();
+    return result;
+}
+
 }  // namespace spaction
