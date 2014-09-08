@@ -41,7 +41,7 @@ class binop : public cltl_formula {
     cltl_formula *clone() const override;
     void destroy() const override { delete this; }
 
-    inline void accept(cltl_visitor &visitor) const override { visitor.visit(this); }
+    inline void accept(cltl_visitor& visitor) const override { visitor.visit(this); }
 
     std::string dump() const override;
 
