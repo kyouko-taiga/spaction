@@ -26,6 +26,13 @@ class atomic;
 class constant;
 class binop;
 class unop;
+    
+typedef enum {
+    kAtom,
+    kConstant,
+    kUnaryOperator,
+    kBinaryOperator
+} FormulaType;
 
 class cltl_visitor {
  public:
@@ -46,6 +53,9 @@ class cltl_formula {
 
  public:
     virtual void accept(cltl_visitor& visitor) const = 0;
+
+    /// Returns the type of the formula so it can be casted to the correct subclass.
+    virtual const FormulaType get_formula_type() const = 0;
 
     virtual std::string dump() const = 0;
 

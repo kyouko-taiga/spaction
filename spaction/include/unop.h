@@ -39,6 +39,8 @@ class unop : public cltl_formula {
 
     inline void accept(cltl_visitor& visitor) const override { visitor.visit(this); }
 
+    inline const FormulaType get_formula_type() const override { return kUnaryOperator; };
+
     std::string dump() const override;
 
     unop_type get_type() const { return _type; }

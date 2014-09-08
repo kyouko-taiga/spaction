@@ -43,6 +43,8 @@ class binop : public cltl_formula {
 
     inline void accept(cltl_visitor& visitor) const override { visitor.visit(this); }
 
+    inline const FormulaType get_formula_type() const override { return kBinaryOperator; };
+
     std::string dump() const override;
 
     binop_type get_type() const { return _type; }
