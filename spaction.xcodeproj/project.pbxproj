@@ -75,6 +75,7 @@
 		759343D31970051200DD5475 /* CostRegisterAutomaton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CostRegisterAutomaton.h; sourceTree = "<group>"; };
 		75AFC89A196EAE3D00BAE38C /* spaction.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = spaction.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		75AFC89F196EAE3D00BAE38C /* spaction.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = spaction.1; sourceTree = "<group>"; };
+		75EF898619B8518E00441B56 /* CltlTranslator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CltlTranslator.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,6 +155,7 @@
 			isa = PBXGroup;
 			children = (
 				759343D31970051200DD5475 /* CostRegisterAutomaton.h */,
+				75EF898619B8518E00441B56 /* CltlTranslator.h */,
 			);
 			path = cra;
 			sourceTree = "<group>";
