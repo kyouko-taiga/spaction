@@ -37,8 +37,6 @@ class unop : public cltl_formula {
     cltl_formula *clone() const override;
     void destroy() const override { delete this; }
 
-    inline void accept(cltl_visitor& visitor) const override { visitor.visit(this); }
-
     inline const FormulaType get_formula_type() const override { return kUnaryOperator; };
 
     std::string dump() const override;

@@ -34,8 +34,6 @@ class constant : public cltl_formula {
 
     inline bool get() const { return _data; }
 
-    inline void accept(cltl_visitor& visitor) const override { visitor.visit(this); }
-
     inline const FormulaType get_formula_type() const override { return kConstant; };
 
     std::string dump() const override;

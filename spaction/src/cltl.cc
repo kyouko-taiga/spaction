@@ -26,75 +26,81 @@ namespace spaction {
 
 cltl_visitor::~cltl_visitor() {}
 
+void cltl_visitor::visit(const spaction::cltl_formula *node) {
+    switch (node->get_formula_type()) {
+        case kAtom:
+            this->visit(static_cast<const atomic*>(node));
+            break;
+        case kBinaryOperator:
+            this->visit(static_cast<const binop*>(node));
+            break;
+        case kConstant:
+            this->visit(static_cast<const constant*>(node));
+            break;
+        case kUnaryOperator:
+            this->visit(static_cast<const unop*>(node));
+            break;
+    }
+}
+
 cltl_formula::~cltl_formula() {}
 
 cltl_formula *cltl_factory::make_atomic(const std::string &s) {
     return new atomic(s);
 }
 
-cltl_formula *
-cltl_factory::make_constant(bool b) {
+cltl_formula *cltl_factory::make_constant(bool b) {
     return new constant(b);
 }
 
-cltl_formula *
-cltl_factory::make_next(const cltl_formula *f) {
+cltl_formula *cltl_factory::make_next(const cltl_formula *f) {
     return new unop(NEXT, f);
 }
 
-cltl_formula *
-cltl_factory::make_not(const cltl_formula *f) {
+cltl_formula *cltl_factory::make_not(const cltl_formula *f) {
     return new unop(NOT, f);
 }
 
-cltl_formula *
-cltl_factory::make_and(const cltl_formula *l, const cltl_formula *r) {
+cltl_formula *cltl_factory::make_and(const cltl_formula *l, const cltl_formula *r) {
     return new binop(AND, l, r);
 }
 
-cltl_formula *
-cltl_factory::make_or(const cltl_formula *l, const cltl_formula *r) {
+cltl_formula *cltl_factory::make_or(const cltl_formula *l, const cltl_formula *r) {
     return new binop(OR, l, r);
 }
 
-cltl_formula *
-cltl_factory::make_until(const cltl_formula *l, const cltl_formula *r) {
+cltl_formula *cltl_factory::make_until(const cltl_formula *l, const cltl_formula *r) {
     return new binop(UNTIL, l, r);
 }
 
-cltl_formula *
-cltl_factory::make_release(const cltl_formula *l, const cltl_formula *r) {
+cltl_formula *cltl_factory::make_release(const cltl_formula *l, const cltl_formula *r) {
     return new binop(RELEASE, l, r);
 }
 
-cltl_formula *
-cltl_factory::make_costuntil(const cltl_formula *l, const cltl_formula *r) {
+cltl_formula *cltl_factory::make_costuntil(const cltl_formula *l, const cltl_formula *r) {
     return new binop(COST_UNTIL, l, r);
 }
 
-cltl_formula *
-cltl_factory::make_costrelease(const cltl_formula *l, const cltl_formula *r) {
+cltl_formula *cltl_factory::make_costrelease(const cltl_formula *l, const cltl_formula *r) {
     return new binop(COST_RELEASE, l, r);
 }
 
-cltl_formula *
-cltl_factory::make_imply(const spaction::cltl_formula *l, const spaction::cltl_formula *r) {
+cltl_formula *cltl_factory::make_imply(const spaction::cltl_formula *l,
+                                       const spaction::cltl_formula *r) {
     cltl_formula *lhs = make_not(l);
     cltl_formula *res = make_or(lhs, r);
     lhs->destroy();
     return res;
 }
 
-cltl_formula *
-cltl_factory::make_finally(const cltl_formula *f) {
+cltl_formula *cltl_factory::make_finally(const cltl_formula *f) {
     cltl_formula *ftrue = make_constant(true);
     cltl_formula *result = make_until(ftrue, f);
     ftrue->destroy();
     return result;
 }
 
-cltl_formula *
-cltl_factory::make_globally(const cltl_formula *f) {
+cltl_formula *cltl_factory::make_globally(const cltl_formula *f) {
     cltl_formula *ffalse = make_constant(false);
     cltl_formula *result = make_release(ffalse, f);
     ffalse->destroy();

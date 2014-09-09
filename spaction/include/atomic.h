@@ -34,8 +34,6 @@ class atomic : public cltl_formula {
 
     std::string get() const { return _data; }
 
-    inline void accept(cltl_visitor& visitor) const override { visitor.visit(this); }
-
     inline const FormulaType get_formula_type() const override { return kAtom; };
 
     std::string dump() const override;

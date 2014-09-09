@@ -23,10 +23,11 @@
 namespace spaction {
 
 class atomic;
-class constant;
 class binop;
+class cltl_formula;
+class constant;
 class unop;
-    
+
 typedef enum {
     kAtom,
     kConstant,
@@ -38,49 +39,50 @@ class cltl_visitor {
  public:
     virtual ~cltl_visitor() = 0;
 
+    virtual void visit(const cltl_formula *node);
+
     virtual void visit(const atomic *node) = 0;
     virtual void visit(const constant *node) = 0;
     virtual void visit(const binop *node) = 0;
     virtual void visit(const unop *node) = 0;
 };
 
-/**
- *  A class to represent a Cost LTL formula
- */
+
+/// A class to represent a Cost LTL formula.
 class cltl_formula {
  protected:
     virtual ~cltl_formula() = 0;
 
  public:
-    virtual void accept(cltl_visitor& visitor) const = 0;
+    virtual cltl_formula *clone() const = 0;
+    virtual void destroy() const = 0;
 
     /// Returns the type of the formula so it can be casted to the correct subclass.
     virtual const FormulaType get_formula_type() const = 0;
 
-    virtual std::string dump() const = 0;
+    virtual inline void accept(cltl_visitor &visitor) const { visitor.visit(this); }
 
-    virtual cltl_formula *clone() const = 0;
-    virtual void destroy() const = 0;
+    virtual std::string dump() const = 0;
 };
 
-/// a factory for cost LTL formulae
+/// A factory for cost LTL formulae.
 class cltl_factory {
  public:
     static cltl_formula *make_atomic(const std::string &);
-    static cltl_formula *make_constant(bool);
-    static cltl_formula *make_next(const cltl_formula *);
-    static cltl_formula *make_not(const cltl_formula *);
-    static cltl_formula *make_and(const cltl_formula *, const cltl_formula *);
-    static cltl_formula *make_or(const cltl_formula *, const cltl_formula *);
-    static cltl_formula *make_until(const cltl_formula *, const cltl_formula *);
-    static cltl_formula *make_release(const cltl_formula *, const cltl_formula *);
-    static cltl_formula *make_costuntil(const cltl_formula *, const cltl_formula *);
-    static cltl_formula *make_costrelease(const cltl_formula *, const cltl_formula *);
+    static cltl_formula *make_constant(bool b);
+    static cltl_formula *make_next(const cltl_formula *formula);
+    static cltl_formula *make_not(const cltl_formula *formula);
+    static cltl_formula *make_and(const cltl_formula *left, const cltl_formula *right);
+    static cltl_formula *make_or(const cltl_formula *left, const cltl_formula *right);
+    static cltl_formula *make_until(const cltl_formula *left, const cltl_formula *right);
+    static cltl_formula *make_release(const cltl_formula *left, const cltl_formula *right);
+    static cltl_formula *make_costuntil(const cltl_formula *left, const cltl_formula *right);
+    static cltl_formula *make_costrelease(const cltl_formula *left, const cltl_formula *right);
 
-    static cltl_formula *make_imply(const cltl_formula *, const cltl_formula *);
-    static cltl_formula *make_globally(const cltl_formula *);
-    static cltl_formula *make_finally(const cltl_formula *);
-    static cltl_formula *make_costfinally(const cltl_formula *);
+    static cltl_formula *make_imply(const cltl_formula *left, const cltl_formula *right);
+    static cltl_formula *make_globally(const cltl_formula *formula);
+    static cltl_formula *make_finally(const cltl_formula *formula);
+    static cltl_formula *make_costfinally(const cltl_formula *formula);
 };
 
 }  // namespace spaction
