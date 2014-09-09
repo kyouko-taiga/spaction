@@ -25,6 +25,7 @@ namespace spaction {
 class atomic;
 class binop;
 class cltl_formula;
+class cltl_factory;
 class constant;
 class unop;
 
@@ -51,18 +52,32 @@ class cltl_visitor {
 /// A class to represent a Cost LTL formula.
 class cltl_formula {
  protected:
+    /// Virtual destructor.
+    /// @remarks
+    ///     This destructor will be called by `destroy()` once common behaviour (ie. formulae
+    ///     uniqueness management) has been executed. Subclasses should implement the specific
+    ///     behaviour related to their own deallocation within this destructor.
     virtual ~cltl_formula() = 0;
 
  public:
-    virtual cltl_formula *clone() const = 0;
-    virtual void destroy() const = 0;
+    // virtual cltl_formula *clone();
+    virtual const cltl_formula *clone() const;
+
+    virtual void destroy() const final;
 
     /// Returns the type of the formula so it can be casted to the correct subclass.
     virtual const FormulaType get_formula_type() const = 0;
 
+    /// Returns a equivalent formula in negation normal form.
+    virtual inline const cltl_formula *to_nnf() const { return this->clone(); }
+
     virtual inline void accept(cltl_visitor &visitor) const { visitor.visit(this); }
 
     virtual std::string dump() const = 0;
+
+ private:
+    mutable std::size_t _ref_count;
+    cltl_factory *_creator;
 };
 
 /// A factory for cost LTL formulae.

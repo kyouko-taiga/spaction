@@ -19,10 +19,6 @@
 
 namespace spaction {
 
-cltl_formula *atomic::clone() const {
-  return new atomic(_data);
-}
-
 std::string atomic::dump() const {
   return "\"" + _data + "\"";
 }

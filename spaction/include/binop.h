@@ -38,9 +38,6 @@ class binop : public cltl_formula {
     binop(const binop &op) = delete;
     binop &operator= (const binop &op) = delete;
 
-    cltl_formula *clone() const override;
-    void destroy() const override { delete this; }
-
     inline const FormulaType get_formula_type() const override { return kBinaryOperator; };
 
     std::string dump() const override;

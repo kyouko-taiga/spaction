@@ -19,10 +19,6 @@
 
 namespace spaction {
 
-cltl_formula *constant::clone() const {
-    return new constant(_data);
-}
-
 std::string constant::dump() const {
     return _data ? "true" : "false";
 }

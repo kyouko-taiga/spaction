@@ -30,13 +30,12 @@
 #include "unop.h"
 #include "visitor.h"
 
-//#define trace std::cerr
+// #define trace std::cerr
 #define trace while (0) std::cerr
 
 namespace spaction {
 
-bool
-spot_check(const std::string &ltl_string, const std::string &modelfile) {
+bool spot_check(const std::string &ltl_string, const std::string &modelfile) {
     // spot parsing of the instantiated formula
     spot::ltl::parse_error_list pel;
     const spot::ltl::formula *ltl_formula = spot::ltl::parse(ltl_string, pel);
@@ -146,20 +145,18 @@ spot_check(const std::string &ltl_string, const std::string &modelfile) {
     return !result;
 }
 
-static bool
-spot_check_inf(const cltl_formula *formula, int n, const std::string &modelname) {
+static bool spot_check_inf(const cltl_formula *formula, int n, const std::string &modelname) {
     // instantiate the cost formula
     std::string ltl_string;
     {
-        cltl_formula *tmp = instantiate_inf(formula, n);
+        const cltl_formula *tmp = instantiate_inf(formula, n);
         ltl_string = tmp->dump();
         tmp->destroy();
     }
     return spot_check(ltl_string, modelname);
 }
 
-unsigned int
-find_bound_min(const cltl_formula *f, const std::string &modelname) {
+unsigned int find_bound_min(const cltl_formula *f, const std::string &modelname) {
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
     unsigned int max = 0;
@@ -187,21 +184,19 @@ find_bound_min(const cltl_formula *f, const std::string &modelname) {
     return min;
 }
 
-static bool
-spot_check_sup(const cltl_formula *formula, int n, const std::string &modelname) {
+static bool spot_check_sup(const cltl_formula *formula, int n, const std::string &modelname) {
     std::cerr << "checking " << n << std::endl;
     // instantiate the cost formula
     std::string ltl_string;
     {
-        cltl_formula *tmp = instantiate_sup(formula, n);
+        const cltl_formula *tmp = instantiate_sup(formula, n);
         ltl_string = tmp->dump();
         tmp->destroy();
     }
     return spot_check(ltl_string, modelname);
 }
 
-unsigned int
-find_bound_max(const cltl_formula *f, const std::string &modelname) {
+unsigned int find_bound_max(const cltl_formula *f, const std::string &modelname) {
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
     unsigned int max = 0;

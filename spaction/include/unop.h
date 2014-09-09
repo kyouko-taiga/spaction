@@ -34,15 +34,14 @@ class unop : public cltl_formula {
     unop(const unop &op) = delete;
     unop &operator= (const unop &op) = delete;
 
-    cltl_formula *clone() const override;
-    void destroy() const override { delete this; }
-
     inline const FormulaType get_formula_type() const override { return kUnaryOperator; };
+
+    cltl_formula *to_nnf() const;
 
     std::string dump() const override;
 
     unop_type get_type() const { return _type; }
-    const cltl_formula *sub() const { return _son; }
+    const cltl_formula *sub() const { return _sub; }
 
  protected:
     explicit unop(unop_type, const cltl_formula *formula);
@@ -50,7 +49,7 @@ class unop : public cltl_formula {
 
  private:
     unop_type _type;
-    const cltl_formula * _son;
+    const cltl_formula *_sub;
 };
 
 }  // namespace spaction

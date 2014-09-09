@@ -39,7 +39,7 @@ class instant_inf : public cltl_visitor {
     }
 
     void visit(const unop *node) final {
-        cltl_formula *sub_instantiated = instantiate_inf(node->sub(), n);
+        const cltl_formula *sub_instantiated = instantiate_inf(node->sub(), n);
         switch (node->get_type()) {
             case NEXT:
                 res = cltl_factory::make_next(sub_instantiated);
@@ -52,15 +52,15 @@ class instant_inf : public cltl_visitor {
     }
 
     void visit(const binop *node) final {
-        cltl_formula *l = instantiate_inf(node->left(), n);
-        cltl_formula *r = instantiate_inf(node->right(), n);
+        const cltl_formula *l = instantiate_inf(node->left(), n);
+        const cltl_formula *r = instantiate_inf(node->right(), n);
 
         cltl_formula *ltmp = nullptr;
         cltl_formula *rtmp = nullptr;
         cltl_formula *ltmp2 = nullptr;
         cltl_formula *rtmp2 = nullptr;
         cltl_formula *tmp2 = nullptr;
-        cltl_formula *tmp3 = nullptr;
+        const cltl_formula *tmp3 = nullptr;
 
         switch (node->get_type()) {
             case AND:
@@ -108,20 +108,19 @@ class instant_inf : public cltl_visitor {
         r->destroy();
     }
 
-    cltl_formula *get_result() const {
+    const cltl_formula *get_result() const {
         return res->clone();
     }
 
  private:
     int n;
-    cltl_formula *res;
+    const cltl_formula *res;
 };
 
-cltl_formula *
-instantiate_inf(const cltl_formula *formula, int n) {
+const cltl_formula *instantiate_inf(const cltl_formula *formula, int n) {
     instant_inf visitor(n);
     formula->accept(visitor);
-    cltl_formula *res = visitor.get_result();
+    const cltl_formula *res = visitor.get_result();
     return res;
 }
 
@@ -139,7 +138,7 @@ class instant_sup : public cltl_visitor {
     }
 
     void visit(const unop *node) final {
-        cltl_formula *sub_instantiated = instantiate_sup(node->sub(), n);
+        const cltl_formula *sub_instantiated = instantiate_sup(node->sub(), n);
         switch (node->get_type()) {
             case NEXT:
                 res = cltl_factory::make_next(sub_instantiated);
@@ -152,10 +151,10 @@ class instant_sup : public cltl_visitor {
     }
 
     void visit(const binop *node) final {
-        cltl_formula *l = instantiate_sup(node->left(), n);
-        cltl_formula *r = instantiate_sup(node->right(), n);
+        const cltl_formula *l = instantiate_sup(node->left(), n);
+        const cltl_formula *r = instantiate_sup(node->right(), n);
 
-        cltl_formula *a_until_b = nullptr;
+        const cltl_formula *a_until_b = nullptr;
         cltl_formula *x_aub = nullptr;
         cltl_formula *not_a = nullptr;
         cltl_formula *not_b = nullptr;
@@ -214,20 +213,19 @@ class instant_sup : public cltl_visitor {
         r->destroy();
     }
 
-    cltl_formula *get_result() const {
+    const cltl_formula *get_result() const {
         return res->clone();
     }
 
  private:
     int n;
-    cltl_formula *res;
+    const cltl_formula *res;
 };
 
-cltl_formula *
-instantiate_sup(const cltl_formula *formula, int n) {
+const cltl_formula *instantiate_sup(const cltl_formula *formula, int n) {
     instant_sup visitor(n);
     formula->accept(visitor);
-    cltl_formula *res = visitor.get_result();
+    const cltl_formula *res = visitor.get_result();
     return res;
 }
 

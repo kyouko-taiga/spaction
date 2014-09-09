@@ -29,9 +29,6 @@ class constant : public cltl_formula {
     constant(const constant &) = delete;
     constant &operator= (const constant &) = delete;
 
-    cltl_formula *clone() const override;
-    void destroy() const override { delete this; }
-
     inline bool get() const { return _data; }
 
     inline const FormulaType get_formula_type() const override { return kConstant; };

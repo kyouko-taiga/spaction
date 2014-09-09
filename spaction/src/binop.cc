@@ -28,10 +28,6 @@ binop::~binop() {
     _right->destroy();
 }
 
-cltl_formula *binop::clone() const {
-    return new binop (_type, _left, _right);
-}
-
 std::string binop::dump() const {
     std::string res;
     res += "(";

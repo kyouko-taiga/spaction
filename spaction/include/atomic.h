@@ -29,9 +29,6 @@ class atomic : public cltl_formula {
     atomic(const atomic &) = delete;
     atomic &operator= (const atomic &) = delete;
 
-    cltl_formula * clone() const override;
-    void destroy() const override { delete this; }
-
     std::string get() const { return _data; }
 
     inline const FormulaType get_formula_type() const override { return kAtom; };

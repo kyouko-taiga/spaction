@@ -19,15 +19,15 @@
 
 namespace spaction {
 
-unop::unop(unop_type t, const cltl_formula *s) : _type(t), _son(s->clone()) {
+unop::unop(unop_type t, const cltl_formula *s) : _type(t), _sub(s->clone()) {
 }
 
 unop::~unop() {
-    _son->destroy();
+    _sub->destroy();
 }
 
-cltl_formula * unop::clone() const {
-    return new unop(_type, _son);
+cltl_formula *unop::to_nnf() const {
+    return 0;
 }
 
 std::string unop::dump() const {
@@ -41,7 +41,7 @@ std::string unop::dump() const {
             break;
     }
     res += " (";
-    res += _son->dump();
+    res += _sub->dump();
     res += ")";
     return res;
 }

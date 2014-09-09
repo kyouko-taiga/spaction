@@ -45,6 +45,19 @@ void cltl_visitor::visit(const spaction::cltl_formula *node) {
 
 cltl_formula::~cltl_formula() {}
 
+const cltl_formula *cltl_formula::clone() const {
+    _ref_count++;
+    return this;
+}
+
+void cltl_formula::destroy() const {
+    _ref_count--;
+    if (_ref_count == 0) {
+        // _creator->_remove(this);
+    }
+    delete this;
+}
+
 cltl_formula *cltl_factory::make_atomic(const std::string &s) {
     return new atomic(s);
 }
