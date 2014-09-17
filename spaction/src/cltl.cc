@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <functional>
+
 #include "cltl.h"
 
 #include "atomic.h"
@@ -24,99 +26,75 @@
 
 namespace spaction {
 
-cltl_visitor::~cltl_visitor() {}
-
-void cltl_visitor::visit(const spaction::cltl_formula *node) {
-    switch (node->get_formula_type()) {
-        case kAtom:
-            this->visit(static_cast<const atomic*>(node));
-            break;
-        case kBinaryOperator:
-            this->visit(static_cast<const binop*>(node));
-            break;
-        case kConstant:
-            this->visit(static_cast<const constant*>(node));
-            break;
-        case kUnaryOperator:
-            this->visit(static_cast<const unop*>(node));
-            break;
+cltl_formula_ptr cltl_factory::_make_shared_formula(cltl_formula* formula) {
+    // try to find the formula within the unique index and return its shared pointer
+    for (auto f : _formulae) {
+        if (*f == *formula) return f->shared_from_this();
     }
+
+    // insert the new formula in the unique index and creates its shared pointer
+    _formulae.insert(formula);
+    return cltl_formula_ptr(formula, std::bind(&cltl_factory::_deleter, this,
+                                               std::placeholders::_1));
 }
 
-cltl_formula::~cltl_formula() {}
-
-const cltl_formula *cltl_formula::clone() const {
-    _ref_count++;
-    return this;
+cltl_formula_ptr cltl_factory::make_atomic(const std::string &s) {
+    return _make_shared_formula(new atomic(s));
 }
 
-void cltl_formula::destroy() const {
-    _ref_count--;
-    if (_ref_count == 0) {
-        // _creator->_remove(this);
-    }
-    delete this;
+cltl_formula_ptr cltl_factory::make_constant(bool b) {
+    return _make_shared_formula(new constant(b));
 }
 
-cltl_formula *cltl_factory::make_atomic(const std::string &s) {
-    return new atomic(s);
+cltl_formula_ptr cltl_factory::make_next(const cltl_formula_ptr &f) {
+    return _make_shared_formula(new unop(NEXT, f));
 }
 
-cltl_formula *cltl_factory::make_constant(bool b) {
-    return new constant(b);
+cltl_formula_ptr cltl_factory::make_not(const cltl_formula_ptr &f) {
+    return _make_shared_formula(new unop(NOT, f));
 }
 
-cltl_formula *cltl_factory::make_next(const cltl_formula *f) {
-    return new unop(NEXT, f);
+cltl_formula_ptr cltl_factory::make_and(const cltl_formula_ptr &l, const cltl_formula_ptr &r) {
+    return _make_shared_formula(new binop(AND, l, r));
 }
 
-cltl_formula *cltl_factory::make_not(const cltl_formula *f) {
-    return new unop(NOT, f);
+cltl_formula_ptr cltl_factory::make_or(const cltl_formula_ptr &l, const cltl_formula_ptr &r) {
+    return _make_shared_formula(new binop(OR, l, r));
 }
 
-cltl_formula *cltl_factory::make_and(const cltl_formula *l, const cltl_formula *r) {
-    return new binop(AND, l, r);
+cltl_formula_ptr cltl_factory::make_until(const cltl_formula_ptr &l, const cltl_formula_ptr &r) {
+    return _make_shared_formula(new binop(UNTIL, l, r));
 }
 
-cltl_formula *cltl_factory::make_or(const cltl_formula *l, const cltl_formula *r) {
-    return new binop(OR, l, r);
+cltl_formula_ptr cltl_factory::make_release(const cltl_formula_ptr &l, const cltl_formula_ptr &r) {
+    return _make_shared_formula(new binop(RELEASE, l, r));
 }
 
-cltl_formula *cltl_factory::make_until(const cltl_formula *l, const cltl_formula *r) {
-    return new binop(UNTIL, l, r);
+cltl_formula_ptr cltl_factory::make_costuntil(const cltl_formula_ptr &l,
+                                              const cltl_formula_ptr &r) {
+    return _make_shared_formula(new binop(COST_UNTIL, l, r));
 }
 
-cltl_formula *cltl_factory::make_release(const cltl_formula *l, const cltl_formula *r) {
-    return new binop(RELEASE, l, r);
+cltl_formula_ptr cltl_factory::make_costrelease(const cltl_formula_ptr &l,
+                                                const cltl_formula_ptr &r) {
+    return _make_shared_formula(new binop(COST_RELEASE, l, r));
 }
 
-cltl_formula *cltl_factory::make_costuntil(const cltl_formula *l, const cltl_formula *r) {
-    return new binop(COST_UNTIL, l, r);
-}
-
-cltl_formula *cltl_factory::make_costrelease(const cltl_formula *l, const cltl_formula *r) {
-    return new binop(COST_RELEASE, l, r);
-}
-
-cltl_formula *cltl_factory::make_imply(const spaction::cltl_formula *l,
-                                       const spaction::cltl_formula *r) {
-    cltl_formula *lhs = make_not(l);
-    cltl_formula *res = make_or(lhs, r);
-    lhs->destroy();
+cltl_formula_ptr cltl_factory::make_imply(const cltl_formula_ptr &l, const cltl_formula_ptr &r) {
+    cltl_formula_ptr lhs = make_not(l);
+    cltl_formula_ptr res = make_or(lhs, r);
     return res;
 }
 
-cltl_formula *cltl_factory::make_finally(const cltl_formula *f) {
-    cltl_formula *ftrue = make_constant(true);
-    cltl_formula *result = make_until(ftrue, f);
-    ftrue->destroy();
+cltl_formula_ptr cltl_factory::make_finally(const cltl_formula_ptr &f) {
+    cltl_formula_ptr ftrue = make_constant(true);
+    cltl_formula_ptr result = make_until(ftrue, f);
     return result;
 }
 
-cltl_formula *cltl_factory::make_globally(const cltl_formula *f) {
-    cltl_formula *ffalse = make_constant(false);
-    cltl_formula *result = make_release(ffalse, f);
-    ffalse->destroy();
+cltl_formula_ptr cltl_factory::make_globally(const cltl_formula_ptr &f) {
+    cltl_formula_ptr ffalse = make_constant(false);
+    cltl_formula_ptr result = make_release(ffalse, f);
     return result;
 }
 

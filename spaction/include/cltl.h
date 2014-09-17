@@ -18,7 +18,10 @@
 #ifndef SPACTION_INCLUDE_CLTL_H_
 #define SPACTION_INCLUDE_CLTL_H_
 
+#include <memory>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 
 namespace spaction {
 
@@ -36,68 +39,80 @@ typedef enum {
     kBinaryOperator
 } FormulaType;
 
+typedef std::shared_ptr<cltl_formula> cltl_formula_ptr;
+
 class cltl_visitor {
  public:
     virtual ~cltl_visitor() = 0;
 
-    virtual void visit(const cltl_formula *node);
-
-    virtual void visit(const atomic *node) = 0;
-    virtual void visit(const constant *node) = 0;
-    virtual void visit(const binop *node) = 0;
-    virtual void visit(const unop *node) = 0;
+    virtual void visit(const std::shared_ptr<const atomic> &node) = 0;
+    virtual void visit(const std::shared_ptr<const constant> &node) = 0;
+    virtual void visit(const std::shared_ptr<const binop> &node) = 0;
+    virtual void visit(const std::shared_ptr<const unop> &node) = 0;
 };
 
-
-/// A class to represent a Cost LTL formula.
-class cltl_formula {
- protected:
-    /// Virtual destructor.
-    /// @remarks
-    ///     This destructor will be called by `destroy()` once common behaviour (ie. formulae
-    ///     uniqueness management) has been executed. Subclasses should implement the specific
-    ///     behaviour related to their own deallocation within this destructor.
-    virtual ~cltl_formula() = 0;
-
+/// A class that represents a Cost LTL formula.
+class cltl_formula : public std::enable_shared_from_this<cltl_formula> {
  public:
-    // virtual cltl_formula *clone();
-    virtual const cltl_formula *clone() const;
-
-    virtual void destroy() const final;
-
     /// Returns the type of the formula so it can be casted to the correct subclass.
     virtual const FormulaType get_formula_type() const = 0;
 
-    /// Returns a equivalent formula in negation normal form.
-    virtual inline const cltl_formula *to_nnf() const { return this->clone(); }
+    virtual bool operator==(const cltl_formula &rhs) const;
+    virtual bool syntactic_eq(const cltl_formula &rhs) const;
 
-    virtual inline void accept(cltl_visitor &visitor) const { visitor.visit(this); }
+    /// Returns a equivalent formula in negation normal form.
+    virtual inline cltl_formula_ptr to_nnf() { return shared_from_this(); }
+
+    virtual void accept(cltl_visitor &visitor) const = 0;
 
     virtual std::string dump() const = 0;
 
+ protected:
+    /// Virtual destructor.
+    /// @remarks
+    ///     This destructor will be called by the creator of the object, once it is no more
+    ///     referenced by anyone. Subclasses should implement the specific behaviour related to
+    ///     their own deallocation within this destructor.
+    virtual ~cltl_formula() = 0;
+
  private:
-    mutable std::size_t _ref_count;
-    cltl_factory *_creator;
+    friend class cltl_factory;
 };
 
-/// A factory for cost LTL formulae.
+/// A factory class for Cost LTL formulae.
 class cltl_factory {
  public:
-    static cltl_formula *make_atomic(const std::string &);
-    static cltl_formula *make_constant(bool b);
-    static cltl_formula *make_next(const cltl_formula *formula);
-    static cltl_formula *make_not(const cltl_formula *formula);
-    static cltl_formula *make_and(const cltl_formula *left, const cltl_formula *right);
-    static cltl_formula *make_or(const cltl_formula *left, const cltl_formula *right);
-    static cltl_formula *make_until(const cltl_formula *left, const cltl_formula *right);
-    static cltl_formula *make_release(const cltl_formula *left, const cltl_formula *right);
-    static cltl_formula *make_costuntil(const cltl_formula *left, const cltl_formula *right);
-    static cltl_formula *make_costrelease(const cltl_formula *left, const cltl_formula *right);
+    cltl_formula_ptr make_atomic(const std::string &);
+    cltl_formula_ptr make_constant(bool b);
 
-    static cltl_formula *make_imply(const cltl_formula *left, const cltl_formula *right);
-    static cltl_formula *make_globally(const cltl_formula *formula);
-    static cltl_formula *make_finally(const cltl_formula *formula);
-    static cltl_formula *make_costfinally(const cltl_formula *formula);
+    cltl_formula_ptr make_next(const cltl_formula_ptr &formula);
+    cltl_formula_ptr make_not(const cltl_formula_ptr &formula);
+    cltl_formula_ptr make_and(const cltl_formula_ptr &left, const cltl_formula_ptr &right);
+    cltl_formula_ptr make_or(const cltl_formula_ptr &left, const cltl_formula_ptr &right);
+    cltl_formula_ptr make_until(const cltl_formula_ptr& left, const cltl_formula_ptr &right);
+    cltl_formula_ptr make_release(const cltl_formula_ptr &left, const cltl_formula_ptr &right);
+    cltl_formula_ptr make_costuntil(const cltl_formula_ptr &left, const cltl_formula_ptr &right);
+    cltl_formula_ptr make_costrelease(const cltl_formula_ptr &left, const cltl_formula_ptr &right);
+
+    cltl_formula_ptr make_imply(const cltl_formula_ptr &left, const cltl_formula_ptr &right);
+    cltl_formula_ptr make_globally(const cltl_formula_ptr &formula);
+    cltl_formula_ptr make_finally(const cltl_formula_ptr &formula);
+    cltl_formula_ptr make_costfinally(const cltl_formula_ptr &formula);
+
+ private:
+    /// Stores the unique index.
+    std::unordered_set<cltl_formula*> _formulae;
+
+    cltl_formula_ptr _make_shared_formula(cltl_formula* formula);
+
+    /// Removes a formula from the unique index once it is no more referenced.
+    /// @remarks
+    ///     This custom deleter is bound to the shared pointers built by this factory. It gets
+    ///     called when the references counter of a particular shared pointer reaches 0.
+    void _deleter(cltl_formula *formula) {
+        _formulae.erase(formula);
+        delete formula;
+    }
 };
 
 }  // namespace spaction

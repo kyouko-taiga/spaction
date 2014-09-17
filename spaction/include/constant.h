@@ -33,6 +33,10 @@ class constant : public cltl_formula {
 
     inline const FormulaType get_formula_type() const override { return kConstant; };
 
+    inline void accept(cltl_visitor &visitor) const override {
+        visitor.visit(std::dynamic_pointer_cast<const atomic>(shared_from_this()));
+    }
+
     std::string dump() const override;
 
  protected:

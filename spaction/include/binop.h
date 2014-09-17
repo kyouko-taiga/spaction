@@ -40,22 +40,26 @@ class binop : public cltl_formula {
 
     inline const FormulaType get_formula_type() const override { return kBinaryOperator; };
 
-    std::string dump() const override;
-
     binop_type get_type() const { return _type; }
 
-    inline const cltl_formula *left() const { return _left; }
+    inline const cltl_formula_ptr &left() const { return _left; }
 
-    inline const cltl_formula *right() const { return _right; }
+    inline const cltl_formula_ptr &right() const { return _right; }
+
+    inline void accept(cltl_visitor &visitor) const override {
+        visitor.visit(std::dynamic_pointer_cast<const atomic>(shared_from_this()));
+    }
+
+    std::string dump() const override;
 
  protected:
-    explicit binop(binop_type type, const cltl_formula *left, const cltl_formula *right);
+    explicit binop(binop_type type, const cltl_formula_ptr &left, const cltl_formula_ptr &right);
     ~binop();
 
  private:
     binop_type _type;
-    const cltl_formula *_left;
-    const cltl_formula *_right;
+    const cltl_formula_ptr _left;
+    const cltl_formula_ptr _right;
 };
 
 }  // namespace spaction

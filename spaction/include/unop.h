@@ -38,18 +38,22 @@ class unop : public cltl_formula {
 
     cltl_formula *to_nnf() const;
 
+    inline void accept(cltl_visitor &visitor) const override {
+        visitor.visit(std::dynamic_pointer_cast<const atomic>(shared_from_this()));
+    }
+
     std::string dump() const override;
 
     unop_type get_type() const { return _type; }
-    const cltl_formula *sub() const { return _sub; }
+    inline const cltl_formula_ptr &sub() const { return _sub; }
 
  protected:
-    explicit unop(unop_type, const cltl_formula *formula);
+    explicit unop(unop_type, const cltl_formula_ptr &formula);
     ~unop();
 
  private:
     unop_type _type;
-    const cltl_formula *_sub;
+    const cltl_formula_ptr _sub;
 };
 
 }  // namespace spaction

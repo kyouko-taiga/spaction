@@ -29,9 +29,13 @@ class atomic : public cltl_formula {
     atomic(const atomic &) = delete;
     atomic &operator= (const atomic &) = delete;
 
+    inline const FormulaType get_formula_type() const override { return kAtom; };
+
     std::string get() const { return _data; }
 
-    inline const FormulaType get_formula_type() const override { return kAtom; };
+    inline void accept(cltl_visitor &visitor) const override {
+        visitor.visit(std::dynamic_pointer_cast<const atomic>(shared_from_this()));
+    }
 
     std::string dump() const override;
 
