@@ -23,6 +23,8 @@
 		755ED7BF196EC0BF003DFDBC /* libspot.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755ED7BE196EC0BF003DFDBC /* libspot.dylib */; };
 		755ED7C0196EC0FD003DFDBC /* libspot.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755ED7BE196EC0BF003DFDBC /* libspot.dylib */; };
 		755ED7C2196EC4C7003DFDBC /* spaction.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 75AFC89A196EAE3D00BAE38C /* spaction.dylib */; };
+		756EE60619C9BDA5002261FF /* CltlFormulaFactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756EE60419C9BDA5002261FF /* CltlFormulaFactory.cpp */; };
+		756EE60919C9C6D0002261FF /* CltlFormulaVisitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756EE60719C9C6D0002261FF /* CltlFormulaVisitor.cpp */; };
 		75AFC8A0196EAE3D00BAE38C /* spaction.1 in Copy Files */ = {isa = PBXBuildFile; fileRef = 75AFC89F196EAE3D00BAE38C /* spaction.1 */; };
 /* End PBXBuildFile section */
 
@@ -72,9 +74,18 @@
 		755CEA56196EBB6C00DD3677 /* spotcheck.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = spotcheck.cc; sourceTree = "<group>"; };
 		755CEA57196EBB6C00DD3677 /* unop.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = unop.cc; sourceTree = "<group>"; };
 		755ED7BE196EC0BF003DFDBC /* libspot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspot.dylib; path = "$(PROJECT_DIR)/dependencies/spot/lib/libspot.dylib"; sourceTree = "<group>"; };
+		756EE5FC19C9A9EF002261FF /* CltlFormulaFactory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CltlFormulaFactory.h; sourceTree = "<group>"; };
+		756EE5FD19C9AD1F002261FF /* CltlFormulaVisitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CltlFormulaVisitor.h; sourceTree = "<group>"; };
+		756EE5FE19C9B090002261FF /* AtomicProposition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AtomicProposition.h; sourceTree = "<group>"; };
+		756EE5FF19C9B2B7002261FF /* ConstantExpression.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConstantExpression.h; sourceTree = "<group>"; };
+		756EE60119C9B438002261FF /* UnaryOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UnaryOperator.h; sourceTree = "<group>"; };
+		756EE60319C9B675002261FF /* BinaryOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BinaryOperator.h; sourceTree = "<group>"; };
+		756EE60419C9BDA5002261FF /* CltlFormulaFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CltlFormulaFactory.cpp; sourceTree = "<group>"; };
+		756EE60719C9C6D0002261FF /* CltlFormulaVisitor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CltlFormulaVisitor.cpp; sourceTree = "<group>"; };
 		759343D31970051200DD5475 /* CostRegisterAutomaton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CostRegisterAutomaton.h; sourceTree = "<group>"; };
 		75AFC89A196EAE3D00BAE38C /* spaction.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = spaction.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		75AFC89F196EAE3D00BAE38C /* spaction.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = spaction.1; sourceTree = "<group>"; };
+		75B92AF019C98888002F4972 /* CltlFormula.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CltlFormula.h; sourceTree = "<group>"; };
 		75EF898619B8518E00441B56 /* CltlTranslator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CltlTranslator.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -133,6 +144,13 @@
 				755CEA4D196EBB6C00DD3677 /* spotcheck.h */,
 				755CEA4E196EBB6C00DD3677 /* unop.h */,
 				755CEA4F196EBB6C00DD3677 /* visitor.h */,
+				75B92AF019C98888002F4972 /* CltlFormula.h */,
+				756EE5FC19C9A9EF002261FF /* CltlFormulaFactory.h */,
+				756EE5FD19C9AD1F002261FF /* CltlFormulaVisitor.h */,
+				756EE5FE19C9B090002261FF /* AtomicProposition.h */,
+				756EE5FF19C9B2B7002261FF /* ConstantExpression.h */,
+				756EE60119C9B438002261FF /* UnaryOperator.h */,
+				756EE60319C9B675002261FF /* BinaryOperator.h */,
 			);
 			path = include;
 			sourceTree = "<group>";
@@ -147,6 +165,8 @@
 				755CEA55196EBB6C00DD3677 /* printer.cc */,
 				755CEA56196EBB6C00DD3677 /* spotcheck.cc */,
 				755CEA57196EBB6C00DD3677 /* unop.cc */,
+				756EE60419C9BDA5002261FF /* CltlFormulaFactory.cpp */,
+				756EE60719C9C6D0002261FF /* CltlFormulaVisitor.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -320,7 +340,9 @@
 				755CEA5E196EBB6C00DD3677 /* unop.cc in Sources */,
 				755CEA5B196EBB6C00DD3677 /* constant.cc in Sources */,
 				755CEA5D196EBB6C00DD3677 /* spotcheck.cc in Sources */,
+				756EE60919C9C6D0002261FF /* CltlFormulaVisitor.cpp in Sources */,
 				755CEA5C196EBB6C00DD3677 /* printer.cc in Sources */,
+				756EE60619C9BDA5002261FF /* CltlFormulaFactory.cpp in Sources */,
 				755CEA59196EBB6C00DD3677 /* binop.cc in Sources */,
 				755CEA58196EBB6C00DD3677 /* atomic.cc in Sources */,
 			);
