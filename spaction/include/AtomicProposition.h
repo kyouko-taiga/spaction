@@ -45,8 +45,8 @@ class AtomicProposition : public CltlFormula {
     std::string dump() const override;
 
  protected:
-    explicit AtomicProposition(const std::string &value);
-    ~AtomicProposition() {}
+    explicit AtomicProposition(const std::string &value, CltlFormulaFactory *creator);
+    ~AtomicProposition() { }
 
  private:
     friend class CltlFormulaFactory;

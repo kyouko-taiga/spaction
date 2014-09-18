@@ -50,8 +50,9 @@ class UnaryOperator : public CltlFormula {
     std::string dump() const override;
 
  protected:
-    explicit UnaryOperator(UnaryOperatorType type, const CltlFormulaPtr &operand);
-    ~UnaryOperator();
+    explicit UnaryOperator(UnaryOperatorType type, const CltlFormulaPtr &operand,
+                           CltlFormulaFactory *creator);
+    ~UnaryOperator() { }
 
  private:
     friend class CltlFormulaFactory;

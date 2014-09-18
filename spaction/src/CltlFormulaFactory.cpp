@@ -40,56 +40,56 @@ CltlFormulaPtr CltlFormulaFactory::_make_shared_formula(CltlFormula *formula) {
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_atomic(const std::string &value) {
-    return _make_shared_formula(new AtomicProposition(value));
+    return _make_shared_formula(new AtomicProposition(value, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_constant(bool value) {
-    return _make_shared_formula(new ConstantExpression(value));
+    return _make_shared_formula(new ConstantExpression(value, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_unary(UnaryOperator::UnaryOperatorType operator_type,
                                               const CltlFormulaPtr &formula) {
-    return _make_shared_formula(new UnaryOperator(operator_type, formula));
+    return _make_shared_formula(new UnaryOperator(operator_type, formula, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_next(const CltlFormulaPtr &f) {
-    return _make_shared_formula(new UnaryOperator(UnaryOperator::kNext, f));
+    return _make_shared_formula(new UnaryOperator(UnaryOperator::kNext, f, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_not(const CltlFormulaPtr &f) {
-    return _make_shared_formula(new UnaryOperator(UnaryOperator::kNot, f));
+    return _make_shared_formula(new UnaryOperator(UnaryOperator::kNot, f, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_binary(BinaryOperator::BinaryOperatorType operator_type,
                                                const CltlFormulaPtr &left,
                                                const CltlFormulaPtr &right) {
-    return _make_shared_formula(new BinaryOperator(operator_type, left, right));
+    return _make_shared_formula(new BinaryOperator(operator_type, left, right, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_or(const CltlFormulaPtr &l, const CltlFormulaPtr &r) {
-    return _make_shared_formula(new BinaryOperator(BinaryOperator::kOr, l, r));
+    return _make_shared_formula(new BinaryOperator(BinaryOperator::kOr, l, r, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_and(const CltlFormulaPtr &l, const CltlFormulaPtr &r) {
-    return _make_shared_formula(new BinaryOperator(BinaryOperator::kAnd, l, r));
+    return _make_shared_formula(new BinaryOperator(BinaryOperator::kAnd, l, r, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_until(const CltlFormulaPtr &l, const CltlFormulaPtr &r) {
-    return _make_shared_formula(new BinaryOperator(BinaryOperator::kUntil, l, r));
+    return _make_shared_formula(new BinaryOperator(BinaryOperator::kUntil, l, r, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_release(const CltlFormulaPtr &l, const CltlFormulaPtr &r) {
-    return _make_shared_formula(new BinaryOperator(BinaryOperator::kRelease, l, r));
+    return _make_shared_formula(new BinaryOperator(BinaryOperator::kRelease, l, r, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_costuntil(const CltlFormulaPtr &l,
                                               const CltlFormulaPtr &r) {
-    return _make_shared_formula(new BinaryOperator(BinaryOperator::kCostUntil, l, r));
+    return _make_shared_formula(new BinaryOperator(BinaryOperator::kCostUntil, l, r, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_costrelease(const CltlFormulaPtr &l,
                                                 const CltlFormulaPtr &r) {
-    return _make_shared_formula(new BinaryOperator(BinaryOperator::kCostRelease, l, r));
+    return _make_shared_formula(new BinaryOperator(BinaryOperator::kCostRelease, l, r, this));
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_imply(const CltlFormulaPtr &l, const CltlFormulaPtr &r) {

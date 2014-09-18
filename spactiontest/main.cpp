@@ -18,11 +18,8 @@
 #include <iostream>
 #include <string>
 
-#include "cltl.h"
-#include "atomic.h"
-#include "constant.h"
-#include "binop.h"
-#include "unop.h"
+#include "CltlFormula.h"
+#include "CltlFormulaFactory.h"
 #include "spotcheck.h"
 
 #include "cra/CostRegisterAutomaton.h"
@@ -86,20 +83,19 @@ int main(int argc, char* argv[]) {
 
     // a test formula
     // \todo atoms are not properly deleted here
-    cltl_formula *f = cltl_factory::make_costuntil(cltl_factory::make_atomic("P_0.wait"),
-                                                   cltl_factory::make_atomic("P_0.CS"));
+    CltlFormulaFactory factory;
+    CltlFormulaPtr f = factory.make_costuntil(factory.make_atomic("P_0.wait"),
+                                              factory.make_atomic("P_0.CS"));
     // G(wait -> F CS)
 //    cltl_formula *f = cltl_factory::make_not(cltl_factory::make_globally(
 //                                                  cltl_factory::make_imply(cltl_factory::make_atomic("P_0.wait"),
 //                                                                           cltl_factory::make_finally(
 //                                                                                                      cltl_factory::make_atomic("P_0.CS")))));
 
-    std::cout << f->dump() << std::endl;
+    std::cout << f.get()->dump() << std::endl;
 
     int bound = find_bound_min(f, argv[1]);
-    std::cout << "the bound for " << f->dump() << " is " << bound << std::endl;
-
-    f->destroy();
+    std::cout << "the bound for " << f.get()->dump() << " is " << bound << std::endl;
 
     return 0;
 }

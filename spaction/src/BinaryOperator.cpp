@@ -21,8 +21,8 @@
 namespace spaction {
     
 BinaryOperator::BinaryOperator(BinaryOperatorType type, const CltlFormulaPtr &left,
-                               const CltlFormulaPtr &right) :
-    _type(type), _left(left), _right(right) {
+                               const CltlFormulaPtr &right, CltlFormulaFactory *creator) :
+    CltlFormula(creator), _type(type), _left(left), _right(right) {
 }
 
 bool BinaryOperator::operator==(const CltlFormula &rhs) const {

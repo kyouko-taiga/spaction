@@ -56,8 +56,8 @@ class BinaryOperator : public CltlFormula {
 
  protected:
     explicit BinaryOperator(BinaryOperatorType type, const CltlFormulaPtr &left,
-                            const CltlFormulaPtr &right);
-    ~BinaryOperator();
+                            const CltlFormulaPtr &right, CltlFormulaFactory *creator);
+    ~BinaryOperator() { }
 
  private:
     friend class CltlFormulaFactory;

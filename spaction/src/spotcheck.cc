@@ -27,8 +27,7 @@
 #include <tgbaalgos/emptiness.hh>
 #include <tgbaalgos/translate.hh>
 
-#include "unop.h"
-#include "visitor.h"
+#include "CltlFormulaVisitor.h"
 
 // #define trace std::cerr
 #define trace while (0) std::cerr
@@ -145,24 +144,23 @@ bool spot_check(const std::string &ltl_string, const std::string &modelfile) {
     return !result;
 }
 
-static bool spot_check_inf(const cltl_formula *formula, int n, const std::string &modelname) {
+static bool spot_check_inf(const CltlFormulaPtr &formula, int n, const std::string &modelname) {
     // instantiate the cost formula
     std::string ltl_string;
-    {
-        const cltl_formula *tmp = instantiate_inf(formula, n);
-        ltl_string = tmp->dump();
-        tmp->destroy();
-    }
+    InstantiateInf instanciator;
+
+    const CltlFormulaPtr &tmp = instanciator(formula, n);
+    ltl_string = tmp->dump();
     return spot_check(ltl_string, modelname);
 }
 
-unsigned int find_bound_min(const cltl_formula *f, const std::string &modelname) {
+unsigned int find_bound_min(const CltlFormulaPtr &formula, const std::string &modelname) {
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
     unsigned int max = 0;
     unsigned int min = 0;
 
-    if (!spot_check_inf(f, max, modelname))
+    if (!spot_check_inf(formula, max, modelname))
         return max;
 
     // increase
@@ -170,13 +168,13 @@ unsigned int find_bound_min(const cltl_formula *f, const std::string &modelname)
         // \todo safe checks to detect int overflow
         if (!max)   max = 1;
         else        max *= 2;
-    } while (spot_check_inf(f, max, modelname));
+    } while (spot_check_inf(formula, max, modelname));
 
     // decrease
     min = max / 2;
     while (min + 1 != max) {
         unsigned int tmp = (min + max) / 2;
-        if (spot_check_inf(f, tmp, modelname))
+        if (spot_check_inf(formula, tmp, modelname))
             min = tmp;
         else
             max = tmp;
@@ -184,25 +182,25 @@ unsigned int find_bound_min(const cltl_formula *f, const std::string &modelname)
     return min;
 }
 
-static bool spot_check_sup(const cltl_formula *formula, int n, const std::string &modelname) {
+static bool spot_check_sup(const CltlFormulaPtr &formula, int n, const std::string &modelname) {
     std::cerr << "checking " << n << std::endl;
+
     // instantiate the cost formula
     std::string ltl_string;
-    {
-        const cltl_formula *tmp = instantiate_sup(formula, n);
-        ltl_string = tmp->dump();
-        tmp->destroy();
-    }
+    InstantiateSup instanciator;
+
+    const CltlFormulaPtr &tmp = instanciator(formula, n);
+    ltl_string = tmp->dump();
     return spot_check(ltl_string, modelname);
 }
 
-unsigned int find_bound_max(const cltl_formula *f, const std::string &modelname) {
+unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname) {
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
     unsigned int max = 0;
     unsigned int min = 0;
 
-    if (spot_check_sup(f, max, modelname))
+    if (spot_check_sup(formula, max, modelname))
         return max;
 
     // increase
@@ -210,13 +208,13 @@ unsigned int find_bound_max(const cltl_formula *f, const std::string &modelname)
         // \todo safe checks to detect int overflow
         if (!max)   max = 1;
         else        max *= 2;
-    } while (!spot_check_sup(f, max, modelname));
+    } while (!spot_check_sup(formula, max, modelname));
 
     // decrease
     min = max / 2;
     while (min + 1 != max) {
         unsigned int tmp = (min + max) / 2;
-        if (!spot_check_sup(f, tmp, modelname))
+        if (!spot_check_sup(formula, tmp, modelname))
             min = tmp;
         else
             max = tmp;

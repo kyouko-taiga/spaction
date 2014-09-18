@@ -20,8 +20,9 @@
 
 namespace spaction {
 
-UnaryOperator::UnaryOperator(UnaryOperatorType type, const CltlFormulaPtr &operand) :
-    _type(type), _operand(operand) {
+UnaryOperator::UnaryOperator(UnaryOperatorType type, const CltlFormulaPtr &operand,
+                             CltlFormulaFactory *creator) :
+    CltlFormula(creator), _type(type), _operand(operand) {
 }
 
 bool UnaryOperator::operator==(const CltlFormula &rhs) const {

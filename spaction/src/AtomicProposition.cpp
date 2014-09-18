@@ -20,7 +20,9 @@
 
 namespace spaction {
 
-AtomicProposition::AtomicProposition(const std::string &value) : _value(value) { }
+AtomicProposition::AtomicProposition(const std::string &value, CltlFormulaFactory *creator) :
+    CltlFormula(creator), _value(value) {
+}
 
 bool AtomicProposition::operator==(const CltlFormula &rhs) const {
     if(rhs.formula_type() != CltlFormula::kAtomicProposition)

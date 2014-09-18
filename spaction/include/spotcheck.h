@@ -19,17 +19,16 @@
 #define SPACTION_INCLUDE_SPOTCHECK_H_
 
 #include <string>
+#include "CltlFormula.h"
 
 namespace spaction {
-
-class cltl_formula;
 
 // \todo expose this?
 // the first argument should be a pure LTL formula, and will be checked with spot
 bool spot_check(const std::string &formula, const std::string &modelname);
 
-unsigned int find_bound_min(const cltl_formula *formula, const std::string &modelname);
-unsigned int find_bound_max(const cltl_formula *formula, const std::string &modelname);
+unsigned int find_bound_min(const CltlFormulaPtr &formula, const std::string &modelname);
+unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname);
 
 }  // namespace spaction
 

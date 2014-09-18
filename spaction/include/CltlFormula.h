@@ -44,6 +44,9 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
         kBinaryOperator
     };
 
+    /// Returns a pointer to the factory that created this formula.
+    virtual inline CltlFormulaFactory *creator() const { return _creator; }
+
     /// Returns the type of the formula so it can be casted to the correct subclass.
     virtual const FormulaType formula_type() const = 0;
 
@@ -70,12 +73,17 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     virtual std::string dump() const = 0;
 
  protected:
+    CltlFormulaFactory *_creator;
+
+    /// Class constructor.
+    explicit CltlFormula(CltlFormulaFactory *creator) : _creator(creator) { }
+
     /// Virtual destructor.
     /// @remarks
     ///     This destructor will be called by the creator of the object, once it is no more
     ///     referenced by anyone. Subclasses should implement the specific behaviour related to
     ///     their own deallocation within this destructor.
-    virtual ~CltlFormula() = 0;
+    virtual ~CltlFormula() { }
 
  private:
     friend class CltlFormulaFactory;

@@ -20,7 +20,9 @@
 
 namespace spaction {
 
-ConstantExpression::ConstantExpression(bool value) : _value(value) { }
+ConstantExpression::ConstantExpression(bool value, CltlFormulaFactory *creator) :
+    CltlFormula(creator), _value(value) {
+}
 
 bool ConstantExpression::operator==(const CltlFormula &rhs) const {
     if(rhs.formula_type() != CltlFormula::kConstantExpression)

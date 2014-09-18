@@ -45,8 +45,8 @@ class ConstantExpression : public CltlFormula {
     std::string dump() const override;
 
  protected:
-    explicit ConstantExpression(bool value);
-    ~ConstantExpression() {}
+    explicit ConstantExpression(bool value, CltlFormulaFactory *creator);
+    ~ConstantExpression() { }
 
  private:
     friend class CltlFormulaFactory;

@@ -33,7 +33,7 @@ class BinaryOperator;
 
 class CltlFormulaVisitor {
  public:
-    virtual ~CltlFormulaVisitor() = 0;
+    virtual ~CltlFormulaVisitor() { }
 
     virtual void visit(const std::shared_ptr<AtomicProposition> &formula) = 0;
     virtual void visit(const std::shared_ptr<ConstantExpression> &formula) = 0;
@@ -43,7 +43,7 @@ class CltlFormulaVisitor {
 
 class Instantiator : public CltlFormulaVisitor {
  public:
-    explicit Instantiator(CltlFormulaFactory *factory) : _factory(factory), _n(0), _result(0) { }
+    explicit Instantiator() : _n(0), _result(0) { }
 
     // corresponds to the function named instantiate_inf in visitor.h
     CltlFormulaPtr operator()(const CltlFormulaPtr &formula, unsigned int n);
@@ -56,7 +56,6 @@ class Instantiator : public CltlFormulaVisitor {
     virtual void visit(const std::shared_ptr<BinaryOperator> &formula) final;
 
  protected:
-    CltlFormulaFactory *_factory;
     unsigned int _n;
     CltlFormulaPtr _result;
 
@@ -73,9 +72,7 @@ class Instantiator : public CltlFormulaVisitor {
 // corresponds to the class named instant_inf in printer.cc
 class InstantiateInf : public Instantiator {
  public:
-    explicit InstantiateInf(CltlFormulaFactory *factory) : Instantiator(factory) { }
-
-    virtual inline Instantiator *copy() const { return new InstantiateInf(_factory); }
+    virtual inline Instantiator *copy() const { return new InstantiateInf(); }
 
  protected:
     virtual CltlFormulaPtr _rewrite_cost_until(const CltlFormulaPtr &formula,
@@ -87,9 +84,7 @@ class InstantiateInf : public Instantiator {
 // corresponds to the class named instant_sup in printer.cc
 class InstantiateSup : public Instantiator {
  public:
-    explicit InstantiateSup(CltlFormulaFactory *factory) : Instantiator(factory) { }
-
-    virtual inline Instantiator *copy() const { return new InstantiateSup(_factory); }
+    virtual inline Instantiator *copy() const { return new InstantiateSup(); }
 
  protected:
     virtual CltlFormulaPtr _rewrite_cost_until(const CltlFormulaPtr &formula,
