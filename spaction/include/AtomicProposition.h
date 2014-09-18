@@ -40,10 +40,7 @@ class AtomicProposition : public CltlFormula {
     /// Returns the string identifying this atomic proposition.
     inline const std::string &value() const { return _value; }
 
-    inline void accept(CltlFormulaVisitor &visitor) override {
-        // explicitly cast shared_from_this to the a derived class shared_ptr
-        visitor.visit(std::dynamic_pointer_cast<AtomicProposition>(shared_from_this()));
-    }
+    void accept(CltlFormulaVisitor &visitor) override;
 
     std::string dump() const override;
 

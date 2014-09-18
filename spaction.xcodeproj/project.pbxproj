@@ -11,13 +11,7 @@
 		755CEA39196EB78C00DD3677 /* libspotdve2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755CEA35196EB78C00DD3677 /* libspotdve2.dylib */; };
 		755CEA42196EBA8C00DD3677 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA41196EBA8C00DD3677 /* main.cpp */; };
 		755CEA44196EBA8C00DD3677 /* spactiontest.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 755CEA43196EBA8C00DD3677 /* spactiontest.1 */; };
-		755CEA58196EBB6C00DD3677 /* atomic.cc in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA51196EBB6C00DD3677 /* atomic.cc */; };
-		755CEA59196EBB6C00DD3677 /* binop.cc in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA52196EBB6C00DD3677 /* binop.cc */; };
-		755CEA5A196EBB6C00DD3677 /* cltl.cc in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA53196EBB6C00DD3677 /* cltl.cc */; };
-		755CEA5B196EBB6C00DD3677 /* constant.cc in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA54196EBB6C00DD3677 /* constant.cc */; };
-		755CEA5C196EBB6C00DD3677 /* printer.cc in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA55196EBB6C00DD3677 /* printer.cc */; };
 		755CEA5D196EBB6C00DD3677 /* spotcheck.cc in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA56196EBB6C00DD3677 /* spotcheck.cc */; };
-		755CEA5E196EBB6C00DD3677 /* unop.cc in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA57196EBB6C00DD3677 /* unop.cc */; };
 		755ED7BC196EC0BF003DFDBC /* libbdd.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755CEA32196EB78C00DD3677 /* libbdd.dylib */; };
 		755ED7BD196EC0BF003DFDBC /* libspotdve2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755CEA35196EB78C00DD3677 /* libspotdve2.dylib */; };
 		755ED7BF196EC0BF003DFDBC /* libspot.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755ED7BE196EC0BF003DFDBC /* libspot.dylib */; };
@@ -25,6 +19,10 @@
 		755ED7C2196EC4C7003DFDBC /* spaction.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 75AFC89A196EAE3D00BAE38C /* spaction.dylib */; };
 		756EE60619C9BDA5002261FF /* CltlFormulaFactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756EE60419C9BDA5002261FF /* CltlFormulaFactory.cpp */; };
 		756EE60919C9C6D0002261FF /* CltlFormulaVisitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756EE60719C9C6D0002261FF /* CltlFormulaVisitor.cpp */; };
+		756EE60C19CAD5C2002261FF /* AtomicProposition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756EE60A19CAD5C2002261FF /* AtomicProposition.cpp */; };
+		756EE60F19CAD6E8002261FF /* ConstantExpression.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756EE60D19CAD6E8002261FF /* ConstantExpression.cpp */; };
+		756EE61219CAD793002261FF /* UnaryOperator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756EE61019CAD793002261FF /* UnaryOperator.cpp */; };
+		756EE61519CAD902002261FF /* BinaryOperator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756EE61319CAD902002261FF /* BinaryOperator.cpp */; };
 		75AFC8A0196EAE3D00BAE38C /* spaction.1 in Copy Files */ = {isa = PBXBuildFile; fileRef = 75AFC89F196EAE3D00BAE38C /* spaction.1 */; };
 /* End PBXBuildFile section */
 
@@ -59,20 +57,8 @@
 		755CEA3F196EBA8C00DD3677 /* spactiontest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = spactiontest; sourceTree = BUILT_PRODUCTS_DIR; };
 		755CEA41196EBA8C00DD3677 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		755CEA43196EBA8C00DD3677 /* spactiontest.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = spactiontest.1; sourceTree = "<group>"; };
-		755CEA49196EBB6C00DD3677 /* atomic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = atomic.h; sourceTree = "<group>"; };
-		755CEA4A196EBB6C00DD3677 /* binop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = binop.h; sourceTree = "<group>"; };
-		755CEA4B196EBB6C00DD3677 /* cltl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cltl.h; sourceTree = "<group>"; };
-		755CEA4C196EBB6C00DD3677 /* constant.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = constant.h; sourceTree = "<group>"; };
 		755CEA4D196EBB6C00DD3677 /* spotcheck.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spotcheck.h; sourceTree = "<group>"; };
-		755CEA4E196EBB6C00DD3677 /* unop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unop.h; sourceTree = "<group>"; };
-		755CEA4F196EBB6C00DD3677 /* visitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = visitor.h; sourceTree = "<group>"; };
-		755CEA51196EBB6C00DD3677 /* atomic.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = atomic.cc; sourceTree = "<group>"; };
-		755CEA52196EBB6C00DD3677 /* binop.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = binop.cc; sourceTree = "<group>"; };
-		755CEA53196EBB6C00DD3677 /* cltl.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cltl.cc; sourceTree = "<group>"; };
-		755CEA54196EBB6C00DD3677 /* constant.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = constant.cc; sourceTree = "<group>"; };
-		755CEA55196EBB6C00DD3677 /* printer.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = printer.cc; sourceTree = "<group>"; };
 		755CEA56196EBB6C00DD3677 /* spotcheck.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = spotcheck.cc; sourceTree = "<group>"; };
-		755CEA57196EBB6C00DD3677 /* unop.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = unop.cc; sourceTree = "<group>"; };
 		755ED7BE196EC0BF003DFDBC /* libspot.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspot.dylib; path = "$(PROJECT_DIR)/dependencies/spot/lib/libspot.dylib"; sourceTree = "<group>"; };
 		756EE5FC19C9A9EF002261FF /* CltlFormulaFactory.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CltlFormulaFactory.h; sourceTree = "<group>"; };
 		756EE5FD19C9AD1F002261FF /* CltlFormulaVisitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CltlFormulaVisitor.h; sourceTree = "<group>"; };
@@ -82,6 +68,10 @@
 		756EE60319C9B675002261FF /* BinaryOperator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = BinaryOperator.h; sourceTree = "<group>"; };
 		756EE60419C9BDA5002261FF /* CltlFormulaFactory.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CltlFormulaFactory.cpp; sourceTree = "<group>"; };
 		756EE60719C9C6D0002261FF /* CltlFormulaVisitor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CltlFormulaVisitor.cpp; sourceTree = "<group>"; };
+		756EE60A19CAD5C2002261FF /* AtomicProposition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = AtomicProposition.cpp; sourceTree = "<group>"; };
+		756EE60D19CAD6E8002261FF /* ConstantExpression.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ConstantExpression.cpp; sourceTree = "<group>"; };
+		756EE61019CAD793002261FF /* UnaryOperator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UnaryOperator.cpp; sourceTree = "<group>"; };
+		756EE61319CAD902002261FF /* BinaryOperator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BinaryOperator.cpp; sourceTree = "<group>"; };
 		759343D31970051200DD5475 /* CostRegisterAutomaton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CostRegisterAutomaton.h; sourceTree = "<group>"; };
 		75AFC89A196EAE3D00BAE38C /* spaction.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = spaction.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		75AFC89F196EAE3D00BAE38C /* spaction.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = spaction.1; sourceTree = "<group>"; };
@@ -137,13 +127,7 @@
 			isa = PBXGroup;
 			children = (
 				759343D21970051200DD5475 /* cra */,
-				755CEA49196EBB6C00DD3677 /* atomic.h */,
-				755CEA4A196EBB6C00DD3677 /* binop.h */,
-				755CEA4B196EBB6C00DD3677 /* cltl.h */,
-				755CEA4C196EBB6C00DD3677 /* constant.h */,
 				755CEA4D196EBB6C00DD3677 /* spotcheck.h */,
-				755CEA4E196EBB6C00DD3677 /* unop.h */,
-				755CEA4F196EBB6C00DD3677 /* visitor.h */,
 				75B92AF019C98888002F4972 /* CltlFormula.h */,
 				756EE5FC19C9A9EF002261FF /* CltlFormulaFactory.h */,
 				756EE5FD19C9AD1F002261FF /* CltlFormulaVisitor.h */,
@@ -158,15 +142,13 @@
 		755CEA50196EBB6C00DD3677 /* src */ = {
 			isa = PBXGroup;
 			children = (
-				755CEA51196EBB6C00DD3677 /* atomic.cc */,
-				755CEA52196EBB6C00DD3677 /* binop.cc */,
-				755CEA53196EBB6C00DD3677 /* cltl.cc */,
-				755CEA54196EBB6C00DD3677 /* constant.cc */,
-				755CEA55196EBB6C00DD3677 /* printer.cc */,
 				755CEA56196EBB6C00DD3677 /* spotcheck.cc */,
-				755CEA57196EBB6C00DD3677 /* unop.cc */,
 				756EE60419C9BDA5002261FF /* CltlFormulaFactory.cpp */,
 				756EE60719C9C6D0002261FF /* CltlFormulaVisitor.cpp */,
+				756EE60A19CAD5C2002261FF /* AtomicProposition.cpp */,
+				756EE60D19CAD6E8002261FF /* ConstantExpression.cpp */,
+				756EE61019CAD793002261FF /* UnaryOperator.cpp */,
+				756EE61319CAD902002261FF /* BinaryOperator.cpp */,
 			);
 			path = src;
 			sourceTree = "<group>";
@@ -336,15 +318,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				755CEA5A196EBB6C00DD3677 /* cltl.cc in Sources */,
-				755CEA5E196EBB6C00DD3677 /* unop.cc in Sources */,
-				755CEA5B196EBB6C00DD3677 /* constant.cc in Sources */,
+				756EE61219CAD793002261FF /* UnaryOperator.cpp in Sources */,
 				755CEA5D196EBB6C00DD3677 /* spotcheck.cc in Sources */,
 				756EE60919C9C6D0002261FF /* CltlFormulaVisitor.cpp in Sources */,
-				755CEA5C196EBB6C00DD3677 /* printer.cc in Sources */,
+				756EE61519CAD902002261FF /* BinaryOperator.cpp in Sources */,
 				756EE60619C9BDA5002261FF /* CltlFormulaFactory.cpp in Sources */,
-				755CEA59196EBB6C00DD3677 /* binop.cc in Sources */,
-				755CEA58196EBB6C00DD3677 /* atomic.cc in Sources */,
+				756EE60C19CAD5C2002261FF /* AtomicProposition.cpp in Sources */,
+				756EE60F19CAD6E8002261FF /* ConstantExpression.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

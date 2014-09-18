@@ -40,9 +40,7 @@ class ConstantExpression : public CltlFormula {
     /// Returns the boolean value of this constant expression.
     inline bool value() const { return _value; }
 
-    inline void accept(CltlFormulaVisitor &visitor) override {
-        visitor.visit(std::dynamic_pointer_cast<ConstantExpression>(shared_from_this()));
-    }
+    void accept(CltlFormulaVisitor &visitor) override;
 
     std::string dump() const override;
 

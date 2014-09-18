@@ -22,9 +22,12 @@
 
 namespace spaction {
 
+class CltlFormulaFactory;
+class CltlFormulaVisitor;
+
 class BinaryOperator : public CltlFormula {
  public:
-    enum BinaryOperatorType : short {
+    enum BinaryOperatorType : char {
         kOr,
         kAnd,
         kUntil,
@@ -47,9 +50,7 @@ class BinaryOperator : public CltlFormula {
     inline const CltlFormulaPtr &left() const { return _left; }
     inline const CltlFormulaPtr &right() const { return _right; }
 
-    inline void accept(CltlFormulaVisitor &visitor) override {
-        visitor.visit(std::dynamic_pointer_cast<BinaryOperator>(shared_from_this()));
-    }
+    void accept(CltlFormulaVisitor &visitor) override;
 
     std::string dump() const override;
 

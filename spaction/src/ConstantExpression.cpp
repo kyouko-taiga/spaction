@@ -13,19 +13,30 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
-// limitations under the License.language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_VISITOR_H_
-#define SPACTION_INCLUDE_VISITOR_H_
-
-#include "cltl.h"
+#include "ConstantExpression.h"
+#include "CltlFormulaVisitor.h"
 
 namespace spaction {
 
-const cltl_formula *instantiate_inf(const cltl_formula *formula, int n);
-const cltl_formula *instantiate_sup(const cltl_formula *formula, int n);
+ConstantExpression::ConstantExpression(bool value) : _value(value) { }
 
+bool ConstantExpression::operator==(const CltlFormula &rhs) const {
+    if(rhs.formula_type() != CltlFormula::kConstantExpression)
+        return false;
+    
+    const ConstantExpression &ce = static_cast<const ConstantExpression &>(rhs);
+    return ce._value == _value;
+}
+
+void ConstantExpression::accept(CltlFormulaVisitor &visitor) {
+    // explicitly cast shared_from_this to the a derived class shared_ptr
+    visitor.visit(std::dynamic_pointer_cast<ConstantExpression>(shared_from_this()));
+}
+
+std::string ConstantExpression::dump() const {
+    return _value ? "true" : "false";
+}
+    
 }  // namespace spaction
-
-#endif  // SPACTION_INCLUDE_VISITOR_H_

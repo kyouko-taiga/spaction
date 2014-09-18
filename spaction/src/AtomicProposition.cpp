@@ -15,12 +15,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "atomic.h"
+#include "AtomicProposition.h"
+#include "CltlFormulaVisitor.h"
 
 namespace spaction {
 
-std::string atomic::dump() const {
-  return "\"" + _data + "\"";
+AtomicProposition::AtomicProposition(const std::string &value) : _value(value) { }
+
+bool AtomicProposition::operator==(const CltlFormula &rhs) const {
+    if(rhs.formula_type() != CltlFormula::kAtomicProposition)
+        return false;
+
+    const AtomicProposition &ap = static_cast<const AtomicProposition &>(rhs);
+    return ap._value == _value;
 }
 
+void AtomicProposition::accept(CltlFormulaVisitor &visitor) {
+    // explicitly cast shared_from_this to the a derived class shared_ptr
+    visitor.visit(std::dynamic_pointer_cast<AtomicProposition>(shared_from_this()));
+}
+
+std::string AtomicProposition::dump() const {
+    return "\"" + _value + "\"";
+}
+    
 }  // namespace spaction

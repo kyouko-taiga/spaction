@@ -37,7 +37,7 @@ typedef std::shared_ptr<CltlFormula> CltlFormulaPtr;
 /// A class that represents a Cost LTL formula.
 class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
  public:
-    enum FormulaType : short {
+    enum FormulaType : char {
         kAtomicProposition,
         kConstantExpression,
         kUnaryOperator,

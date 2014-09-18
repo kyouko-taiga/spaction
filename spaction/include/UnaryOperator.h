@@ -27,7 +27,7 @@ class CltlFormulaVisitor;
 
 class UnaryOperator : public CltlFormula {
  public:
-    enum UnaryOperatorType : short {
+    enum UnaryOperatorType : char {
         kNot,
         kNext
     };
@@ -45,9 +45,7 @@ class UnaryOperator : public CltlFormula {
 
     inline const CltlFormulaPtr &operand() const { return _operand; }
 
-    inline void accept(CltlFormulaVisitor &visitor) override {
-        visitor.visit(std::dynamic_pointer_cast<UnaryOperator>(shared_from_this()));
-    }
+    void accept(CltlFormulaVisitor &visitor) override;
 
     std::string dump() const override;
 
