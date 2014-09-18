@@ -71,8 +71,6 @@ void test_cost_register_automata(const std::string &str = "aabaaacba") {
 }
 
 int main(int argc, char* argv[]) {
-    using namespace spaction;
-
     test_cost_register_automata();
 
     if (argc != 2) {
@@ -83,18 +81,18 @@ int main(int argc, char* argv[]) {
 
     // a test formula
     // \todo atoms are not properly deleted here
-    CltlFormulaFactory factory;
-    CltlFormulaPtr f = factory.make_costuntil(factory.make_atomic("P_0.wait"),
-                                              factory.make_atomic("P_0.CS"));
+    spaction::CltlFormulaFactory factory;
+    spaction::CltlFormulaPtr f = factory.make_costuntil(factory.make_atomic("P_0.wait"),
+                                                        factory.make_atomic("P_0.CS"));
     // G(wait -> F CS)
-//    cltl_formula *f = cltl_factory::make_not(cltl_factory::make_globally(
-//                                                  cltl_factory::make_imply(cltl_factory::make_atomic("P_0.wait"),
-//                                                                           cltl_factory::make_finally(
-//                                                                                                      cltl_factory::make_atomic("P_0.CS")))));
+    /* cltl_formula *f = cltl_factory::make_not(cltl_factory::make_globally(
+     * cltl_factory::make_imply(cltl_factory::make_atomic("P_0.wait"),
+     *  cltl_factory::make_finally(
+     *  cltl_factory::make_atomic("P_0.CS"))))); */
 
     std::cout << f.get()->dump() << std::endl;
 
-    int bound = find_bound_min(f, argv[1]);
+    int bound = spaction::find_bound_min(f, argv[1]);
     std::cout << "the bound for " << f.get()->dump() << " is " << bound << std::endl;
 
     return 0;

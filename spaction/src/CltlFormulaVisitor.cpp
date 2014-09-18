@@ -46,26 +46,26 @@ void Instantiator::visit(const std::shared_ptr<ConstantExpression> &formula) {
 void Instantiator::visit(const std::shared_ptr<UnaryOperator> &formula) {
     // use a copy of the current instantiator to instantiate operand
     Instantiator *instantiator = this->copy();
-    const CltlFormulaPtr &operand = (*instantiator)(formula.get()->operand(), _n);
+    const CltlFormulaPtr &operand = (*instantiator)(formula->operand(), _n);
     delete instantiator;
 
-    CltlFormulaFactory *factory = formula.get()->creator();
-    _result = factory->make_unary(formula.get()->operator_type(), operand);
+    CltlFormulaFactory *factory = formula->creator();
+    _result = factory->make_unary(formula->operator_type(), operand);
 }
 
 void Instantiator::visit(const std::shared_ptr<BinaryOperator> &formula) {
     // use a copy of the current instantiator to instantiate operands
     Instantiator *instantiator = this->copy();
-    const CltlFormulaPtr &left = (*instantiator)(formula.get()->left(), _n);
-    const CltlFormulaPtr &right = (*instantiator)(formula.get()->right(), _n);
-    CltlFormulaFactory *factory = formula.get()->creator();
+    const CltlFormulaPtr &left = (*instantiator)(formula->left(), _n);
+    const CltlFormulaPtr &right = (*instantiator)(formula->right(), _n);
+    CltlFormulaFactory *factory = formula->creator();
 
     switch (formula->operator_type()) {
         case BinaryOperator::kOr:
         case BinaryOperator::kAnd:
         case BinaryOperator::kUntil:
         case BinaryOperator::kRelease:
-            _result = factory->make_binary(formula.get()->operator_type(), left, right);
+            _result = factory->make_binary(formula->operator_type(), left, right);
             break;
         case BinaryOperator::kCostUntil:
             _result = _rewrite_cost_until(formula, left, right, instantiator);
@@ -83,7 +83,7 @@ CltlFormulaPtr InstantiateInf::_rewrite_cost_until(const CltlFormulaPtr &formula
                                                    const CltlFormulaPtr &left,
                                                    const CltlFormulaPtr &right,
                                                    Instantiator *instantiator) const {
-    CltlFormulaFactory *factory = formula.get()->creator();
+    CltlFormulaFactory *factory = formula->creator();
     if (_n == 0) {
         return factory->make_until(left, right);
     }
@@ -104,7 +104,7 @@ CltlFormulaPtr InstantiateSup::_rewrite_cost_until(const CltlFormulaPtr &formula
     // a U{n=0} b -> true U b
     // doubtful: a U{n}   b -> a U (!a && X (a U{n-1} b))
     // a U{n}   b -> (a && !b) U (!a && !b && X (a U{n-1} b))
-    CltlFormulaFactory *factory = formula.get()->creator();
+    CltlFormulaFactory *factory = formula->creator();
     if (_n == 0) {
         CltlFormulaPtr &&ftrue = factory->make_constant(true);
         return factory->make_until(ftrue, right);
