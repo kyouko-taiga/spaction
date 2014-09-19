@@ -15,7 +15,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "CltlInstantiator.h"
+#include "Instantiator.h"
 
 #include <stdexcept>
 
@@ -77,6 +77,7 @@ void Instantiator::visit(const std::shared_ptr<BinaryOperator> &formula) {
     }
 
     delete instantiator;
+    
 }
 
 CltlFormulaPtr InstantiateInf::_rewrite_cost_until(const CltlFormulaPtr &formula,

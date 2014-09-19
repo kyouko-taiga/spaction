@@ -27,7 +27,7 @@
 #include <tgbaalgos/emptiness.hh>
 #include <tgbaalgos/translate.hh>
 
-#include "CltlInstantiator.h"
+#include "Instantiator.h"
 
 // #define trace std::cerr
 #define trace while (0) std::cerr

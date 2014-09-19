@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_CLTLINSTANTIATOR_H_
-#define SPACTION_INCLUDE_CLTLINSTANTIATOR_H_
+#ifndef SPACTION_INCLUDE_INSTANTIATOR_H_
+#define SPACTION_INCLUDE_INSTANTIATOR_H_
 
 #include "CltlFormulaVisitor.h"
 
@@ -76,4 +76,4 @@ class InstantiateSup : public Instantiator {
 
 }  // namespace spaction
 
-#endif  // SPACTION_INCLUDE_CLTLINSTANTIATOR_H_
+#endif  // SPACTION_INCLUDE_INSTANTIATOR_H_
