@@ -18,13 +18,9 @@
 #ifndef SPACTION_INCLUDE_CLTLFORMULAVISITOR_H_
 #define SPACTION_INCLUDE_CLTLFORMULAVISITOR_H_
 
-#include <memory>
 #include "CltlFormula.h"
 
 namespace spaction {
-
-class CltlFormula;
-class CltlFormulaFactory;
 
 class AtomicProposition;
 class ConstantExpression;
@@ -39,58 +35,6 @@ class CltlFormulaVisitor {
     virtual void visit(const std::shared_ptr<ConstantExpression> &formula) = 0;
     virtual void visit(const std::shared_ptr<UnaryOperator> &formula) = 0;
     virtual void visit(const std::shared_ptr<BinaryOperator> &formula) = 0;
-};
-
-class Instantiator : public CltlFormulaVisitor {
- public:
-    explicit Instantiator() : _n(0), _result(0) { }
-
-    // corresponds to the function named instantiate_inf in visitor.h
-    CltlFormulaPtr operator()(const CltlFormulaPtr &formula, unsigned int n);
-
-    virtual Instantiator *copy() const = 0;
-
-    virtual void visit(const std::shared_ptr<AtomicProposition> &formula) final;
-    virtual void visit(const std::shared_ptr<ConstantExpression> &formula) final;
-    virtual void visit(const std::shared_ptr<UnaryOperator> &formula) final;
-    virtual void visit(const std::shared_ptr<BinaryOperator> &formula) final;
-
- protected:
-    unsigned int _n;
-    CltlFormulaPtr _result;
-
-    /// Handles the rewriting of Cost Until formulae.
-    /// @remarks
-    ///     This class should be implemented to specify the behaviour of the Cost Until operator
-    ///     under whether inf or sup instantiation.
-    virtual CltlFormulaPtr _rewrite_cost_until(const CltlFormulaPtr &formula,
-                                               const CltlFormulaPtr &left,
-                                               const CltlFormulaPtr &right,
-                                               Instantiator *instantiator) const = 0;
-};
-
-// corresponds to the class named instant_inf in printer.cc
-class InstantiateInf : public Instantiator {
- public:
-    virtual inline Instantiator *copy() const { return new InstantiateInf(); }
-
- protected:
-    virtual CltlFormulaPtr _rewrite_cost_until(const CltlFormulaPtr &formula,
-                                               const CltlFormulaPtr &left,
-                                               const CltlFormulaPtr &right,
-                                               Instantiator *instantiator) const;
-};
-
-// corresponds to the class named instant_sup in printer.cc
-class InstantiateSup : public Instantiator {
- public:
-    virtual inline Instantiator *copy() const { return new InstantiateSup(); }
-
- protected:
-    virtual CltlFormulaPtr _rewrite_cost_until(const CltlFormulaPtr &formula,
-                                               const CltlFormulaPtr &left,
-                                               const CltlFormulaPtr &right,
-                                               Instantiator *instantiator) const;
 };
 
 }  // namespace spaction
