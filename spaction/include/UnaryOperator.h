@@ -43,6 +43,9 @@ class UnaryOperator : public CltlFormula {
     /// Returns true if `rhs` is an UnaryOperator whose operator and operand are equal to ours.
     virtual bool operator==(const CltlFormula &rhs) const;
 
+    /// Returns a equivalent formula in negation normal form.
+    virtual CltlFormulaPtr to_nnf();
+
     inline const CltlFormulaPtr &operand() const { return _operand; }
 
     void accept(CltlFormulaVisitor &visitor) override;
@@ -53,6 +56,13 @@ class UnaryOperator : public CltlFormula {
     explicit UnaryOperator(UnaryOperatorType type, const CltlFormulaPtr &operand,
                            CltlFormulaFactory *creator);
     ~UnaryOperator() { }
+
+    /// Comparison operator used internally to build normal forms.
+    ///
+    /// Formulae ordering is first based on formula type (@see CltlFormula::FormulaType). Then, the
+    /// ordering of Unary operator is based on operator type (@see UnaryOperatorType) and finally on
+    /// the relation of operands.
+    virtual bool operator<(const CltlFormula &rhs) const;
 
  private:
     friend class CltlFormulaFactory;

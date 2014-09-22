@@ -48,6 +48,16 @@ class AtomicProposition : public CltlFormula {
     explicit AtomicProposition(const std::string &value, CltlFormulaFactory *creator);
     ~AtomicProposition() { }
 
+    /// Comparison operator used internally to build normal forms.
+    ///
+    /// Formulae ordering is first based on formula type (@see CltlFormula::FormulaType). Then, an
+    /// AtomicExpression is lesser than another if the hash its `_value` is lesser than the latter
+    /// (@see _hash()).
+    virtual bool operator<(const CltlFormula &rhs) const;
+
+    /// Hash function used internally for AtomicProposition ordering.
+    unsigned int _hash() const;
+
  private:
     friend class CltlFormulaFactory;
     std::string _value;

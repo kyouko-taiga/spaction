@@ -25,11 +25,24 @@ AtomicProposition::AtomicProposition(const std::string &value, CltlFormulaFactor
 }
 
 bool AtomicProposition::operator==(const CltlFormula &rhs) const {
-    if(rhs.formula_type() != CltlFormula::kAtomicProposition)
+    if (rhs.formula_type() != CltlFormula::kAtomicProposition)
         return false;
 
     const AtomicProposition &ap = static_cast<const AtomicProposition &>(rhs);
     return ap._value == _value;
+}
+
+bool AtomicProposition::operator<(const CltlFormula &rhs) const {
+    switch (rhs.formula_type()) {
+        case CltlFormula::kConstantExpression:
+            return false;
+        case CltlFormula::kAtomicProposition: {
+            const AtomicProposition &ap = static_cast<const AtomicProposition &>(rhs);
+            return _hash() < ap._hash();
+        }
+        default:
+            return true;
+    }
 }
 
 void AtomicProposition::accept(CltlFormulaVisitor &visitor) {
@@ -40,5 +53,13 @@ void AtomicProposition::accept(CltlFormulaVisitor &visitor) {
 std::string AtomicProposition::dump() const {
     return "\"" + _value + "\"";
 }
-    
+
+unsigned int AtomicProposition::_hash() const {
+	unsigned int h = 0;
+	for (std::size_t i = 0; i < _value.length(); i++) {
+		h += _value[i] << (8 * i);
+	}
+	return h;
+}
+
 }  // namespace spaction

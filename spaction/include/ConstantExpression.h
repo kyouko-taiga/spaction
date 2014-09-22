@@ -48,6 +48,12 @@ class ConstantExpression : public CltlFormula {
     explicit ConstantExpression(bool value, CltlFormulaFactory *creator);
     ~ConstantExpression() { }
 
+    /// Comparison operator used internally to build normal forms.
+    ///
+    /// Formulae ordering is first based on formula type (@see CltlFormula::FormulaType). Then, the
+    /// ordering on ConstantExpression is given such that False < True.
+    virtual bool operator<(const CltlFormula &rhs) const;
+
  private:
     friend class CltlFormulaFactory;
     bool _value;

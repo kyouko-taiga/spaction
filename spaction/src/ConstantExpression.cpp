@@ -32,6 +32,17 @@ bool ConstantExpression::operator==(const CltlFormula &rhs) const {
     return ce._value == _value;
 }
 
+bool ConstantExpression::operator<(const CltlFormula &rhs) const {
+    switch (rhs.formula_type()) {
+        case CltlFormula::kConstantExpression: {
+            const ConstantExpression &ce = static_cast<const ConstantExpression &>(rhs);
+            return (!_value and ce._value);
+        }
+        default:
+            return true;
+    }
+}
+
 void ConstantExpression::accept(CltlFormulaVisitor &visitor) {
     // explicitly cast shared_from_this to the a derived class shared_ptr
     visitor.visit(std::dynamic_pointer_cast<ConstantExpression>(shared_from_this()));

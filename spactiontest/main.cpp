@@ -79,21 +79,30 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    // a test formula: (a + b) * c * (d + a) == acd + aac + bcd + abc
+    spaction::CltlFormulaFactory f;
+    spaction::CltlFormulaPtr k = f.make_and(f.make_and(f.make_or(f.make_atomic("a"),
+                                                                 f.make_atomic("b")),
+                                                       f.make_atomic("c")),
+                                            f.make_or(f.make_atomic("d"), f.make_atomic("a")));
+    std::cout << "input: " << k->dump() << std::endl;
+    std::cout << "nnf:   " << k->to_nnf()->dump() << std::endl;
+    std::cout << "dnf:   " << k->to_dnf()->dump() << std::endl;
+
     // a test formula
     // \todo atoms are not properly deleted here
-    spaction::CltlFormulaFactory factory;
-    spaction::CltlFormulaPtr f = factory.make_costuntil(factory.make_atomic("P_0.wait"),
-                                                        factory.make_atomic("P_0.CS"));
+    k = f.make_costuntil(f.make_atomic("P_0.wait"), f.make_atomic("P_0.CS"));
+
     // G(wait -> F CS)
     /* cltl_formula *f = cltl_factory::make_not(cltl_factory::make_globally(
      * cltl_factory::make_imply(cltl_factory::make_atomic("P_0.wait"),
      *  cltl_factory::make_finally(
      *  cltl_factory::make_atomic("P_0.CS"))))); */
 
-    std::cout << f.get()->dump() << std::endl;
+    std::cout << k->dump() << std::endl;
 
-    int bound = spaction::find_bound_min(f, argv[1]);
-    std::cout << "the bound for " << f.get()->dump() << " is " << bound << std::endl;
+    int bound = spaction::find_bound_min(k, argv[1]);
+    std::cout << "the bound for " << k->dump() << " is " << bound << std::endl;
 
     return 0;
 }

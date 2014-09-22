@@ -16,6 +16,8 @@
 // limitations under the License.
 
 #include "BinaryOperator.h"
+
+#include "CltlFormulaFactory.h"
 #include "CltlFormulaVisitor.h"
 
 namespace spaction {
@@ -48,6 +50,67 @@ bool BinaryOperator::operator==(const CltlFormula &rhs) const {
         case BinaryOperator::kCostRelease:
             return ((bo._left == _left) and (bo._right == _right));
     }
+}
+
+bool BinaryOperator::operator<(const CltlFormula &rhs) const {
+    switch (rhs.formula_type()) {
+        case CltlFormula::kConstantExpression:
+        case CltlFormula::kAtomicProposition:
+        case CltlFormula::kUnaryOperator:
+            return false;
+        case CltlFormula::kBinaryOperator: {
+            const BinaryOperator &bo = static_cast<const BinaryOperator &>(rhs);
+            if (_type != bo._type)
+                return _type < bo._type;
+            else if (_left != bo._left)
+                return _left < bo._left;
+            return _right < bo._right;
+        }
+    }
+}
+
+CltlFormulaPtr BinaryOperator::to_nnf() {
+    return _creator->make_binary(_type, _left->to_nnf(), _right->to_nnf());
+}
+
+CltlFormulaPtr BinaryOperator::to_dnf() {
+    // get the negative normal form of itself
+    CltlFormulaPtr &&nnf_self = this->to_nnf();
+
+    // check if `nnf_self` is a binary operator
+    if (nnf_self->formula_type() == CltlFormula::kBinaryOperator) {
+        // recursively transform operands
+        BinaryOperator *bo_self = static_cast<BinaryOperator*>(nnf_self.get());
+        const CltlFormulaPtr &left = bo_self->left()->to_dnf();
+        const CltlFormulaPtr &right = bo_self->right()->to_dnf();
+
+        // check if `nnf_self` is of the form (x && y)
+        if (bo_self->operator_type() == BinaryOperator::kAnd) {
+            if (right->formula_type() == CltlFormula::kBinaryOperator) {
+                BinaryOperator *bo_right = static_cast<BinaryOperator*>(right.get());
+                if (bo_right->operator_type() == BinaryOperator::kOr) {
+                    // distribute a * (b + c)
+                    const CltlFormulaPtr &a = _creator->make_and(left, bo_right->left());
+                    const CltlFormulaPtr &b = _creator->make_and(left, bo_right->right());
+                    return _creator->make_or(a, b)->to_dnf();
+                }
+            } else if (left->formula_type() == CltlFormula::kBinaryOperator) {
+                BinaryOperator *bo_left = static_cast<BinaryOperator*>(left.get());
+                if (bo_left->operator_type() == BinaryOperator::kOr) {
+                    // distribute (a + b) * c
+                    const CltlFormulaPtr &a = _creator->make_and(right, bo_left->left());
+                    const CltlFormulaPtr &b = _creator->make_and(right, bo_left->right());
+                    return _creator->make_or(a, b)->to_dnf();
+                }
+            }
+        } else {
+            // returns a binary operator with transformed operands
+            return _creator->make_binary(bo_self->operator_type(), left, right);
+        }
+    }
+
+    // no further transformation to be performed since `nnf_self` is not a binary operator
+    return nnf_self;
 }
 
 void BinaryOperator::accept(CltlFormulaVisitor &visitor) {

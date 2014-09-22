@@ -47,6 +47,12 @@ class BinaryOperator : public CltlFormula {
     /// Returns true if `rhs` is a BinaryOperator whose operator and operands are equal to ours.
     virtual bool operator==(const CltlFormula &rhs) const;
 
+    /// Returns a equivalent formula in negation normal form.
+    virtual CltlFormulaPtr to_nnf();
+
+    /// Returns a equivalent formula in disjunctive normal form.
+    virtual CltlFormulaPtr to_dnf();
+
     inline const CltlFormulaPtr &left() const { return _left; }
     inline const CltlFormulaPtr &right() const { return _right; }
 
@@ -58,6 +64,13 @@ class BinaryOperator : public CltlFormula {
     explicit BinaryOperator(BinaryOperatorType type, const CltlFormulaPtr &left,
                             const CltlFormulaPtr &right, CltlFormulaFactory *creator);
     ~BinaryOperator() { }
+
+    /// Comparison operator used internally to build normal forms.
+    ///
+    /// Formulae ordering is first based on formula type (@see CltlFormula::FormulaType). Then, the
+    /// ordering of Unary operator is based on operator type (@see BinaryOperatorType) and finally
+    /// on the relation of operands, with left operands being compared first.
+    virtual bool operator<(const CltlFormula &rhs) const;
 
  private:
     friend class CltlFormulaFactory;

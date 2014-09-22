@@ -53,6 +53,9 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     /// Returns whether or not `rhs` is equal to this formula.
     virtual bool operator==(const CltlFormula &rhs) const = 0;
 
+    /// Returns whether or not `rhs` is not equal to this formula.
+    virtual inline bool operator!=(const CltlFormula &rhs) const { return !(*this == rhs); }
+
     /// Returns whether or not `rhs` is syntactically equivalent to this formula.
     /// @remarks
     ///     Subclasses may override this method to implement the specific behaviour of their own
@@ -62,6 +65,9 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
 
     /// Returns a equivalent formula in negation normal form.
     virtual inline CltlFormulaPtr to_nnf() { return shared_from_this(); }
+
+    /// Returns a equivalent formula in disjunctive normal form.
+    virtual inline CltlFormulaPtr to_dnf() { return this->to_nnf(); }
 
     /// @remarks
     ///     We could make this method constant, but it would require to pass a
@@ -79,11 +85,22 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     explicit CltlFormula(CltlFormulaFactory *creator) : _creator(creator) { }
 
     /// Virtual destructor.
-    /// @remarks
-    ///     This destructor will be called by the creator of the object, once it is no more
-    ///     referenced by anyone. Subclasses should implement the specific behaviour related to
-    ///     their own deallocation within this destructor.
+    ///
+    /// This destructor will be called by the creator of the object, once it is no more referenced
+    /// by anyone. Subclasses should implement the specific behaviour related to their own
+    /// deallocation within this destructor.
     virtual ~CltlFormula() { }
+
+    /// Comparison operator used internally to build normal forms.
+    ///
+    /// Formulae ordering is first based on formula type (@see CltlFormula::FormulaType). Then,
+    /// subsequent orderings of formulae that share the same type is documented within subclasses.
+    virtual bool operator<(const CltlFormula &rhs) const = 0;
+
+    /// Comparison operator used internally to build normal forms.
+    virtual inline bool operator>(const CltlFormula &rhs) const {
+        return !((*this == rhs) || (*this < rhs));
+    }
 
  private:
     friend class CltlFormulaFactory;
