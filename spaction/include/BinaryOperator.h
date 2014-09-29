@@ -58,6 +58,8 @@ class BinaryOperator : public CltlFormula {
 
     void accept(CltlFormulaVisitor &visitor) override;
 
+    inline std::size_t height() const { return 1 + std::max(_left->height(), _right->height()); }
+
     std::string dump() const override;
 
  protected:

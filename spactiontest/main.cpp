@@ -89,6 +89,8 @@ int main(int argc, char* argv[]) {
     std::cout << "nnf:   " << k->to_nnf()->dump() << std::endl;
     std::cout << "dnf:   " << k->to_dnf()->dump() << std::endl;
 
+    std::cout << "\nheight of the formula: " << k->height() << std::endl;
+
     // a test formula
     // \todo atoms are not properly deleted here
     k = f.make_costuntil(f.make_atomic("P_0.wait"), f.make_atomic("P_0.CS"));

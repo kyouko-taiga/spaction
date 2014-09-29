@@ -69,11 +69,17 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     /// Returns a equivalent formula in disjunctive normal form.
     virtual inline CltlFormulaPtr to_dnf() { return this->to_nnf(); }
 
-    /// @remarks
+    /// @note
     ///     We could make this method constant, but it would require to pass a
     ///     std::shared_ptr<const CltlFormula> to the visitor and thus to every subsequent call
     ///     using our reference (eg. CltlFormulaFactory).
     virtual void accept(CltlFormulaVisitor &visitor) = 0;
+
+    /// Returns the height of the formula.
+    ///
+    /// Height of a formula is `1` for an atomic proposition, or the highest height within its
+    /// subformulae + `1`.
+    virtual std::size_t height() const = 0;
 
     /// Returns a string representation of the formula.
     virtual std::string dump() const = 0;

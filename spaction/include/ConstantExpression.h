@@ -42,6 +42,8 @@ class ConstantExpression : public CltlFormula {
 
     void accept(CltlFormulaVisitor &visitor) override;
 
+    inline std::size_t height() const { return 1; }
+
     std::string dump() const override;
 
  protected:

@@ -50,6 +50,8 @@ class UnaryOperator : public CltlFormula {
 
     void accept(CltlFormulaVisitor &visitor) override;
 
+    inline std::size_t height() const { return 1 + _operand->height(); }
+
     std::string dump() const override;
 
  protected:
