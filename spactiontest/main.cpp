@@ -79,7 +79,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // a test formula: (a + b) * c * (d + a) == acd + aac + bcd + abc
+    // a test formula: (a + b) * c * (d + a) == acd + ac + bcd + abc
     spaction::CltlFormulaFactory f;
     spaction::CltlFormulaPtr k = f.make_and(f.make_and(f.make_or(f.make_atomic("a"),
                                                                  f.make_atomic("b")),

@@ -34,8 +34,8 @@ class AtomicProposition : public CltlFormula {
 
     inline const FormulaType formula_type() const override { return kAtomicProposition; }
 
-    /// Returns true if `rhs` is an AtomicProposition and its value mathes ours.
-    virtual bool operator==(const CltlFormula &rhs) const;
+    /// Returns whether or not `rhs` is syntactically equivalent to this formula.
+    virtual bool syntactic_eq(const CltlFormula &rhs) const;
 
     /// Returns the string identifying this atomic proposition.
     inline const std::string &value() const { return _value; }
@@ -49,16 +49,6 @@ class AtomicProposition : public CltlFormula {
  protected:
     explicit AtomicProposition(const std::string &value, CltlFormulaFactory *creator);
     ~AtomicProposition() { }
-
-    /// Comparison operator used internally to build normal forms.
-    ///
-    /// Formulae ordering is first based on formula type (@see CltlFormula::FormulaType). Then, an
-    /// AtomicExpression is lesser than another if the hash its `_value` is lesser than the latter
-    /// (@see _hash()).
-    virtual bool operator<(const CltlFormula &rhs) const;
-
-    /// Hash function used internally for AtomicProposition ordering.
-    unsigned int _hash() const;
 
  private:
     friend class CltlFormulaFactory;

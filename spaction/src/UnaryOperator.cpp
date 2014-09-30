@@ -28,26 +28,12 @@ UnaryOperator::UnaryOperator(UnaryOperatorType type, const CltlFormulaPtr &opera
     CltlFormula(creator), _type(type), _operand(operand) {
 }
 
-bool UnaryOperator::operator==(const CltlFormula &rhs) const {
+bool UnaryOperator::syntactic_eq(const CltlFormula &rhs) const {
     if(rhs.formula_type() != CltlFormula::kUnaryOperator)
         return false;
 
     const UnaryOperator &uo = static_cast<const UnaryOperator &>(rhs);
     return (uo._type == _type) and (uo._operand == _operand);
-}
-
-bool UnaryOperator::operator<(const CltlFormula &rhs) const {
-    switch (rhs.formula_type()) {
-        case CltlFormula::kConstantExpression:
-        case CltlFormula::kAtomicProposition:
-            return false;
-        case CltlFormula::kUnaryOperator: {
-            const UnaryOperator &uo = static_cast<const UnaryOperator &>(rhs);
-            return (_type != uo._type) ? (_type < uo._type) : (_operand < uo._operand);
-        }
-        case CltlFormula::kBinaryOperator:
-            return true;
-    }
 }
 
 CltlFormulaPtr UnaryOperator::to_nnf() {

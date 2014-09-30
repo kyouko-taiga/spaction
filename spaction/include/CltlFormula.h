@@ -50,18 +50,13 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     /// Returns the type of the formula so it can be casted to the correct subclass.
     virtual const FormulaType formula_type() const = 0;
 
-    /// Returns whether or not `rhs` is equal to this formula.
-    virtual bool operator==(const CltlFormula &rhs) const = 0;
-
-    /// Returns whether or not `rhs` is not equal to this formula.
+    /// Returns whether or not `rhs` is the same formula.
+    virtual inline bool operator==(const CltlFormula &rhs) const { return this == &rhs; }
+    /// Returns whether or not `rhs` is not the same formula.
     virtual inline bool operator!=(const CltlFormula &rhs) const { return !(*this == rhs); }
 
     /// Returns whether or not `rhs` is syntactically equivalent to this formula.
-    /// @remarks
-    ///     Subclasses may override this method to implement the specific behaviour of their own
-    ///     syntactic equivalences. By the default, this method returns true if and only if `rhs`
-    ///     is equal to the formula, as defined by `==`.
-    virtual inline bool syntactic_eq(const CltlFormula &rhs) const { return (*this == rhs); }
+    virtual inline bool syntactic_eq(const CltlFormula &rhs) const = 0;
 
     /// Returns a equivalent formula in negation normal form.
     virtual inline CltlFormulaPtr to_nnf() { return shared_from_this(); }
@@ -97,16 +92,10 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     /// deallocation within this destructor.
     virtual ~CltlFormula() { }
 
-    /// Comparison operator used internally to build normal forms.
-    ///
-    /// Formulae ordering is first based on formula type (@see CltlFormula::FormulaType). Then,
-    /// subsequent orderings of formulae that share the same type is documented within subclasses.
-    virtual bool operator<(const CltlFormula &rhs) const = 0;
-
-    /// Comparison operator used internally to build normal forms.
-    virtual inline bool operator>(const CltlFormula &rhs) const {
-        return !((*this == rhs) || (*this < rhs));
-    }
+    /// Comparison operator used internally to build canonical forms.
+    virtual inline bool operator<(const CltlFormula &rhs) const { return this < &rhs; }
+    /// Comparison operator used internally to build canonical forms.
+    virtual inline bool operator>(const CltlFormula &rhs) const { return this > &rhs; }
 
  private:
     friend class CltlFormulaFactory;

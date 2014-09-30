@@ -34,8 +34,8 @@ class ConstantExpression : public CltlFormula {
 
     inline const FormulaType formula_type() const override { return kConstantExpression; };
 
-    /// Returns true if `rhs` is a ConstantExpression and its value mathes ours.
-    virtual bool operator==(const CltlFormula &rhs) const;
+    /// Returns whether or not `rhs` is syntactically equivalent to this formula.
+    virtual bool syntactic_eq(const CltlFormula &rhs) const;
 
     /// Returns the boolean value of this constant expression.
     inline bool value() const { return _value; }
@@ -49,12 +49,6 @@ class ConstantExpression : public CltlFormula {
  protected:
     explicit ConstantExpression(bool value, CltlFormulaFactory *creator);
     ~ConstantExpression() { }
-
-    /// Comparison operator used internally to build normal forms.
-    ///
-    /// Formulae ordering is first based on formula type (@see CltlFormula::FormulaType). Then, the
-    /// ordering on ConstantExpression is given such that False < True.
-    virtual bool operator<(const CltlFormula &rhs) const;
 
  private:
     friend class CltlFormulaFactory;

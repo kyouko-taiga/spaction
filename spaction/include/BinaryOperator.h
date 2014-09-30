@@ -45,8 +45,8 @@ class BinaryOperator : public CltlFormula {
     inline const FormulaType formula_type() const override { return kBinaryOperator; };
     BinaryOperatorType operator_type() const { return _type; }
 
-    /// Returns true if `rhs` is a BinaryOperator whose operator and operands are equal to ours.
-    virtual bool operator==(const CltlFormula &rhs) const;
+    /// Returns whether or not `rhs` is syntactically equivalent to this formula.
+    virtual bool syntactic_eq(const CltlFormula &rhs) const;
 
     /// Returns a equivalent formula in negation normal form.
     virtual CltlFormulaPtr to_nnf();

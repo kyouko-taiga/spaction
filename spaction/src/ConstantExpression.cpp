@@ -24,23 +24,12 @@ ConstantExpression::ConstantExpression(bool value, CltlFormulaFactory *creator) 
     CltlFormula(creator), _value(value) {
 }
 
-bool ConstantExpression::operator==(const CltlFormula &rhs) const {
+bool ConstantExpression::syntactic_eq(const CltlFormula &rhs) const {
     if(rhs.formula_type() != CltlFormula::kConstantExpression)
         return false;
     
     const ConstantExpression &ce = static_cast<const ConstantExpression &>(rhs);
     return ce._value == _value;
-}
-
-bool ConstantExpression::operator<(const CltlFormula &rhs) const {
-    switch (rhs.formula_type()) {
-        case CltlFormula::kConstantExpression: {
-            const ConstantExpression &ce = static_cast<const ConstantExpression &>(rhs);
-            return (!_value and ce._value);
-        }
-        default:
-            return true;
-    }
 }
 
 void ConstantExpression::accept(CltlFormulaVisitor &visitor) {

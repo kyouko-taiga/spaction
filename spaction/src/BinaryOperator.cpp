@@ -30,45 +30,23 @@ BinaryOperator::BinaryOperator(BinaryOperatorType type, const CltlFormulaPtr &le
     CltlFormula(creator), _type(type), _left(left), _right(right) {
 }
 
-bool BinaryOperator::operator==(const CltlFormula &rhs) const {
+bool BinaryOperator::syntactic_eq(const CltlFormula &rhs) const {
     if (rhs.formula_type() != CltlFormula::kBinaryOperator)
         return false;
-    
+
     const BinaryOperator &bo = static_cast<const BinaryOperator &>(rhs);
     if (bo._type != _type)
         return false;
 
     switch (bo.operator_type()) {
         case BinaryOperator::kOr:
-        case BinaryOperator::kAnd: {
-            // check for commutativity
-            bool a = ((bo._left == _left) and (bo._right == _right));
-            bool b = ((bo._right == _left) and (bo._left == _right));
-            return a or b;
-        }
-
+        case BinaryOperator::kAnd:
+            return _leaves() == bo._leaves();
         case BinaryOperator::kUntil:
         case BinaryOperator::kRelease:
         case BinaryOperator::kCostUntil:
         case BinaryOperator::kCostRelease:
             return ((bo._left == _left) and (bo._right == _right));
-    }
-}
-
-bool BinaryOperator::operator<(const CltlFormula &rhs) const {
-    switch (rhs.formula_type()) {
-        case CltlFormula::kConstantExpression:
-        case CltlFormula::kAtomicProposition:
-        case CltlFormula::kUnaryOperator:
-            return false;
-        case CltlFormula::kBinaryOperator: {
-            const BinaryOperator &bo = static_cast<const BinaryOperator &>(rhs);
-            if (_type != bo._type)
-                return _type < bo._type;
-            else if (_left != bo._left)
-                return _left < bo._left;
-            return _right < bo._right;
-        }
     }
 }
 

@@ -30,7 +30,7 @@ namespace spaction {
 CltlFormulaPtr CltlFormulaFactory::_make_shared_formula(CltlFormula *formula) {
     // try to find the formula within the unique index and return its shared pointer
     for (auto f : _formulae) {
-        if (*f == *formula) return f->shared_from_this();
+        if (f->syntactic_eq(*formula)) return f->shared_from_this();
     }
 
     // insert the new formula in the unique index and creates its shared pointer
