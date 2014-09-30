@@ -24,7 +24,7 @@
 #include "cra/CostRegisterAutomaton.h"
 
 namespace spaction {
-namespace cra {
+namespace automata {
 
 /// Helper class to build a Generalized Büchi Automata (GBA) from a CLTL formula.
 ///
@@ -55,7 +55,7 @@ class CltlTranslator {
     
 };
 
-}  // namespact cra
+}  // namespact automata
 }  // namespact spaction
 
 #endif  // defined SPACTION_INCLUDE_CLTLTRANSLATOR_H_

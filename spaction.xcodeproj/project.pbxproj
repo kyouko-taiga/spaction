@@ -127,7 +127,7 @@
 		755CEA48196EBB6C00DD3677 /* include */ = {
 			isa = PBXGroup;
 			children = (
-				759343D21970051200DD5475 /* cra */,
+				759343D21970051200DD5475 /* automata */,
 				755CEA4D196EBB6C00DD3677 /* spotcheck.h */,
 				75B92AF019C98888002F4972 /* CltlFormula.h */,
 				756EE5FC19C9A9EF002261FF /* CltlFormulaFactory.h */,
@@ -155,13 +155,13 @@
 			path = src;
 			sourceTree = "<group>";
 		};
-		759343D21970051200DD5475 /* cra */ = {
+		759343D21970051200DD5475 /* automata */ = {
 			isa = PBXGroup;
 			children = (
 				759343D31970051200DD5475 /* CostRegisterAutomaton.h */,
 				75EF898619B8518E00441B56 /* CltlTranslator.h */,
 			);
-			path = cra;
+			path = automata;
 			sourceTree = "<group>";
 		};
 		75AFC891196EAE3D00BAE38C = {

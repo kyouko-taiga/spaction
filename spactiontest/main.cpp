@@ -22,7 +22,7 @@
 #include "CltlFormulaFactory.h"
 #include "spotcheck.h"
 
-#include "cra/CostRegisterAutomaton.h"
+#include "automata/CostRegisterAutomaton.h"
 
 // this file is strongly inspired from spot/iface/dve2/dve2check.cc
 
@@ -34,21 +34,21 @@
 ///     and Cost Register Automata", 2013
 void test_cost_register_automata(const std::string &str = "aabaaacba") {
     // create a cost register automaton with 2 registers
-    spaction::cra::CostRegisterAutomaton<char> automaton(2);
+    spaction::automata::CostRegisterAutomaton<char> automaton(2);
 
     // build the automaton state
     automaton.add_state("q0", true);
 
     // build the automaton transitions:
-    typedef spaction::cra::Transition<char> T;
+    typedef spaction::automata::Transition<char> T;
     T *ta = automaton.add_transition("q0", "q0", 'a');
     T *tb = automaton.add_transition("q0", "q0", 'b');
     T *tc = automaton.add_transition("q0", "q0", 'c');
 
     // set the transition operations
-    using spaction::cra::Register;
-    using spaction::cra::Registers;
-    using spaction::cra::RegisterOperation;
+    using spaction::automata::Register;
+    using spaction::automata::Registers;
+    using spaction::automata::RegisterOperation;
 
     ta->set_register_operation(0, new RegisterOperation([](const Registers& regs) {
         return regs[0] + 1; }));  // a / x = x + 1
@@ -85,6 +85,7 @@ int main(int argc, char* argv[]) {
                                                                  f.make_atomic("b")),
                                                        f.make_atomic("c")),
                                             f.make_or(f.make_atomic("d"), f.make_atomic("a")));
+
     std::cout << "input: " << k->dump() << std::endl;
     std::cout << "nnf:   " << k->to_nnf()->dump() << std::endl;
     std::cout << "dnf:   " << k->to_dnf()->dump() << std::endl;

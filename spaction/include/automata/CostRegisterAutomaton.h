@@ -25,7 +25,7 @@
 #include <vector>
 
 namespace spaction {
-namespace cra {
+namespace automata {
 
 typedef unsigned Register;
 typedef std::vector<Register> Registers;
@@ -146,7 +146,7 @@ protected:
     void operator=(Transition const&);
 };
 
-}  // namespact cra
+}  // namespact automata
 }  // namespace spaction
 
 #endif  // defined SPACTION_INCLUDE_COSTREGISTERAUTOMATON_H_
