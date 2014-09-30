@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_COSTREGISTERAUTOMATON_H_
-#define SPACTION_INCLUDE_COSTREGISTERAUTOMATON_H_
+#ifndef SPACTION_INCLUDE_REGISTERAUTOMATON_H_
+#define SPACTION_INCLUDE_REGISTERAUTOMATON_H_
 
 #include <functional>
 #include <memory>
@@ -35,9 +35,9 @@ typedef std::function<Register(const Registers&)> RegisterOperation;
 template<typename Sigma> class Transition;
 
 template<typename  Sigma>
-class CostRegisterAutomaton {
+class RegisterAutomaton {
 public:
-    explicit CostRegisterAutomaton(std::size_t num_registers) :
+    explicit RegisterAutomaton(std::size_t num_registers) :
         _initial_state(""), _current_state(""), _registers(num_registers, 0) {
     }
 
@@ -127,7 +127,7 @@ public:
     }
 
 protected:
-    friend class CostRegisterAutomaton<Sigma>;
+    friend class RegisterAutomaton<Sigma>;
 
     const std::string &_source;
     const std::string &_sink;
@@ -149,4 +149,4 @@ protected:
 }  // namespact automata
 }  // namespace spaction
 
-#endif  // defined SPACTION_INCLUDE_COSTREGISTERAUTOMATON_H_
+#endif  // defined SPACTION_INCLUDE_REGISTERAUTOMATON_H_

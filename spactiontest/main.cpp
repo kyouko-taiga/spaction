@@ -22,7 +22,7 @@
 #include "CltlFormulaFactory.h"
 #include "spotcheck.h"
 
-#include "automata/CostRegisterAutomaton.h"
+#include "automata/RegisterAutomaton.h"
 
 // this file is strongly inspired from spot/iface/dve2/dve2check.cc
 
@@ -34,7 +34,7 @@
 ///     and Cost Register Automata", 2013
 void test_cost_register_automata(const std::string &str = "aabaaacba") {
     // create a cost register automaton with 2 registers
-    spaction::automata::CostRegisterAutomaton<char> automaton(2);
+    spaction::automata::RegisterAutomaton<char> automaton(2);
 
     // build the automaton state
     automaton.add_state("q0", true);
