@@ -94,8 +94,8 @@ CltlFormulaPtr BinaryOperator::to_dnf() {
     return nnf_self;
 }
 
-std::unordered_set<CltlFormula*> BinaryOperator::_leaves() const {
-    std::unordered_set<CltlFormula*> leaves;
+std::unordered_multiset<const CltlFormula*> BinaryOperator::_leaves() const {
+    std::unordered_multiset<const CltlFormula*> leaves;
     std::stack<const BinaryOperator*> stack({this});
     bool is_leaf;
 

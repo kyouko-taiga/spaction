@@ -80,7 +80,7 @@ class BinaryOperator : public CltlFormula {
     /// @warning
     ///     The result of this method is valid only if the `_type` of this formula is an operator
     ///     of propositional logic.
-    std::unordered_set<CltlFormula*> _leaves() const;
+    std::unordered_multiset<const CltlFormula*> _leaves() const;
 
     BinaryOperatorType _type;
     const CltlFormulaPtr _left;
