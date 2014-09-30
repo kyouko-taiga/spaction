@@ -17,6 +17,9 @@
 
 #include "BinaryOperator.h"
 
+#include <unordered_set>
+#include <stack>
+
 #include "CltlFormulaFactory.h"
 #include "CltlFormulaVisitor.h"
 
@@ -111,6 +114,46 @@ CltlFormulaPtr BinaryOperator::to_dnf() {
 
     // no further transformation to be performed since `nnf_self` is not a binary operator
     return nnf_self;
+}
+
+std::unordered_set<CltlFormula*> BinaryOperator::_leaves() const {
+    std::unordered_set<CltlFormula*> leaves;
+    std::stack<const BinaryOperator*> stack({this});
+    bool is_leaf;
+
+    // unfold the operator such that we get the set of leaves
+    while (!stack.empty()) {
+        const BinaryOperator *current = stack.top();
+        stack.pop();
+
+        // push the right member on the stack, unless it is not a compatible operation
+        is_leaf = true;
+        if (current->right()->formula_type() == CltlFormula::kBinaryOperator) {
+            BinaryOperator *bo = static_cast<BinaryOperator*>(current->right().get());
+            if (bo->operator_type() == _type) {
+                stack.push(bo);
+                is_leaf = false;
+            }
+        }
+        if (is_leaf) {
+            leaves.insert(current->right().get());
+        }
+
+        // push the left member on the stack, unless it is not a compatible operation
+        is_leaf = true;
+        if (current->left()->formula_type() == CltlFormula::kBinaryOperator) {
+            BinaryOperator *bo = static_cast<BinaryOperator*>(current->left().get());
+            if (bo->operator_type() == _type) {
+                stack.push(bo);
+                is_leaf = false;
+            }
+        }
+        if (is_leaf) {
+            leaves.insert(current->left().get());
+        }
+    }
+
+    return leaves;
 }
 
 void BinaryOperator::accept(CltlFormulaVisitor &visitor) {

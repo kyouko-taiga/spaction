@@ -18,6 +18,7 @@
 #ifndef SPACTION_INCLUDE_BINARYOPERATOR_H_
 #define SPACTION_INCLUDE_BINARYOPERATOR_H_
 
+#include <unordered_set>
 #include "CltlFormula.h"
 
 namespace spaction {
@@ -67,15 +68,19 @@ class BinaryOperator : public CltlFormula {
                             const CltlFormulaPtr &right, CltlFormulaFactory *creator);
     ~BinaryOperator() { }
 
-    /// Comparison operator used internally to build normal forms.
-    ///
-    /// Formulae ordering is first based on formula type (@see CltlFormula::FormulaType). Then, the
-    /// ordering of Unary operator is based on operator type (@see BinaryOperatorType) and finally
-    /// on the relation of operands, with left operands being compared first.
-    virtual bool operator<(const CltlFormula &rhs) const;
-
  private:
     friend class CltlFormulaFactory;
+
+    /// Internal method to retrieve the leaves of this formula.
+    /// @remarks
+    ///     A subformula of a binary operation is called a leaf if it is either a binary operation
+    ///     whose operator differs, or any other kinf of formula. For instance, the expression
+    ///     `(a + (b * c)) + d` has for leaves `a` `ab` and `d`.
+    ///
+    /// @warning
+    ///     The result of this method is valid only if the `_type` of this formula is an operator
+    ///     of propositional logic.
+    std::unordered_set<CltlFormula*> _leaves() const;
 
     BinaryOperatorType _type;
     const CltlFormulaPtr _left;
