@@ -71,6 +71,10 @@ class BinaryOperator : public CltlFormula {
  private:
     friend class CltlFormulaFactory;
 
+    BinaryOperatorType _type;
+    const CltlFormulaPtr _left;
+    const CltlFormulaPtr _right;
+
     /// Internal method to retrieve the leaves of this formula.
     /// @remarks
     ///     A subformula of a binary operation is called a leaf if it is either a binary operation
@@ -81,10 +85,6 @@ class BinaryOperator : public CltlFormula {
     ///     The result of this method is valid only if the `_type` of this formula is an operator
     ///     of propositional logic.
     std::unordered_multiset<const CltlFormula*> _leaves() const;
-
-    BinaryOperatorType _type;
-    const CltlFormulaPtr _left;
-    const CltlFormulaPtr _right;
 };
 
 }  // namespace spaction

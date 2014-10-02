@@ -138,7 +138,7 @@ void BinaryOperator::accept(CltlFormulaVisitor &visitor) {
     // explicitly cast shared_from_this to the a derived class shared_ptr
     visitor.visit(std::dynamic_pointer_cast<BinaryOperator>(shared_from_this()));
 }
-    
+
 std::string BinaryOperator::dump() const {
     std::string result;
     result += "(";
