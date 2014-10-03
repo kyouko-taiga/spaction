@@ -65,9 +65,11 @@ void Instantiator::visit(const std::shared_ptr<BinaryOperator> &formula) {
         case BinaryOperator::kAnd:
         case BinaryOperator::kUntil:
         case BinaryOperator::kRelease:
+            // for every boolean binary op o, (f o g)[n] = f[n] o f[n]
             _result = factory->make_binary(formula->operator_type(), left, right);
             break;
         case BinaryOperator::kCostUntil:
+            // (f UN g)[n] = (f[n] UN g[n])[n]
             _result = _rewrite_cost_until(formula, left, right, instantiator);
             break;
         case BinaryOperator::kCostRelease:
@@ -80,21 +82,36 @@ void Instantiator::visit(const std::shared_ptr<BinaryOperator> &formula) {
     
 }
 
+// recall that left and right are assumed to be LTL (already instantiated)
 CltlFormulaPtr InstantiateInf::_rewrite_cost_until(const CltlFormulaPtr &formula,
                                                    const CltlFormulaPtr &left,
                                                    const CltlFormulaPtr &right,
                                                    Instantiator *instantiator) const {
+    // the formula factory
     CltlFormulaFactory *factory = formula->creator();
+
+    // if f and g are LTL, then (f UN g)[0] = f U g
     if (_n == 0) {
         return factory->make_until(left, right);
     }
 
+    // if f and g are LTL and n > 0 then
+    // (f UN g)[n] = (f UN g)[n-1] || (f U (!f && X((f UN g)[n-1])))
+    // (f UN g)[n] = (f U g) || (f U (!f && X((f UN g)[n-1])))
+
+    // left U right
     const CltlFormulaPtr &tmp_left_1 = factory->make_until(left, right);
+    // !left
     const CltlFormulaPtr &tmp_left_2 = factory->make_not(left);
+    // f[n-1]
     const CltlFormulaPtr &tmp_rslt_3 = (*instantiator)(formula, _n-1);
+    // X(f[n-1])
     const CltlFormulaPtr &tmp_rght_2 = factory->make_next(tmp_rslt_3);
+    // !left && X(f[n-1])
     const CltlFormulaPtr &tmp_rslt_2 = factory->make_and(tmp_left_2, tmp_rght_2);
+    // left U (!left && X(f[n-1]))
     const CltlFormulaPtr &tmp_rght_1 = factory->make_until(left, tmp_rslt_2);
+    // (left U right) || (left U (!left && X(formula[n-1])))
     return factory->make_or(tmp_left_1, tmp_rght_1);
 }
 
