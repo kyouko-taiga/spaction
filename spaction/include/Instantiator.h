@@ -26,7 +26,11 @@ class Instantiator : public CltlFormulaVisitor {
  public:
     explicit Instantiator() : _n(0), _result(0) { }
 
-    // corresponds to the function named instantiate_inf in visitor.h
+    /// Instantiate CLTL formula to LTL formulae
+    /// for an integer n, u |= f(n) iff (u,n) |= f
+    /// @param formula  a CLTL formula to instantiate
+    /// @param n        a non-negative integer
+    /// @return         g LTL formula s.t. for all word u, u |= g iff (u,n) |= formula
     CltlFormulaPtr operator()(const CltlFormulaPtr &formula, unsigned int n);
 
     virtual Instantiator *copy() const = 0;
@@ -44,6 +48,8 @@ class Instantiator : public CltlFormulaVisitor {
     /// @remarks
     ///     This class should be implemented to specify the behaviour of the Cost Until operator
     ///     under whether inf or sup instantiation.
+    /// @param
+    ///     \a left and \a right are assumed to be LTL formulae (already instantiated)
     virtual CltlFormulaPtr _rewrite_cost_until(const CltlFormulaPtr &formula,
                                                const CltlFormulaPtr &left,
                                                const CltlFormulaPtr &right,
@@ -63,6 +69,7 @@ class InstantiateInf : public Instantiator {
 };
 
 // corresponds to the class named instant_sup in printer.cc
+// obsolete, DO NOT USE
 class InstantiateSup : public Instantiator {
  public:
     virtual inline Instantiator *copy() const { return new InstantiateSup(); }
