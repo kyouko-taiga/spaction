@@ -32,7 +32,7 @@ typedef std::vector<Register> Registers;
 
 typedef std::function<Register(const Registers&)> RegisterOperation;
 
-template<typename Sigma> class Transition;
+template<typename Sigma> class RegisterAutomatonTransition;
 
 template<typename  Sigma>
 class RegisterAutomaton {
@@ -56,12 +56,14 @@ public:
     bool has_state(const std::string &name) const { return _graph.count(name) > 0; }
     Register register_value(std::size_t reg)      { return _registers[reg]; }
 
-    Transition<Sigma> *add_transition(const std::string &source, const std::string &sink,
-                                      const Sigma &symbol) {
+    RegisterAutomatonTransition<Sigma> *add_transition(const std::string &source,
+                                                       const std::string &sink,
+                                                       const Sigma &symbol) {
         if(!has_state(source) || !has_state(sink))
             return nullptr;
 
-        Transition<Sigma> *t = new Transition<Sigma>(source, sink, symbol, _registers.size());
+        RegisterAutomatonTransition<Sigma> *t =
+            new RegisterAutomatonTransition<Sigma>(source, sink, symbol, _registers.size());
         _graph[source][symbol] = t;
         return t;
     }
@@ -70,7 +72,7 @@ public:
         if (_current_state.empty()) _current_state = _initial_state;
 
         // retrieve the outgoind transition
-        Transition<Sigma> *t = _graph[_current_state].at(symbol);
+        RegisterAutomatonTransition<Sigma> *t = _graph[_current_state].at(symbol);
 
         // update registers
         Registers updated_registers(_registers.size());
@@ -88,13 +90,14 @@ public:
 protected:
     std::string _initial_state;
     std::string _current_state;
-    std::unordered_map<std::string, std::unordered_map<Sigma, Transition<Sigma>*>> _graph;
+    std::unordered_map<std::string,
+                       std::unordered_map<Sigma, RegisterAutomatonTransition<Sigma>*>> _graph;
 
     Registers _registers;
 };
 
 template<typename Sigma>
-class Transition {
+class RegisterAutomatonTransition {
 public:
     const std::string &source() const { return _source; }
     const std::string &sink()   const { return _sink; }
@@ -135,15 +138,15 @@ protected:
 
     std::vector<std::shared_ptr<RegisterOperation>> _operations;
 
-    explicit Transition(const std::string &source, const std::string &sink, const Sigma &symbol,
+    explicit RegisterAutomatonTransition(const std::string &source, const std::string &sink, const Sigma &symbol,
                         std::size_t num_registers) :
         _source(source), _sink(sink), _symbol(symbol), _operations(num_registers, nullptr) {
     }
 
     /// Disallows copy constructor.
-    Transition(Transition const&);
+    RegisterAutomatonTransition(RegisterAutomatonTransition const&);
     /// Disallows copy assignement.
-    void operator=(Transition const&);
+    void operator=(RegisterAutomatonTransition const&);
 };
 
 }  // namespact automata
