@@ -31,11 +31,12 @@ template<typename Q, typename S> class TransitionSystem {
 public:
     virtual ~TransitionSystem() { }
 
-    virtual void add_state(const Q &name) = 0;
+    virtual void add_state(const Q &state) = 0;
+    virtual void remove_state(const Q &state) = 0;
+
+    virtual bool has_state(const Q &state) const = 0;
 
     virtual Transition<Q,S> *add_transition(const Q &source, const Q &sink, const S &label) = 0;
-
-    virtual bool has_state(const Q &name) const = 0;
 
     /// Returns a pointer to an outgoing transition of `source` that is labeled by `label`, unless
     /// returns `nullptr`.
@@ -43,7 +44,7 @@ public:
 
     /// Returns a vector of all the outgoing transitions of `source` that are labeled by `label`.
     virtual std::vector<Transition<Q,S>*> find_all_transitions(const Q &source,
-                                                             const S &label) const = 0;
+                                                               const S &label) const = 0;
 
 protected:
     /// Internal method to build transitions.
@@ -51,8 +52,7 @@ protected:
     ///     Instances of the class Transition shouldn't be constructed outside a TransitionSystem.
     ///     Subclasses may use this method within their implementation of `add_transition` to
     ///     actually create the transitions object.
-    virtual Transition<Q,S> *_make_transition(const Q &source, const Q &sink,
-                                            const S &label) {
+    virtual Transition<Q,S> *_make_transition(const Q &source, const Q &sink, const S &label) {
         if (!has_state(source) or !has_state(sink))
             return nullptr;
         return new Transition<Q,S>(source, sink, label);
@@ -68,17 +68,28 @@ template<typename Q, typename S> class DeterministicTransitionSystem :
 public:
     virtual ~DeterministicTransitionSystem() {}
 
-    virtual void add_state(const Q &name) {
-        if (_graph.count(name) > 0) return;
-        _graph[name];
+    virtual void add_state(const Q &state) {
+        if (_graph.count(state) > 0) return;
+        _graph[state];
     }
 
-    virtual inline bool has_state(const Q &name) const {
-        return _graph.count(name) > 0;
+    virtual void remove_state(const Q &state) {
+        if (!has_state(state)) return;
+
+        _graph.erase(state);
+        for (auto source : _graph) {
+            for (auto t = source.second.begin(); t != source.second.end(); ++t) {
+                if ((*t)->sink() == state)
+                    t = source.second.erase(t);
+            }
+        }
     }
 
-    virtual Transition<Q,S> *add_transition(const Q &source, const Q &sink,
-                                          const S &label) {
+    virtual inline bool has_state(const Q &state) const {
+        return _graph.count(state) > 0;
+    }
+
+    virtual Transition<Q,S> *add_transition(const Q &source, const Q &sink, const S &label) {
         if (!has_state(source) or !has_state(sink))
             return nullptr;
         
@@ -92,7 +103,7 @@ public:
     }
 
     virtual std::vector<Transition<Q,S>*> find_all_transitions(const Q &source,
-                                                             const S &label) const {
+                                                               const S &label) const {
         return std::vector<Transition<Q,S>*>({find_transition(source, label)});
     }
 
@@ -110,13 +121,27 @@ template<typename Q, typename S> class UndeterministicTransitionSystem :
 public:
     virtual ~UndeterministicTransitionSystem() {}
     
-    virtual void add_state(const Q &name) {
-        if (_graph.count(name) > 0) return;
-        _graph[name];
+    virtual void add_state(const Q &state) {
+        if (_graph.count(state) > 0) return;
+        _graph[state];
     }
 
-    virtual inline bool has_state(const Q &name) const {
-        return _graph.count(name) > 0;
+    virtual void remove_state(const Q &state) {
+        if (!has_state(state)) return;
+
+        _graph.erase(state);
+        for (auto source : _graph) {
+            for (auto transitions : source.second) {
+                for (auto t = transitions.second.begin(); t != transitions.second.end(); ++t) {
+                    if ((*t)->sink() == state)
+                        t = transitions.second.erase(t);
+                }
+            }
+        }
+    }
+
+    virtual inline bool has_state(const Q &state) const {
+        return _graph.count(state) > 0;
     }
 
     virtual Transition<Q,S> *add_transition(const Q &source, const Q &sink,
