@@ -34,10 +34,10 @@ void CltlTranslator::build_automaton() {
     _build_transition_system();
 }
 
-Node *CltlTranslator::_build_node(const FormulaList &terms) {
+CltlTranslator::Node *CltlTranslator::_build_node(const FormulaList &terms) {
     // search for a pre-existing instance of the node
     for (auto n : _nodes) {
-        if (n->terms == terms) return n;
+        if (n->terms() == terms) return n;
     }
 
     // build a new instance and stores its pointer
@@ -49,12 +49,12 @@ Node *CltlTranslator::_build_node(const FormulaList &terms) {
 CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
     // take the formula with the highest height out of the subset to be reduced
     CltlFormulaPtr f = 0;
-    FormulaList leftover(node->terms);
+    FormulaList leftover(node->terms());
 
-    for (long i = node->terms.size() - 1; i >= 0; --i) {
+    for (long i = node->terms().size() - 1; i >= 0; --i) {
         // only binary operators must be reduced
-        if (node->terms[i]->formula_type() == CltlFormula::kBinaryOperator) {
-            f = node->terms[i];
+        if (node->terms()[i]->formula_type() == CltlFormula::kBinaryOperator) {
+            f = node->terms()[i];
             leftover.erase(leftover.begin() + i);
             break;
         }
@@ -156,16 +156,16 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
     return {};
 }
 
-Node *CltlTranslator::_build_actual_successor(Node *node) {
+CltlTranslator::Node *CltlTranslator::_build_actual_successor(Node *node) {
     FormulaList propositions;
-    FormulaList successor;
+    FormulaList successor_terms;
 
-    for (auto f : node->terms) {
+    for (auto f : node->terms()) {
         // formulae of type f = X(f1) will be transformed to f1 in the successor
         if (f->formula_type() == CltlFormula::kUnaryOperator) {
             UnaryOperator *uo = static_cast<UnaryOperator*>(f.get());
             if (uo->operator_type() == UnaryOperator::kNext) {
-                successor.push_back(uo->operand());
+                successor_terms.push_back(uo->operand());
                 continue;
             }
         }
@@ -195,12 +195,10 @@ void CltlTranslator::_process_reduce() {
         Node *s = _to_be_reduced.top();
         _to_be_reduced.pop();
 
-        if (s->is_reduced)
+        if (s->is_reduced())
             continue;
-        s->is_reduced = true;
-        
-        // todo: check that `s` is consistant and skip it unless it is
-        
+        s->set_reduced();
+
         // build the epsilon successors of `s` and put it to the reduce stack
         NodeList successors = _build_epsilon_successors(s);
         if (successors.empty())
@@ -216,14 +214,14 @@ void CltlTranslator::_process_fire() {
         // fetch the next pseudo-state to be fired
         Node *s = _to_be_fired.top();
         _to_be_fired.pop();
-        
+
         // build the actual successor of `s`
         Node *t = _build_actual_successor(s);
         _states.push_back(t);
-        
+
         // `t` should never be empty (ie. end of the word), but just in case, we won't
         // add it to the reduce stack since it would cause a null pointer exception
-        if (!t->terms.empty())
+        if (!t->terms().empty())
             _to_be_reduced.push(t);
     }
 }

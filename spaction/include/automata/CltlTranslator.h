@@ -42,6 +42,57 @@ public:
     void build_automaton();
 
 private:
+    /// Helper class representing the states of the temporary transition system.
+    ///
+    /// This struct is used to represent states and pseudo-states of the the temporary transition
+    /// system, in the process of translating a CLTL formula into a counter automaton. So called
+    /// pseudo-states are those obtained by building the epsilon-transitions from actual states.
+    class Node {
+    public:
+        explicit inline Node(const CltlTranslator::FormulaList &terms) :
+            _terms(terms), _is_reduced(false) {
+        }
+
+        const inline CltlTranslator::FormulaList &terms() const { return _terms; }
+
+        void inline set_reduced(bool reduced=true) { _is_reduced = reduced; }
+        bool inline is_reduced() const { return _is_reduced; }
+
+        bool is_consistent() const;
+
+        const std::string dump() const;
+
+    private:
+        /// List of subformulae corresponding to this pseudo-state.
+        /// @remarks
+        ///     This list remains always ordered by the height of the formulae it contains, such that
+        ///     the latest element of the list is the biggest formula.
+        const CltlTranslator::FormulaList _terms;
+
+        bool _is_reduced;
+    };
+
+    /// Helper struct representing the alphabet of the temporary transition system.
+    ///
+    /// This struct is used to represent the alphabet of the transitions of the temporary transition
+    /// system, in the process of translating a CLTL formula into a counter automaton. Each letter
+    /// of this alphabet is composed of the set of propositions to be satisfied, the set of actions
+    /// on the counters, and the optional postponed condition marking.
+    struct TransitionLabel {
+        /// Set of propositions that needs to be satisfied to fire the transition.
+        CltlTranslator::FormulaList propositions;
+        /// Vector of actions on the counters
+        std::vector<std::string> counter_actions;
+        /// Optional until formula that would have been postponed.
+        CltlFormulaPtr postponed;
+
+        explicit inline TransitionLabel(const CltlTranslator::FormulaList &propositions={},
+                                        const std::vector<std::string> &counter_actions={},
+                                        const CltlFormulaPtr &postoned=0) :
+            propositions(propositions), counter_actions(counter_actions), postponed(postoned) {
+        }
+    };
+
     typedef std::vector<Node*> NodeList;
 
     /// Stores the formula being translated by this translator.
@@ -78,42 +129,6 @@ private:
 
     /// Helper method that inserts a formula into a FormulaList and keeps the result sorted.
     FormulaList _insert(const FormulaList &list, const CltlFormulaPtr &formula) const;
-};
-
-/// Helper class to build a Transition Generalized Büchi Automata (TGBA) from a CLTL formula.
-///
-/// This class represents a single node within the tree that denotes a set of terms and its
-/// (epsilon-)transition. Each node is a tuple <T,S> where T is a set of terms and S a the set
-/// of successor nodes. Furthermore, each successor is labeled by the sub-alphabet that may lead
-/// to, together with the potential postponed constraints.
-struct Node {
-    /// List of subformulae corresponding to this pseudo-state.
-    /// @remarks
-    ///     This list remains always ordered by the height of the formulae it contains, such that
-    ///     the latest element of the list is the biggest formula.
-    const CltlTranslator::FormulaList terms;
-
-    /// Stores wether this node has already been reduced.
-    bool is_reduced;
-
-    explicit inline Node(const CltlTranslator::FormulaList &terms) :
-        terms(terms), is_reduced(false) {
-    }
-};
-
-struct TransitionLabel {
-    /// Set of propositions that needs to be satisfied to fire the transition.
-    CltlTranslator::FormulaList propositions;
-    /// Vector of actions on the counters
-    std::vector<std::string> counter_actions;
-    /// Optional until formula that would have been postponed.
-    CltlFormulaPtr postponed;
-
-    explicit inline TransitionLabel(const CltlTranslator::FormulaList &propositions={},
-                                    const std::vector<std::string> &counter_actions={},
-                                    const CltlFormulaPtr &postoned=0) :
-        propositions(propositions), counter_actions(counter_actions), postponed(postoned) {
-    }
 };
 
 }  // namespact automata
