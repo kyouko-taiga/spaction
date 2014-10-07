@@ -40,13 +40,8 @@ Node *CltlTranslator::_build_node(const FormulaList &terms) {
         if (n->terms == terms) return n;
     }
 
-    std::string node_name = "";
-    for (const auto t : terms) {
-        node_name += "(" + t->dump() + "), ";
-    }
-
     // build a new instance and stores its pointer
-    Node *n = new Node(node_name, terms);
+    Node *n = new Node(terms);
     _nodes.push_back(n);
     return n;
 }
@@ -72,12 +67,10 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
             //                   [_,_,_]-> (f2)
             case BinaryOperator::kOr: {
                 Node *phi_left = _build_node(_insert(leftover, bo->left()));
-                _transition_system.add_transition(node->state, phi_left->state,
-                                                  new TransitionLabel());
+                _transition_system.add_transition(node, phi_left, new TransitionLabel());
 
                 Node *phi_right = _build_node(_insert(leftover, bo->right()));
-                _transition_system.add_transition(node->state, phi_right->state,
-                                                  new TransitionLabel());
+                _transition_system.add_transition(node, phi_right, new TransitionLabel());
 
                 return {phi_left, phi_right};
             }
@@ -85,7 +78,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
             // (f = f1 && f2) => [_,_,_]-> (f1, f2)
             case BinaryOperator::kAnd: {
                 Node *phi = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
-                _transition_system.add_transition(node->state, phi->state, new TransitionLabel());
+                _transition_system.add_transition(node, phi, new TransitionLabel());
                 return {phi};
             }
 
@@ -93,12 +86,11 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
             //                  [_,_,f]-> (f1, X(f))
             case BinaryOperator::kUntil: {
                 Node *phi_0 = _build_node(_insert(leftover, bo->right()));
-                _transition_system.add_transition(node->state, phi_0->state, new TransitionLabel());
+                _transition_system.add_transition(node, phi_0, new TransitionLabel());
 
                 Node *phi_1 = _build_node(_insert(_insert(leftover, bo->left()),
                                                   bo->creator()->make_next(f)));
-                _transition_system.add_transition(node->state, phi_1->state,
-                                                  new TransitionLabel({},{},f));
+                _transition_system.add_transition(node, phi_1, new TransitionLabel({},{},f));
 
                 return {phi_0, phi_1};
             }
@@ -107,11 +99,11 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
             //                  [_,_,_]-> (f2, X(f))
             case BinaryOperator::kRelease: {
                 Node *phi_0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
-                _transition_system.add_transition(node->state, phi_0->state, new TransitionLabel());
+                _transition_system.add_transition(node, phi_0, new TransitionLabel());
 
                 Node *phi_1 = _build_node(_insert(_insert(leftover, bo->right()),
                                                   bo->creator()->make_next(f)));
-                _transition_system.add_transition(node->state, phi_1->state, new TransitionLabel());
+                _transition_system.add_transition(node, phi_1, new TransitionLabel());
 
                 return {phi_0, phi_1};
             }
@@ -124,18 +116,15 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
 
                 Node *phi_0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
                 counters[_nb_counters-1] = "r";
-                _transition_system.add_transition(node->state, phi_0->state,
-                                                  new TransitionLabel({},counters));
+                _transition_system.add_transition(node, phi_0, new TransitionLabel({},counters));
 
                 Node *phi_1 = _build_node(_insert(_insert(leftover, bo->right()),
                                                   bo->creator()->make_next(f)));
-                _transition_system.add_transition(node->state, phi_1->state,
-                                                  new TransitionLabel({},{},f));
+                _transition_system.add_transition(node, phi_1, new TransitionLabel({},{},f));
 
                 Node *phi_2 = _build_node({bo->creator()->make_next(f)});
                 counters[_nb_counters-1] = "ic";
-                _transition_system.add_transition(node->state, phi_2->state,
-                                                  new TransitionLabel({},counters,f));
+                _transition_system.add_transition(node, phi_2, new TransitionLabel({},counters,f));
 
                 return {phi_0, phi_1, phi_2};
             }
@@ -148,17 +137,15 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
 
                 Node *phi_0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
                 counters[_nb_counters-1] = "r";
-                _transition_system.add_transition(node->state, phi_0->state,
-                                                  new TransitionLabel({},counters));
+                _transition_system.add_transition(node, phi_0, new TransitionLabel({},counters));
                 
                 Node *phi_1 = _build_node(_insert(_insert(leftover, bo->right()),
                                                   bo->creator()->make_next(f)));
-                _transition_system.add_transition(node->state, phi_1->state, new TransitionLabel());
+                _transition_system.add_transition(node, phi_1, new TransitionLabel());
 
                 Node *phi_2 = _build_node({bo->creator()->make_next(f)});
                 counters[_nb_counters-1] = "ic";
-                _transition_system.add_transition(node->state, phi_2->state,
-                                                  new TransitionLabel({},counters));
+                _transition_system.add_transition(node, phi_2, new TransitionLabel({},counters));
                 
                 return {phi_0, phi_1, phi_2};
             }
@@ -188,7 +175,7 @@ Node *CltlTranslator::_build_actual_successor(Node *node) {
     }
 
     Node *phi = _build_node(successor);
-    _transition_system.add_transition(node->state, phi->state, new TransitionLabel(propositions));
+    _transition_system.add_transition(node, phi, new TransitionLabel(propositions));
     return phi;
 }
 

@@ -52,7 +52,7 @@ private:
     NodeList _nodes;
 
     /// Stores the temporar transition system that is used to build the automata.
-    UndeterministicTransitionSystem<TransitionLabel*> _transition_system;
+    UndeterministicTransitionSystem<Node*, TransitionLabel*> _transition_system;
 
     /// Stores the number of counters.
     std::size_t _nb_counters;
@@ -87,9 +87,6 @@ private:
 /// of successor nodes. Furthermore, each successor is labeled by the sub-alphabet that may lead
 /// to, together with the potential postponed constraints.
 struct Node {
-    /// Name of the corresponding state in the transition system.
-    const std::string state;
-
     /// List of subformulae corresponding to this pseudo-state.
     /// @remarks
     ///     This list remains always ordered by the height of the formulae it contains, such that
@@ -99,8 +96,8 @@ struct Node {
     /// Stores wether this node has already been reduced.
     bool is_reduced;
 
-    explicit inline Node(const std::string &state, const CltlTranslator::FormulaList &terms) :
-        state(state), terms(terms), is_reduced(false) {
+    explicit inline Node(const CltlTranslator::FormulaList &terms) :
+        terms(terms), is_reduced(false) {
     }
 };
 
