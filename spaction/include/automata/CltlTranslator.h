@@ -105,7 +105,6 @@ private:
     /// Stores the temporar transition system that is used to build the automata.
     UndeterministicTransitionSystem<Node*, TransitionLabel*> _transition_system;
 
-    /// Stores the number of counters.
     std::size_t _nb_counters;
 
     std::stack<Node*> _to_be_reduced;
@@ -123,6 +122,7 @@ private:
     /// be satisfied) and updates the transition system accordingly.
     Node *_build_actual_successor(Node *node);
 
+    /// Builds the temporary transition system out of the formula.
     void _build_transition_system();
     void _process_reduce();
     void _process_fire();
