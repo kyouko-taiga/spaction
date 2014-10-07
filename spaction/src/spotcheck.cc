@@ -34,11 +34,11 @@
 
 namespace spaction {
 
-bool spot_check(const std::string &ltl_string, const std::string &modelfile) {
+bool spot_dve_check(const std::string &formula, const std::string &modelfile) {
     // spot parsing of the instantiated formula
     spot::ltl::parse_error_list pel;
-    const spot::ltl::formula *ltl_formula = spot::ltl::parse(ltl_string, pel);
-    if (spot::ltl::format_parse_errors(std::cerr, ltl_string, pel)) {
+    const spot::ltl::formula *ltl_formula = spot::ltl::parse(formula, pel);
+    if (spot::ltl::format_parse_errors(std::cerr, formula, pel)) {
         ltl_formula->destroy();
         exit(1);
     }
@@ -57,7 +57,7 @@ bool spot_check(const std::string &ltl_string, const std::string &modelfile) {
         property_automaton = formula_translator.run(&ltl_formula);
     }
 
-    trace << "tgba built" << std::endl;
+    trace << "property tgba built" << std::endl;
 
     // collect atomic propositions from formula
     atomic_prop_collect(ltl_formula, &atomic_propositions);
@@ -73,27 +73,6 @@ bool spot_check(const std::string &ltl_string, const std::string &modelfile) {
     spot::tgba *product = new spot::tgba_product(model, property_automaton);
 
     trace << "product built" << std::endl;
-
-    // \debug
-    {
-        // output automaton in .dot
-        static int i = 0;
-        std::stringstream autname;
-        autname << "automaton_" << i << ".dot";
-        std::ofstream out(autname.str());
-        spot::dotty_reachable(out, property_automaton, false);
-        out.close();
-        // output kripke in .dot
-        out = std::ofstream("model.dot");
-        spot::dotty_reachable(out, model);
-        out.close();
-        // output product in .dot
-        std::stringstream prodname;
-        prodname << "product_" << i++ << ".dot";
-        out = std::ofstream(prodname.str());
-        spot::dotty_reachable(out, product);
-        out.close();
-    }
 
     // emptiness check of the product automaton
     const char* echeck_algo = "Cou99";
@@ -117,6 +96,8 @@ bool spot_check(const std::string &ltl_string, const std::string &modelfile) {
         std::cerr << "out of memory during emptiness check" << std::endl;
         assert(false);
     }
+    bool to_return = !result;
+    trace << "result is " << to_return << std::endl;
 
     trace << "all done, prepare for delete" << std::endl;
 
@@ -136,14 +117,11 @@ bool spot_check(const std::string &ltl_string, const std::string &modelfile) {
 
     trace << "all freed, return" << std::endl;
 
-    trace << "result is " << !result << std::endl;
-
-    trace << "done block" << std::endl;
-
     // return the result
-    return !result;
+    return to_return;
 }
 
+// @param formula is assumed to be CLTL[<=]
 static bool spot_check_inf(const CltlFormulaPtr &formula, int n, const std::string &modelname) {
     // instantiate the cost formula
     std::string ltl_string;
@@ -151,9 +129,11 @@ static bool spot_check_inf(const CltlFormulaPtr &formula, int n, const std::stri
 
     const CltlFormulaPtr &tmp = instanciator(formula, n);
     ltl_string = tmp->dump();
-    return spot_check(ltl_string, modelname);
+    return spot_dve_check(ltl_string, modelname);
 }
 
+// @param   formula is assumed to be CLTL[<=]
+// @todo    do not use 'blind' dichotomy, use bound |aut| \times |system|
 unsigned int find_bound_min(const CltlFormulaPtr &formula, const std::string &modelname) {
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
@@ -182,18 +162,20 @@ unsigned int find_bound_min(const CltlFormulaPtr &formula, const std::string &mo
     return min;
 }
 
+// @param formula is assumed to be CLTL[>]
 static bool spot_check_sup(const CltlFormulaPtr &formula, int n, const std::string &modelname) {
-    std::cerr << "checking " << n << std::endl;
-
     // instantiate the cost formula
     std::string ltl_string;
     InstantiateSup instanciator;
 
     const CltlFormulaPtr &tmp = instanciator(formula, n);
     ltl_string = tmp->dump();
-    return spot_check(ltl_string, modelname);
+    return spot_dve_check(ltl_string, modelname);
 }
 
+// @param   formula is assumed to be CLTL[>]
+// @todo    a +1 is probably missing around here
+// @todo    do not use 'blind' dichotomy, use bound |aut| \times |system|
 unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname) {
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
