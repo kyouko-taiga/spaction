@@ -22,6 +22,7 @@
 #include "CltlFormulaFactory.h"
 #include "spotcheck.h"
 
+#include "automata/CltlTranslator.h"
 #include "automata/RegisterAutomaton.h"
 
 // this file is strongly inspired from spot/iface/dve2/dve2check.cc
@@ -40,7 +41,7 @@ void test_cost_register_automata(const std::string &str = "aabaaacba") {
     automaton.add_state("q0", true);
 
     // build the automaton transitions:
-    typedef spaction::automata::Transition<char> T;
+    typedef spaction::automata::RegisterAutomatonTransition<char> T;
     T *ta = automaton.add_transition("q0", "q0", 'a');
     T *tb = automaton.add_transition("q0", "q0", 'b');
     T *tc = automaton.add_transition("q0", "q0", 'c');
@@ -90,7 +91,10 @@ int main(int argc, char* argv[]) {
     std::cout << "nnf:   " << k->to_nnf()->dump() << std::endl;
     std::cout << "dnf:   " << k->to_dnf()->dump() << std::endl;
 
-    std::cout << "\nheight of the formula: " << k->height() << std::endl;
+    // a test formula and its equivalent automaton
+    k = f.make_and(f.make_atomic("a"), f.make_atomic("b"));
+    spaction::automata::CltlTranslator translator(k);
+    translator.build_automaton();
 
     // a test formula
     // \todo atoms are not properly deleted here

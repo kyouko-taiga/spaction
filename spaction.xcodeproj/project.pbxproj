@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		753EF59819DDA16200106D3C /* CltlTranslator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 753EF59719DDA16200106D3C /* CltlTranslator.cpp */; };
 		755CEA36196EB78C00DD3677 /* libbdd.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755CEA32196EB78C00DD3677 /* libbdd.dylib */; };
 		755CEA39196EB78C00DD3677 /* libspotdve2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755CEA35196EB78C00DD3677 /* libspotdve2.dylib */; };
 		755CEA42196EBA8C00DD3677 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA41196EBA8C00DD3677 /* main.cpp */; };
@@ -52,6 +53,8 @@
 
 /* Begin PBXFileReference section */
 		4AB890DC196EE51200F7BB44 /* cpplint.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = cpplint.py; sourceTree = "<group>"; };
+		753EF59719DDA16200106D3C /* CltlTranslator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CltlTranslator.cpp; sourceTree = "<group>"; };
+		753EF59919DEEA6900106D3C /* TransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TransitionSystem.h; sourceTree = "<group>"; };
 		755CEA32196EB78C00DD3677 /* libbdd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbdd.dylib; path = "$(PROJECT_DIR)/dependencies/spot/lib/libbdd.dylib"; sourceTree = "<group>"; };
 		755CEA35196EB78C00DD3677 /* libspotdve2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspotdve2.dylib; path = "$(PROJECT_DIR)/dependencies/spot/lib/libspotdve2.dylib"; sourceTree = "<group>"; };
 		755CEA3F196EBA8C00DD3677 /* spactiontest */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = spactiontest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -105,6 +108,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		753EF59619DDA14800106D3C /* automata */ = {
+			isa = PBXGroup;
+			children = (
+				753EF59719DDA16200106D3C /* CltlTranslator.cpp */,
+			);
+			path = automata;
+			sourceTree = "<group>";
+		};
 		755CEA3A196EB79B00DD3677 /* libraries */ = {
 			isa = PBXGroup;
 			children = (
@@ -144,6 +155,7 @@
 		755CEA50196EBB6C00DD3677 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				753EF59619DDA14800106D3C /* automata */,
 				755CEA56196EBB6C00DD3677 /* spotcheck.cc */,
 				756EE60419C9BDA5002261FF /* CltlFormulaFactory.cpp */,
 				756EE60A19CAD5C2002261FF /* AtomicProposition.cpp */,
@@ -160,6 +172,7 @@
 			children = (
 				75EF898619B8518E00441B56 /* CltlTranslator.h */,
 				759343D31970051200DD5475 /* RegisterAutomaton.h */,
+				753EF59919DEEA6900106D3C /* TransitionSystem.h */,
 			);
 			path = automata;
 			sourceTree = "<group>";
@@ -324,6 +337,7 @@
 				755CEA5D196EBB6C00DD3677 /* spotcheck.cc in Sources */,
 				756EE60919C9C6D0002261FF /* Instantiator.cpp in Sources */,
 				756EE61519CAD902002261FF /* BinaryOperator.cpp in Sources */,
+				753EF59819DDA16200106D3C /* CltlTranslator.cpp in Sources */,
 				756EE60619C9BDA5002261FF /* CltlFormulaFactory.cpp in Sources */,
 				756EE60C19CAD5C2002261FF /* AtomicProposition.cpp in Sources */,
 				756EE60F19CAD6E8002261FF /* ConstantExpression.cpp in Sources */,
