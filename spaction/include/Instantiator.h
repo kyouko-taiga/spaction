@@ -54,9 +54,19 @@ class Instantiator : public CltlFormulaVisitor {
                                                const CltlFormulaPtr &left,
                                                const CltlFormulaPtr &right,
                                                Instantiator *instantiator) const = 0;
+    /// Handles the rewriting of Cost Release formulae.
+    /// @remarks
+    ///     This class should be implemented to specify the behaviour of the Cost Release operator
+    ///     under whether inf or sup instantiation.
+    /// @param
+    ///     \a left and \a right are assumed to be LTL formulae (already instantiated)
+    virtual CltlFormulaPtr _rewrite_cost_release(const CltlFormulaPtr &formula,
+                                                 const CltlFormulaPtr &left,
+                                                 const CltlFormulaPtr &right,
+                                                 Instantiator *instantiator) const = 0;
 };
 
-// corresponds to the class named instant_inf in printer.cc
+/// Instantiate a CLTL[<=] formula (raise an exception if a Cost Release is encountered)
 class InstantiateInf : public Instantiator {
  public:
     virtual inline Instantiator *copy() const { return new InstantiateInf(); }
@@ -66,10 +76,14 @@ class InstantiateInf : public Instantiator {
                                                const CltlFormulaPtr &left,
                                                const CltlFormulaPtr &right,
                                                Instantiator *instantiator) const;
+
+    virtual CltlFormulaPtr _rewrite_cost_release(const CltlFormulaPtr &formula,
+                                                 const CltlFormulaPtr &left,
+                                                 const CltlFormulaPtr &right,
+                                                 Instantiator *instantiator) const;
 };
 
-// corresponds to the class named instant_sup in printer.cc
-// obsolete, DO NOT USE
+/// Instantiate a CLTL[>] formula (raise an exception if a Cost Release is encountered)
 class InstantiateSup : public Instantiator {
  public:
     virtual inline Instantiator *copy() const { return new InstantiateSup(); }
@@ -79,6 +93,11 @@ class InstantiateSup : public Instantiator {
                                                const CltlFormulaPtr &left,
                                                const CltlFormulaPtr &right,
                                                Instantiator *instantiator) const;
+
+    virtual CltlFormulaPtr _rewrite_cost_release(const CltlFormulaPtr &formula,
+                                                 const CltlFormulaPtr &left,
+                                                 const CltlFormulaPtr &right,
+                                                 Instantiator *instantiator) const;
 };
 
 }  // namespace spaction
