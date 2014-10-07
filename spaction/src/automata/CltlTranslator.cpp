@@ -21,6 +21,7 @@
 
 #include "BinaryOperator.h"
 #include "CltlFormulaFactory.h"
+#include "ConstantExpression.h"
 #include "UnaryOperator.h"
 
 namespace spaction {
@@ -60,100 +61,139 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         }
     }
 
-    if (f) {
-        BinaryOperator *bo = static_cast<BinaryOperator*>(f.get());
-        switch (bo->operator_type()) {
-            // (f = f1 || f2) => [_,_,_]-> (f1)
-            //                   [_,_,_]-> (f2)
-            case BinaryOperator::kOr: {
-                Node *phi_left = _build_node(_insert(leftover, bo->left()));
-                _transition_system.add_transition(node, phi_left, new TransitionLabel());
+    if (!f) return {};
 
-                Node *phi_right = _build_node(_insert(leftover, bo->right()));
-                _transition_system.add_transition(node, phi_right, new TransitionLabel());
+    BinaryOperator *bo = static_cast<BinaryOperator*>(f.get());
+    NodeList successors;
 
-                return {phi_left, phi_right};
+    switch (bo->operator_type()) {
+        // (f = f1 || f2) => [_,_,_]-> (f1)
+        //                   [_,_,_]-> (f2)
+        case BinaryOperator::kOr: {
+            Node *s0 = _build_node(_insert(leftover, bo->left()));
+            if (s0->is_consistent()) {
+                _transition_system.add_transition(node, s0, new TransitionLabel());
+                successors.push_back(s0);
             }
 
-            // (f = f1 && f2) => [_,_,_]-> (f1, f2)
-            case BinaryOperator::kAnd: {
-                Node *phi = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
-                _transition_system.add_transition(node, phi, new TransitionLabel());
-                return {phi};
+            Node *s1 = _build_node(_insert(leftover, bo->right()));
+            if (s1->is_consistent()) {
+                _transition_system.add_transition(node, s1, new TransitionLabel());
+                successors.push_back(s1);
             }
 
-            // (f = f1 U f2) => [_,_,_]-> (f2)
-            //                  [_,_,f]-> (f1, X(f))
-            case BinaryOperator::kUntil: {
-                Node *phi_0 = _build_node(_insert(leftover, bo->right()));
-                _transition_system.add_transition(node, phi_0, new TransitionLabel());
+            return successors;
+        }
 
-                Node *phi_1 = _build_node(_insert(_insert(leftover, bo->left()),
-                                                  bo->creator()->make_next(f)));
-                _transition_system.add_transition(node, phi_1, new TransitionLabel({},{},f));
-
-                return {phi_0, phi_1};
+        // (f = f1 && f2) => [_,_,_]-> (f1, f2)
+        case BinaryOperator::kAnd: {
+            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
+            if (s0->is_consistent()) {
+                _transition_system.add_transition(node, s0, new TransitionLabel());
+                successors.push_back(s0);
             }
 
-            // (f = f1 R f2) => [_,_,_]-> (f1, f2)
-            //                  [_,_,_]-> (f2, X(f))
-            case BinaryOperator::kRelease: {
-                Node *phi_0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
-                _transition_system.add_transition(node, phi_0, new TransitionLabel());
+            return successors;
+        }
 
-                Node *phi_1 = _build_node(_insert(_insert(leftover, bo->right()),
-                                                  bo->creator()->make_next(f)));
-                _transition_system.add_transition(node, phi_1, new TransitionLabel());
-
-                return {phi_0, phi_1};
+        // (f = f1 U f2) => [_,_,_]-> (f2)
+        //                  [_,_,f]-> (f1, X(f))
+        case BinaryOperator::kUntil: {
+            Node *s0 = _build_node(_insert(leftover, bo->right()));
+            if (s0->is_consistent()) {
+                _transition_system.add_transition(node, s0, new TransitionLabel());
+                successors.push_back(s0);
             }
 
-            // (f = f1 UN f2) => [_,r,_]-> (f2)
-            //                   [_,_,f]-> (f1, X(f))
-            //                   [_,ic,f]-> (X(f))
-            case BinaryOperator::kCostUntil: {
-                std::vector<std::string> counters(++_nb_counters, "");
+            Node *s1 = _build_node(_insert(_insert(leftover, bo->left()),
+                                              bo->creator()->make_next(f)));
+            if (s1->is_consistent()) {
+                _transition_system.add_transition(node, s1, new TransitionLabel({},{},f));
+                successors.push_back(s1);
+            }
 
-                Node *phi_0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
+            return successors;
+        }
+
+        // (f = f1 R f2) => [_,_,_]-> (f1, f2)
+        //                  [_,_,_]-> (f2, X(f))
+        case BinaryOperator::kRelease: {
+            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
+            if (s0->is_consistent()) {
+                _transition_system.add_transition(node, s0, new TransitionLabel());
+                successors.push_back(s0);
+            }
+
+            Node *s1 = _build_node(_insert(_insert(leftover, bo->right()),
+                                              bo->creator()->make_next(f)));
+            if (s1->is_consistent()) {
+                _transition_system.add_transition(node, s1, new TransitionLabel());
+                successors.push_back(s1);
+            }
+
+            return successors;
+        }
+
+        // (f = f1 UN f2) => [_,r,_]-> (f2)
+        //                   [_,_,f]-> (f1, X(f))
+        //                   [_,ic,f]-> (X(f))
+        case BinaryOperator::kCostUntil: {
+            std::vector<std::string> counters(++_nb_counters, "");
+
+            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
+            if (s0->is_consistent()) {
                 counters[_nb_counters-1] = "r";
-                _transition_system.add_transition(node, phi_0, new TransitionLabel({},counters));
-
-                Node *phi_1 = _build_node(_insert(_insert(leftover, bo->right()),
-                                                  bo->creator()->make_next(f)));
-                _transition_system.add_transition(node, phi_1, new TransitionLabel({},{},f));
-
-                Node *phi_2 = _build_node({bo->creator()->make_next(f)});
-                counters[_nb_counters-1] = "ic";
-                _transition_system.add_transition(node, phi_2, new TransitionLabel({},counters,f));
-
-                return {phi_0, phi_1, phi_2};
+                _transition_system.add_transition(node, s0, new TransitionLabel({},counters));
+                successors.push_back(s0);
             }
 
-            // (f = f1 RN f2) => [_,r,_]-> (f1,f2)
-            //                   [_,_,_]-> (f2, X(f))
-            //                   [_,ic,_]-> (X(f))
-            case BinaryOperator::kCostRelease: {
-                std::vector<std::string> counters(++_nb_counters, "");
+            Node *s1 = _build_node(_insert(_insert(leftover, bo->right()),
+                                              bo->creator()->make_next(f)));
+            if (s1->is_consistent()) {
+                _transition_system.add_transition(node, s1, new TransitionLabel({},{},f));
+                successors.push_back(s1);
+            }
 
-                Node *phi_0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
+            Node *s2 = _build_node({bo->creator()->make_next(f)});
+            if (s2->is_consistent()) {
+                counters[_nb_counters-1] = "ic";
+                _transition_system.add_transition(node, s2, new TransitionLabel({},counters,f));
+                successors.push_back(s2);
+            }
+
+            return successors;
+        }
+
+        // (f = f1 RN f2) => [_,r,_]-> (f1,f2)
+        //                   [_,_,_]-> (f2, X(f))
+        //                   [_,ic,_]-> (X(f))
+        case BinaryOperator::kCostRelease: {
+            std::vector<std::string> counters(++_nb_counters, "");
+
+            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
+            if (s0->is_consistent()) {
                 counters[_nb_counters-1] = "r";
-                _transition_system.add_transition(node, phi_0, new TransitionLabel({},counters));
-                
-                Node *phi_1 = _build_node(_insert(_insert(leftover, bo->right()),
-                                                  bo->creator()->make_next(f)));
-                _transition_system.add_transition(node, phi_1, new TransitionLabel());
-
-                Node *phi_2 = _build_node({bo->creator()->make_next(f)});
-                counters[_nb_counters-1] = "ic";
-                _transition_system.add_transition(node, phi_2, new TransitionLabel({},counters));
-                
-                return {phi_0, phi_1, phi_2};
+                _transition_system.add_transition(node, s0, new TransitionLabel({},counters));
+                successors.push_back(s0);
             }
+
+            Node *s1 = _build_node(_insert(_insert(leftover, bo->right()),
+                                              bo->creator()->make_next(f)));
+            if (s1->is_consistent()) {
+                _transition_system.add_transition(node, s1, new TransitionLabel());
+                successors.push_back(s1);
+            }
+
+            Node *s2 = _build_node({bo->creator()->make_next(f)});
+            if (s2->is_consistent()) {
+                counters[_nb_counters-1] = "ic";
+                _transition_system.add_transition(node, s2, new TransitionLabel({},counters));
+                successors.push_back(s2);
+            }
+
+            return successors;
         }
     }
-
-    // if no epsilon successors were built, simply return the empty set
-    return {};
 }
 
 CltlTranslator::Node *CltlTranslator::_build_actual_successor(Node *node) {
@@ -174,9 +214,9 @@ CltlTranslator::Node *CltlTranslator::_build_actual_successor(Node *node) {
         propositions.push_back(f);
     }
 
-    Node *phi = _build_node(successor);
-    _transition_system.add_transition(node, phi, new TransitionLabel(propositions));
-    return phi;
+    Node *suc = _build_node(successor_terms);
+    _transition_system.add_transition(node, suc, new TransitionLabel(propositions));
+    return suc;
 }
 
 void CltlTranslator::_build_transition_system() {
@@ -237,6 +277,41 @@ CltlTranslator::FormulaList CltlTranslator::_insert(const FormulaList &list,
 
     result.insert(it, formula);
     return result;
+}
+
+bool CltlTranslator::Node::is_consistent() const {
+    FormulaList truths;
+    FormulaList negations;
+
+    for (auto f : _terms) {
+        if (f->formula_type() == CltlFormula::kUnaryOperator) {
+            UnaryOperator *uo = static_cast<UnaryOperator*>(f.get());
+            if (uo->operator_type() == UnaryOperator::kNot) {
+                negations.push_back(uo->operand());
+                continue;
+            }
+        } else if (f->formula_type() == CltlFormula::kConstantExpression) {
+            ConstantExpression *ce = static_cast<ConstantExpression*>(f.get());
+            if (!ce->value())
+                return false;
+        }
+        truths.push_back(f);
+    }
+
+    for (auto f : negations) {
+        if (std::find(truths.begin(), truths.end(), f) != truths.end())
+            return false;
+    }
+
+    return true;
+}
+
+const std::string CltlTranslator::Node::dump() const {
+    std::string node_name = "";
+    for (const auto t : _terms) {
+        node_name += "[" + t->dump() + "], ";
+    }
+    return node_name;
 }
 
 }  // namespace automata
