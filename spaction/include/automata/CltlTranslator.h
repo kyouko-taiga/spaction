@@ -73,6 +73,8 @@ private:
     Node *_build_actual_successor(Node *node);
 
     void _build_transition_system();
+    void _process_reduce();
+    void _process_fire();
 
     /// Helper method that inserts a formula into a FormulaList and keeps the result sorted.
     FormulaList _insert(const FormulaList &list, const CltlFormulaPtr &formula) const;
