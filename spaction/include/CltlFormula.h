@@ -27,11 +27,6 @@ class CltlFormula;
 class CltlFormulaFactory;
 class CltlFormulaVisitor;
 
-class AtomicProposition;
-class ConstantExpression;
-class UnaryOperator;
-class BinaryOperator;
-
 typedef std::shared_ptr<CltlFormula> CltlFormulaPtr;
 
 /// A class that represents a Cost LTL formula.

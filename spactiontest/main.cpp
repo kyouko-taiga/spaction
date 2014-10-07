@@ -91,8 +91,8 @@ int main(int argc, char* argv[]) {
     std::cout << "nnf:   " << k->to_nnf()->dump() << std::endl;
     std::cout << "dnf:   " << k->to_dnf()->dump() << std::endl;
 
-    // a test formula and its equivalent automaton
-    k = f.make_and(f.make_atomic("a"), f.make_atomic("b"));
+    // a test formula: G(a + b), and its equivalent automaton
+    k = f.make_release(f.make_constant(false), f.make_or(f.make_atomic("a"), f.make_atomic("b")));
     spaction::automata::CltlTranslator translator(k);
     translator.build_automaton();
 
