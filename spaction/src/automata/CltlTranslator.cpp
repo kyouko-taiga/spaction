@@ -43,6 +43,7 @@ CltlTranslator::Node *CltlTranslator::_build_node(const FormulaList &terms) {
 
     // build a new instance and stores its pointer
     Node *n = new Node(terms);
+    _transition_system.add_state(n);
     _nodes.push_back(n);
     return n;
 }
