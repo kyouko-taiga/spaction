@@ -196,7 +196,7 @@ private:
     Transition &operator=(const Transition &) = delete;
 };
 
-}  // namespact automata
-}  // namespact spaction
+}  // namespace automata
+}  // namespace spaction
 
 #endif  // defined SPACTION_INCLUDE_CLTLTRANSLATOR_H_

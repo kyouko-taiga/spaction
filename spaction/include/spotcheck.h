@@ -23,11 +23,21 @@
 
 namespace spaction {
 
-// \todo expose this?
-// the first argument should be a pure LTL formula, and will be checked with spot
-bool spot_check(const std::string &formula, const std::string &modelname);
+// @todo expose it?
+// uses spot to check a LTL formula against a DVE model
+// @remarks
+//          the LTL formula is tested as is. It is the responsibility of the user to negate the
+//          formula if necessary.
+// @param formula       a LTL formula
+// @param modelfile     the path to the DVE model which \a formula is tested against
+// @return              true iff \a formula holds on no execution of \a model (empty product)
+bool spot_dve_check(const std::string &formula, const std::string &modelfile);
 
+/// finds the min bound of the given formula over the given model
+/// in practice, uses CLTL[<=] formulae
 unsigned int find_bound_min(const CltlFormulaPtr &formula, const std::string &modelname);
+/// finds the min bound of the given formula over the given model
+/// in practice, uses CLTL[>] formulae
 unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname);
 
 }  // namespace spaction
