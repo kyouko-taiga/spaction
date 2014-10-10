@@ -106,5 +106,11 @@ CltlFormulaPtr CltlFormulaFactory::make_globally(const CltlFormulaPtr &f) {
     const CltlFormulaPtr &ffalse = make_constant(false);
     return make_release(ffalse, f);
 }
-    
+
+// FN f = false UN f
+CltlFormulaPtr CltlFormulaFactory::make_costfinally(const CltlFormulaPtr &f) {
+    const CltlFormulaPtr &ffalse = make_constant(false);
+    return make_costuntil(ffalse, f);
+}
+
 }  // namespace spaction
