@@ -38,7 +38,7 @@ void AtomicProposition::accept(CltlFormulaVisitor &visitor) {
 }
 
 std::string AtomicProposition::dump() const {
-    return "\"" + _value + "\"";
+    return "\'" + _value + "\'";
 }
 
 }  // namespace spaction
