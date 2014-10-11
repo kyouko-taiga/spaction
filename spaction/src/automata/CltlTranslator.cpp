@@ -35,14 +35,29 @@ void CltlTranslator::build_automaton() {
     _build_transition_system();
 }
 
+CltlTranslator::FormulaList CltlTranslator::_unique_sort(const CltlTranslator::FormulaList &terms) {
+    FormulaList result(terms);
+    // sort
+    std::sort(result.begin(), result.end(),
+              [](const CltlFormulaPtr &l, const CltlFormulaPtr &r){
+                  return (l->height() == r->height()) ? (l < r) : (l->height() < r->height());
+              });
+    // remove duplicates
+    auto last = std::unique(result.begin(), result.end());
+    // remove shrinked values
+    result.erase(last, result.end());
+    return result;
+}
+
 CltlTranslator::Node *CltlTranslator::_build_node(const FormulaList &terms) {
+    FormulaList canonical = _unique_sort(terms);
     // search for a pre-existing instance of the node
     for (auto n : _nodes) {
-        if (n->terms() == terms) return n;
+        if (n->terms() == canonical) return n;
     }
 
     // build a new instance and stores its pointer
-    Node *n = new Node(terms);
+    Node *n = new Node(canonical);
     _transition_system.add_state(n);
     _nodes.push_back(n);
     return n;

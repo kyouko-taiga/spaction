@@ -49,6 +49,8 @@ private:
     /// pseudo-states are those obtained by building the epsilon-transitions from actual states.
     class Node {
     public:
+        /// `terms` is assumed to be sorted according to `_unique_sort` (see below)
+        /// this constructor is therefore not supposed to be called outside of `_build_node`
         explicit inline Node(const CltlTranslator::FormulaList &terms) :
             _terms(terms), _is_reduced(false) {
         }
@@ -111,6 +113,10 @@ private:
     std::stack<Node*> _to_be_fired;
     std::vector<Node*> _states;
 
+    /// a helper function that returns from a list of terms a sorted set, to ease comparison.
+    /// Sorting is done according to height, so that the last element of the list
+    /// is also (one of) the highest.
+    static FormulaList _unique_sort(const CltlTranslator::FormulaList &terms);
     /// Either builds or returns an existing node for the given set of `terms`.
     Node *_build_node(const FormulaList &terms);
 
