@@ -18,6 +18,11 @@
 #ifndef SPACTION_INCLUDE_TRANSITIONSYSTEM_H_
 #define SPACTION_INCLUDE_TRANSITIONSYSTEM_H_
 
+#include <fstream>
+#include <map>
+#include <vector>
+#include <unordered_map>
+
 namespace spaction {
 namespace automata {
 
@@ -162,8 +167,46 @@ public:
     }
 
     virtual std::vector<Transition<Q,S>*> find_all_transitions(const Q &source,
-                                                             const S &label) const {
+                                                               const S &label) const {
         return this->_graph.at(source).at(label);
+    }
+
+    /// an export to graphviz
+    void to_dot(const std::string &dotfile) const {
+        // open output file
+        std::ofstream o;
+        o.open(dotfile);
+
+        // initial dot file
+        o << "digraph G {" << std::endl;
+//        o << "0 [label=\"\", style=invis, height=0];" << std::endl;
+//        o << "0 -> 1;" << std::endl;
+
+        // export system's nodes
+        unsigned int i = 1;
+        std::map<Q, unsigned int> node_map;
+        for (auto n : _graph) {
+            auto it = node_map.insert(std::make_pair(n.first, i));
+            // increment i if n.first was not already in node_map
+            if (it.second) ++i;
+
+            o << it.first->second << " [label=\"" << n.first->dump("\\n") << "\" ];" << std::endl;
+            for (auto vt : n.second) {
+                for (auto t : vt.second) {
+                    auto jt = node_map.insert(std::make_pair(t->sink(), i));
+                    // increment i if t.sink was not already in node_map
+                    if (jt.second) ++i;
+
+                    o << it.first->second << "->" << jt.first->second << " [label=\"" << t->label()->dump() << "\" ];" << std::endl;
+                }
+            }
+        }
+
+        // end of graph definition
+        o << "}" << std::endl;
+        
+        // close output file
+        o.close();
     }
 
 protected:
