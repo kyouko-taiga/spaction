@@ -58,7 +58,9 @@ CltlTranslator::Node *CltlTranslator::_build_node(const FormulaList &terms) {
 
     // build a new instance and stores its pointer
     Node *n = new Node(canonical);
-    _transition_system.add_state(n);
+
+    if (n->is_consistent())
+        _transition_system.add_state(n);
     _nodes.push_back(n);
     return n;
 }
