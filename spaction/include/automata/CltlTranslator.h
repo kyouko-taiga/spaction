@@ -134,7 +134,7 @@ private:
     void _process_fire();
 
     /// Helper method that inserts a formula into a FormulaList and keeps the result sorted.
-    FormulaList _insert(const FormulaList &list, const CltlFormulaPtr &formula) const;
+    FormulaList _insert(const FormulaList &list, const std::initializer_list<CltlFormulaPtr> &add_list) const;
 };
 
 }  // namespace automata

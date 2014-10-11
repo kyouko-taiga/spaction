@@ -88,13 +88,13 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         // (f = f1 || f2) => [_,_,_]-> (f1)
         //                   [_,_,_]-> (f2)
         case BinaryOperator::kOr: {
-            Node *s0 = _build_node(_insert(leftover, bo->left()));
+            Node *s0 = _build_node(_insert(leftover, {bo->left()}));
             if (s0->is_consistent()) {
                 _transition_system.add_transition(node, s0, new TransitionLabel());
                 successors.push_back(s0);
             }
 
-            Node *s1 = _build_node(_insert(leftover, bo->right()));
+            Node *s1 = _build_node(_insert(leftover, {bo->right()}));
             if (s1->is_consistent()) {
                 _transition_system.add_transition(node, s1, new TransitionLabel());
                 successors.push_back(s1);
@@ -105,7 +105,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
 
         // (f = f1 && f2) => [_,_,_]-> (f1, f2)
         case BinaryOperator::kAnd: {
-            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
+            Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
             if (s0->is_consistent()) {
                 _transition_system.add_transition(node, s0, new TransitionLabel());
                 successors.push_back(s0);
@@ -117,14 +117,13 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         // (f = f1 U f2) => [_,_,_]-> (f2)
         //                  [_,_,f]-> (f1, X(f))
         case BinaryOperator::kUntil: {
-            Node *s0 = _build_node(_insert(leftover, bo->right()));
+            Node *s0 = _build_node(_insert(leftover, {bo->right()}));
             if (s0->is_consistent()) {
                 _transition_system.add_transition(node, s0, new TransitionLabel());
                 successors.push_back(s0);
             }
 
-            Node *s1 = _build_node(_insert(_insert(leftover, bo->left()),
-                                              bo->creator()->make_next(f)));
+            Node *s1 = _build_node(_insert(leftover, {bo->left(), bo->creator()->make_next(f)}));
             if (s1->is_consistent()) {
                 _transition_system.add_transition(node, s1, new TransitionLabel({},{},f));
                 successors.push_back(s1);
@@ -136,14 +135,13 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         // (f = f1 R f2) => [_,_,_]-> (f1, f2)
         //                  [_,_,_]-> (f2, X(f))
         case BinaryOperator::kRelease: {
-            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
+            Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
             if (s0->is_consistent()) {
                 _transition_system.add_transition(node, s0, new TransitionLabel());
                 successors.push_back(s0);
             }
 
-            Node *s1 = _build_node(_insert(_insert(leftover, bo->right()),
-                                              bo->creator()->make_next(f)));
+            Node *s1 = _build_node(_insert(leftover, {bo->right(), bo->creator()->make_next(f)}));
             if (s1->is_consistent()) {
                 _transition_system.add_transition(node, s1, new TransitionLabel());
                 successors.push_back(s1);
@@ -158,15 +156,14 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         case BinaryOperator::kCostUntil: {
             std::vector<std::string> counters(++_nb_counters, "");
 
-            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
+            Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
             if (s0->is_consistent()) {
                 counters[_nb_counters-1] = "r";
                 _transition_system.add_transition(node, s0, new TransitionLabel({},counters));
                 successors.push_back(s0);
             }
 
-            Node *s1 = _build_node(_insert(_insert(leftover, bo->right()),
-                                              bo->creator()->make_next(f)));
+            Node *s1 = _build_node(_insert(leftover, {bo->right(), bo->creator()->make_next(f)}));
             if (s1->is_consistent()) {
                 _transition_system.add_transition(node, s1, new TransitionLabel({},{},f));
                 successors.push_back(s1);
@@ -188,15 +185,14 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         case BinaryOperator::kCostRelease: {
             std::vector<std::string> counters(++_nb_counters, "");
 
-            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
+            Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
             if (s0->is_consistent()) {
                 counters[_nb_counters-1] = "r";
                 _transition_system.add_transition(node, s0, new TransitionLabel({},counters));
                 successors.push_back(s0);
             }
 
-            Node *s1 = _build_node(_insert(_insert(leftover, bo->right()),
-                                              bo->creator()->make_next(f)));
+            Node *s1 = _build_node(_insert(leftover, {bo->right(), bo->creator()->make_next(f)}));
             if (s1->is_consistent()) {
                 _transition_system.add_transition(node, s1, new TransitionLabel());
                 successors.push_back(s1);
@@ -285,15 +281,9 @@ void CltlTranslator::_process_fire() {
 }
 
 CltlTranslator::FormulaList CltlTranslator::_insert(const FormulaList &list,
-                                                    const CltlFormulaPtr &formula) const {
+                                                    const std::initializer_list<CltlFormulaPtr> &add_list) const {
     FormulaList result(list);
-    FormulaList::iterator it = result.begin();
-
-    // seek for the position at which insert the new element
-    while((it != result.end()) and (*it)->height() < formula->height())
-        it++;
-
-    result.insert(it, formula);
+    result.insert(result.end(), add_list);
     return result;
 }
 
