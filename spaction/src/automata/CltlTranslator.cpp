@@ -293,7 +293,8 @@ void CltlTranslator::_process_fire() {
 
         // build the actual successor of `s`
         Node *t = _build_actual_successor(s);
-        _states.push_back(t);
+        if (std::find(_states.begin(), _states.end(), t) == _states.end())
+            _states.push_back(t);
 
         // `t` should never be empty (ie. end of the word), but just in case, we won't
         // add it to the reduce stack since it would cause a null pointer exception

@@ -22,3 +22,6 @@
 
 # Don't put dependencies under versioning
 dependencies/*
+
+# Don't put documentation under versioning
+docs/*

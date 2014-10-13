@@ -40,6 +40,12 @@ public:
 
     explicit CltlTranslator(const CltlFormulaPtr &formula);
 
+    /// @note
+    ///     Both Node and TransitionLabel objects might create memory leaks once the translator
+    ///     that built them goes out of scope. Consider using std::unique_ptr or std::shared_ptr
+    ///     to manage these objects.
+    ~CltlTranslator() { }
+
     void build_automaton();
 
     void automaton_dot(const std::string &dotfile) const { _transition_system.to_dot(dotfile); }
