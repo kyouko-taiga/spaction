@@ -322,5 +322,28 @@ const std::string CltlTranslator::Node::dump(const std::string &sep) const {
     return node_name;
 }
 
+const std::string CltlTranslator::TransitionLabel::dump() const {
+    std::string result = "";
+    if (propositions.empty()) {
+        result += "true";
+    } else {
+        auto it = propositions.begin();
+        result += (*it)->dump();
+        for (++it; it != propositions.end(); ++it) {
+            result += " && " + (*it)->dump();
+        }
+    }
+
+    result += "\\n";
+    for (auto c : counter_actions) {
+        result += c + "/";
+    }
+    if (postponed != nullptr) {
+        result += "\\n";
+        result += "PP { " + postponed->dump() + " }";
+    }
+    return result;
+}
+
 }  // namespace automata
 }  // namespace spaction

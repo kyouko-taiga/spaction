@@ -41,6 +41,8 @@ public:
 
     void build_automaton();
 
+    void automaton_dot(const std::string &dotfile) const { _transition_system.to_dot(dotfile); }
+
 private:
     /// Helper class representing the states of the temporary transition system.
     ///
@@ -93,6 +95,8 @@ private:
                                         const CltlFormulaPtr &postponed=nullptr) :
             propositions(propositions), counter_actions(counter_actions), postponed(postponed) {
         }
+
+        const std::string dump() const;
     };
 
     typedef std::vector<Node*> NodeList;
