@@ -90,8 +90,8 @@ private:
 
         explicit inline TransitionLabel(const CltlTranslator::FormulaList &propositions={},
                                         const std::vector<std::string> &counter_actions={},
-                                        const CltlFormulaPtr &postoned=0) :
-            propositions(propositions), counter_actions(counter_actions), postponed(postoned) {
+                                        const CltlFormulaPtr &postponed=nullptr) :
+            propositions(propositions), counter_actions(counter_actions), postponed(postponed) {
         }
     };
 
