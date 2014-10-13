@@ -314,10 +314,10 @@ bool CltlTranslator::Node::is_consistent() const {
     return true;
 }
 
-const std::string CltlTranslator::Node::dump() const {
+const std::string CltlTranslator::Node::dump(const std::string &sep) const {
     std::string node_name = "";
     for (const auto t : _terms) {
-        node_name += "[" + t->dump() + "], ";
+        node_name += "[" + t->dump() + "]" + sep + " ";
     }
     return node_name;
 }

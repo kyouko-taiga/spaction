@@ -62,7 +62,7 @@ private:
 
         bool is_consistent() const;
 
-        const std::string dump() const;
+        const std::string dump(const std::string &sep=",") const;
 
     private:
         /// List of subformulae corresponding to this pseudo-state.
