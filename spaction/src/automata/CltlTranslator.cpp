@@ -156,20 +156,20 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         case BinaryOperator::kCostUntil: {
             std::vector<std::string> counters(++_nb_counters, "");
 
-            Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
+            Node *s0 = _build_node(_insert(leftover, {bo->right()}));
             if (s0->is_consistent()) {
                 counters[_nb_counters-1] = "r";
                 _transition_system.add_transition(node, s0, new TransitionLabel({},counters));
                 successors.push_back(s0);
             }
 
-            Node *s1 = _build_node(_insert(leftover, {bo->right(), bo->creator()->make_next(f)}));
+            Node *s1 = _build_node(_insert(leftover, {bo->left(), bo->creator()->make_next(f)}));
             if (s1->is_consistent()) {
                 _transition_system.add_transition(node, s1, new TransitionLabel({},{},f));
                 successors.push_back(s1);
             }
 
-            Node *s2 = _build_node({bo->creator()->make_next(f)});
+            Node *s2 = _build_node(_insert(leftover,{bo->creator()->make_next(f)}));
             if (s2->is_consistent()) {
                 counters[_nb_counters-1] = "ic";
                 _transition_system.add_transition(node, s2, new TransitionLabel({},counters,f));
