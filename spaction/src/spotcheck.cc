@@ -129,6 +129,8 @@ static bool spot_check_inf(const CltlFormulaPtr &formula, int n, const std::stri
 
     const CltlFormulaPtr &tmp = instanciator(formula, n);
     ltl_string = tmp->dump();
+    // to please spot, replace single quotes by double quotes around atomic propostions
+    std::replace(ltl_string.begin(), ltl_string.end(), '\'', '"');
     return spot_dve_check(ltl_string, modelname);
 }
 
