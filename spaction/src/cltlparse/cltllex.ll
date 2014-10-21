@@ -17,13 +17,14 @@
 // limitations under the License.
 
 #include "cltlparse.hh"
-#include "cltlparse/cltlscanner.hh"
+#include "cltlparse/CLTLScanner.h"
 
 typedef yy::parser::token token;
 
 %}
 
 %option c++
+%option outfile="lex.yy.c"
 %option noyywrap warn 8bit batch
 %option yyclass="CLTLScanner"
 

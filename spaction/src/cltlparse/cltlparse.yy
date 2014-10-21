@@ -22,7 +22,7 @@
 #include <string>
 #include "CltlFormula.h"
 #include "CltlFormulaFactory.h"
-#include "cltlparse/cltlscanner.hh"
+#include "cltlparse/CLTLScanner.h"
 
 // wrap a static default factory for CLTL formulae
 static spaction::CltlFormulaFactory & _factory();
@@ -39,7 +39,7 @@ struct union_tag {
 #define YYSTYPE union_tag
 
 // custom lex function
-static int yylex(YYSTYPE*, spaction::cltlparse::CLTLScanner&);
+static int yylex(YYSTYPE*, spaction::cltlparse::CLTLScanner &);
 
 // NOTE error handling is copied from SPOT LTL parser
 /// \brief A parse diagnostic with its location.
@@ -135,7 +135,7 @@ int yylex(YYSTYPE *yylval, spaction::cltlparse::CLTLScanner &scanner) {
 
 #include <sstream>
 
-#include "cltlparse/public.hh"
+#include "cltlparse/public.h"
 
 namespace spaction {
 namespace cltlparse {
