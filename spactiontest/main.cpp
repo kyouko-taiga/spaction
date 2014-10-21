@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <string>
+#include <unistd.h>
 
 #include "CltlFormula.h"
 #include "CltlFormulaFactory.h"
@@ -24,6 +25,8 @@
 
 #include "automata/CltlTranslator.h"
 #include "automata/RegisterAutomaton.h"
+
+#include "cltlparse/public.h"
 
 // this file is strongly inspired from spot/iface/dve2/dve2check.cc
 
@@ -72,44 +75,47 @@ void test_cost_register_automata(const std::string &str = "aabaaacba") {
 }
 
 int main(int argc, char* argv[]) {
-    test_cost_register_automata();
+    std::string cltl_string = "";
+    std::string dot_file = "";
 
-    if (argc != 2) {
-        std::cerr << "wrong number of arguments" << std::endl;
-        std::cerr << "usage: spaction model.dve" << std::endl;
+    int c;
+    while ((c = getopt(argc, argv, "f:o:")) != -1) {
+        switch (c) {
+            case 'f':
+                cltl_string = optarg;
+                break;
+            case 'o':
+                dot_file = optarg;
+                break;
+            default:
+                std::cerr << "unknown option " << c << std::endl;
+                std::cerr << "abort" << std::endl;
+                return 1;
+        }
+    }
+
+    if (cltl_string == "") {
+        std::cerr << "no input formula, abort" << std::endl;
         return 1;
     }
 
-    // a test formula: (a + b) * c * (d + a) == acd + ac + bcd + abc
-    spaction::CltlFormulaFactory f;
-    spaction::CltlFormulaPtr k = f.make_and(f.make_and(f.make_or(f.make_atomic("a"),
-                                                                 f.make_atomic("b")),
-                                                       f.make_atomic("c")),
-                                            f.make_or(f.make_atomic("d"), f.make_atomic("a")));
+    spaction::CltlFormulaPtr f = spaction::cltlparse::parse_formula(cltl_string);
+    if (f == nullptr) {
+        std::cerr << "parsing went wrong, abort" << std::endl;
+        return 1;
+    }
 
-    std::cout << "input: " << k->dump() << std::endl;
-    std::cout << "nnf:   " << k->to_nnf()->dump() << std::endl;
-    std::cout << "dnf:   " << k->to_dnf()->dump() << std::endl;
+    std::cout << "input: " << cltl_string << std::endl;
+    std::cout << "nnf:   " << f->to_nnf()->dump() << std::endl;
+    std::cout << "dnf:   " << f->to_dnf()->dump() << std::endl;
+    std::cout << "the input formula is " << f->dump() << std::endl;
 
-    // a test formula: G(a + b), and its equivalent automaton
-    k = f.make_release(f.make_constant(false), f.make_or(f.make_atomic("a"), f.make_atomic("b")));
-    spaction::automata::CltlTranslator translator(k);
+    spaction::automata::CltlTranslator translator(f);
     translator.build_automaton();
-
-    // a test formula
-    // \todo atoms are not properly deleted here
-    k = f.make_costuntil(f.make_atomic("P_0.wait"), f.make_atomic("P_0.CS"));
-
-    // G(wait -> F CS)
-    /* cltl_formula *f = cltl_factory::make_not(cltl_factory::make_globally(
-     * cltl_factory::make_imply(cltl_factory::make_atomic("P_0.wait"),
-     *  cltl_factory::make_finally(
-     *  cltl_factory::make_atomic("P_0.CS"))))); */
-
-    std::cout << k->dump() << std::endl;
-
-    int bound = spaction::find_bound_min(k, argv[1]);
-    std::cout << "the bound for " << k->dump() << " is " << bound << std::endl;
+    if (dot_file != "") {
+        translator.automaton_dot(dot_file);
+        std::cerr << "automaton was printed to file " << dot_file << std::endl;
+    }
 
     return 0;
 }
