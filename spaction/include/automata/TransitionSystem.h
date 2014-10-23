@@ -27,13 +27,15 @@ template<typename Q, typename S> class Transition;
 
 template<typename Q, typename S> class TransitionSystem {
 protected:
-    class Iterator;
+    class _TransitionIterator;
+    class _StateIterator;
     class StateWrapper;
     class SuccessorContainer;
     class PredecessorContainer;
 
 public:
-    typedef Iterator iterator;
+    typedef _TransitionIterator TransitionIterator;
+    typedef _StateIterator StateIterator;
 
     virtual ~TransitionSystem() { }
 
@@ -47,20 +49,20 @@ public:
     virtual void remove_transition(const Q &source, const Q &sink, const S &label) = 0;
 
 protected:
-    class BaseIterator {
+    class TransitionBaseIterator {
     public:
-        virtual ~BaseIterator() { }
+        virtual ~TransitionBaseIterator() { }
 
-        bool operator!=(const BaseIterator& rhs) const {
+        bool operator!=(const TransitionBaseIterator& rhs) const {
             // unfortunately, using rtti here is probably better than other alternative
             // see http://stackoverflow.com/questions/11332075
             return (typeid(*this) != typeid(rhs)) or !is_equal(rhs);
         }
 
-        virtual bool is_equal(const BaseIterator& rhs) const = 0;
+        virtual bool is_equal(const TransitionBaseIterator& rhs) const = 0;
 
         virtual Transition<Q,S>* operator*() = 0;
-        virtual const BaseIterator& operator++() = 0;
+        virtual const TransitionBaseIterator& operator++() = 0;
     };
 
     class StateWrapper {
@@ -89,25 +91,25 @@ protected:
         const Q _state;
     };
 
-    class Iterator {
+    class _TransitionIterator {
     public:
-        explicit Iterator(BaseIterator *base_iterator) :
+        explicit _TransitionIterator(TransitionBaseIterator *base_iterator) :
             _base_iterator(base_iterator) { }
-        virtual ~Iterator() { delete _base_iterator; }
+        virtual ~_TransitionIterator() { delete _base_iterator; }
 
-        bool operator!=(const Iterator& rhs) const {
+        bool operator!=(const _TransitionIterator& rhs) const {
             return *(_base_iterator) != *(rhs._base_iterator);
         }
 
         Transition<Q,S>* operator*() { return **_base_iterator; }
 
-        const Iterator& operator++() {
+        const _TransitionIterator& operator++() {
             ++(*_base_iterator);
             return *this;
         }
 
     private:
-        BaseIterator *_base_iterator;
+        TransitionBaseIterator *_base_iterator;
     };
 
     class RelationshipContainer {
@@ -119,8 +121,8 @@ protected:
         const StateWrapper *state() const { return _state_wrapper; }
         const S *label() const { return _label; }
 
-        virtual Iterator begin() const = 0;
-        virtual Iterator end() const = 0;
+        virtual _TransitionIterator begin() const = 0;
+        virtual _TransitionIterator end() const = 0;
 
     protected:
         StateWrapper *_state_wrapper;
@@ -132,13 +134,13 @@ protected:
         explicit SuccessorContainer(StateWrapper *state_wrapper, const S* label=nullptr) :
             RelationshipContainer(state_wrapper, label) { }
 
-        virtual Iterator begin() const {
+        virtual _TransitionIterator begin() const {
             TransitionSystem<Q,S> *ts = this->_state_wrapper->transition_system();
             return Iterator(ts->_successor_begin(this->_state_wrapper->state(),
                                                              this->_label));
         }
 
-        virtual Iterator end() const {
+        virtual _TransitionIterator end() const {
             TransitionSystem<Q,S> *ts = this->_state_wrapper->transition_system();
             return Iterator(ts->_successor_end(this->_state_wrapper->state()));
         }
@@ -155,11 +157,11 @@ protected:
         return new Transition<Q,S>(source, sink, label);
     }
 
-    virtual BaseIterator *_successor_begin(const Q &state, const S *label) = 0;
-    virtual BaseIterator *_successor_end(const Q &state) = 0;
+    virtual TransitionBaseIterator *_successor_begin(const Q &state, const S *label) = 0;
+    virtual TransitionBaseIterator *_successor_end(const Q &state) = 0;
 
-    virtual BaseIterator *_predecessor_begin(const Q &state, const S *label) = 0;
-    virtual BaseIterator *_predecessor_end(const Q &state) = 0;
+    virtual TransitionBaseIterator *_predecessor_begin(const Q &state, const S *label) = 0;
+    virtual TransitionBaseIterator *_predecessor_end(const Q &state) = 0;
 };
 
 /// Class that represents a transition in a TransitionSystem.
