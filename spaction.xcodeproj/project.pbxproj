@@ -88,6 +88,8 @@
 		756EE61019CAD793002261FF /* UnaryOperator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = UnaryOperator.cpp; sourceTree = "<group>"; };
 		756EE61319CAD902002261FF /* BinaryOperator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = BinaryOperator.cpp; sourceTree = "<group>"; };
 		756EE61619CC1C78002261FF /* Instantiator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Instantiator.h; sourceTree = "<group>"; };
+		7582518219F55299008D042D /* DeterministicTransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeterministicTransitionSystem.h; sourceTree = "<group>"; };
+		7582518319F55299008D042D /* UndeterministicTransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UndeterministicTransitionSystem.h; sourceTree = "<group>"; };
 		759343D31970051200DD5475 /* RegisterAutomaton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RegisterAutomaton.h; sourceTree = "<group>"; };
 		75AFC89A196EAE3D00BAE38C /* spaction.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = spaction.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		75AFC89F196EAE3D00BAE38C /* spaction.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = spaction.1; sourceTree = "<group>"; };
@@ -211,6 +213,8 @@
 				75EF898619B8518E00441B56 /* CltlTranslator.h */,
 				759343D31970051200DD5475 /* RegisterAutomaton.h */,
 				753EF59919DEEA6900106D3C /* TransitionSystem.h */,
+				7582518219F55299008D042D /* DeterministicTransitionSystem.h */,
+				7582518319F55299008D042D /* UndeterministicTransitionSystem.h */,
 			);
 			path = automata;
 			sourceTree = "<group>";

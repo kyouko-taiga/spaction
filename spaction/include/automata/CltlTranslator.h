@@ -24,7 +24,7 @@
 
 #include "CltlFormula.h"
 #include "automata/RegisterAutomaton.h"
-#include "automata/TransitionSystem.h"
+#include "automata/UndeterministicTransitionSystem.h"
 
 namespace spaction {
 namespace automata {
@@ -101,8 +101,8 @@ private:
 
         explicit inline TransitionLabel(const CltlTranslator::FormulaList &propositions={},
                                         const std::vector<std::string> &counter_actions={},
-                                        const CltlFormulaPtr &postponed=nullptr) :
-            propositions(propositions), counter_actions(counter_actions), postponed(postponed) {
+                                        const CltlFormulaPtr &postoned=0) :
+            propositions(propositions), counter_actions(counter_actions), postponed(postoned) {
         }
 
         const std::string dump() const;
