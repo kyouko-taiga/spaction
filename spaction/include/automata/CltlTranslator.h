@@ -25,6 +25,7 @@
 
 #include "CltlFormula.h"
 #include "automata/RegisterAutomaton.h"
+#include "automata/TSPrinter.h"
 #include "automata/UndeterministicTransitionSystem.h"
 
 namespace spaction {
@@ -48,7 +49,10 @@ public:
 
     void build_automaton();
 
-    void automaton_dot(const std::string &dotfile) const { _transition_system.to_dot(dotfile); }
+    void automaton_dot(const std::string &dotfile) {
+        TSPrinter<Node*, TransitionLabel*> p(_transition_system);
+        p.print_to_file(dotfile);
+    }
 
 private:
     /// map occurrences of cost operator to counters
