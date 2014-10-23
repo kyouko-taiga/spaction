@@ -18,6 +18,7 @@
 #ifndef SPACTION_INCLUDE_CLTLTRANSLATOR_H_
 #define SPACTION_INCLUDE_CLTLTRANSLATOR_H_
 
+#include <map>
 #include <stack>
 #include <string>
 #include <vector>
