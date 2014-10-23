@@ -30,6 +30,7 @@ protected:
     class _TransitionIterator;
     class _StateIterator;
     class StateWrapper;
+    class StateContainer;
     class SuccessorContainer;
     class PredecessorContainer;
 
@@ -44,6 +45,7 @@ public:
     virtual bool has_state(const Q &state) const = 0;
 
     virtual StateWrapper operator()(const Q &state) { return StateWrapper(this, state); }
+    virtual StateContainer states() { return StateContainer(this); }
 
     virtual Transition<Q,S> *add_transition(const Q &source, const Q &sink, const S &label) = 0;
     virtual void remove_transition(const Q &source, const Q &sink, const S &label) = 0;
@@ -63,6 +65,22 @@ protected:
 
         virtual Transition<Q,S>* operator*() = 0;
         virtual const TransitionBaseIterator& operator++() = 0;
+    };
+
+    class StateBaseIterator {
+    public:
+        virtual ~StateBaseIterator() { }
+
+        bool operator!=(const StateBaseIterator& rhs) const {
+            // unfortunately, using rtti here is probably better than other alternative
+            // see http://stackoverflow.com/questions/11332075
+            return (typeid(*this) != typeid(rhs)) or !is_equal(rhs);
+        }
+
+        virtual bool is_equal(const StateBaseIterator& rhs) const = 0;
+
+        virtual Q operator*() = 0;
+        virtual const StateBaseIterator& operator++() = 0;
     };
 
     class StateWrapper {
@@ -112,6 +130,43 @@ protected:
         TransitionBaseIterator *_base_iterator;
     };
 
+    class _StateIterator {
+    public:
+        explicit _StateIterator(StateBaseIterator *base_iterator) :
+        _base_iterator(base_iterator) { }
+        virtual ~_StateIterator() { delete _base_iterator; }
+
+        bool operator!=(const _StateIterator& rhs) const {
+            return *(_base_iterator) != *(rhs._base_iterator);
+        }
+
+        Q operator*() { return **_base_iterator; }
+
+        const _StateIterator& operator++() {
+            ++(*_base_iterator);
+            return *this;
+        }
+
+    private:
+        StateBaseIterator *_base_iterator;
+    };
+
+    class StateContainer {
+    public:
+        StateContainer(TransitionSystem<Q,S> *ts): _ts(ts) {}
+        virtual ~StateContainer() {}
+
+        virtual _StateIterator begin() const {
+            return _StateIterator(_ts->_state_begin());
+        }
+        virtual _StateIterator end() const {
+            return _StateIterator(_ts->_state_end());
+        }
+
+    private:
+        TransitionSystem<Q,S> *_ts;
+    };
+
     class RelationshipContainer {
     public:
         explicit RelationshipContainer(StateWrapper *state_wrapper, const S* label=nullptr) :
@@ -136,13 +191,13 @@ protected:
 
         virtual _TransitionIterator begin() const {
             TransitionSystem<Q,S> *ts = this->_state_wrapper->transition_system();
-            return Iterator(ts->_successor_begin(this->_state_wrapper->state(),
-                                                             this->_label));
+            return _TransitionIterator(ts->_successor_begin(this->_state_wrapper->state(),
+                                                            this->_label));
         }
 
         virtual _TransitionIterator end() const {
             TransitionSystem<Q,S> *ts = this->_state_wrapper->transition_system();
-            return Iterator(ts->_successor_end(this->_state_wrapper->state()));
+            return _TransitionIterator(ts->_successor_end(this->_state_wrapper->state()));
         }
     };
 
@@ -162,6 +217,9 @@ protected:
 
     virtual TransitionBaseIterator *_predecessor_begin(const Q &state, const S *label) = 0;
     virtual TransitionBaseIterator *_predecessor_end(const Q &state) = 0;
+
+    virtual StateBaseIterator *_state_begin() = 0;
+    virtual StateBaseIterator *_state_end() = 0;
 };
 
 /// Class that represents a transition in a TransitionSystem.
