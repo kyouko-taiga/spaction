@@ -29,28 +29,43 @@ namespace automata {
 
 CltlTranslator::CltlTranslator(const CltlFormulaPtr &formula) :
     _formula(formula->to_nnf()), _nb_counters(0) {
-        _formula->accept(*this);
+        this->map_costop_to_counters(_formula);
 }
 
 void CltlTranslator::build_automaton() {
     _build_transition_system();
 }
 
-void CltlTranslator::visit(const std::shared_ptr<UnaryOperator> &formula) {
-    formula->operand()->accept(*this);
-}
-
-void CltlTranslator::visit(const std::shared_ptr<BinaryOperator> &formula) {
-    switch (formula->operator_type()) {
-        case BinaryOperator::kCostUntil:
-        case BinaryOperator::kCostRelease:
-            _counters_maps[formula] = _nb_counters++;
+void CltlTranslator::map_costop_to_counters(const CltlFormulaPtr &f) {
+    switch (f->formula_type()) {
+        case CltlFormula::kUnaryOperator:
+            this->map_costop_to_counters(
+                // this cast is safe
+                reinterpret_cast<const std::shared_ptr<UnaryOperator> &>(f)->operand());
             break;
+        case CltlFormula::kBinaryOperator: {
+            // this cast is safe
+            const std::shared_ptr<BinaryOperator> &fbin =
+                reinterpret_cast<const std::shared_ptr<BinaryOperator> &>(f);
+            switch (fbin->operator_type()) {
+                case BinaryOperator::kCostUntil:
+                case BinaryOperator::kCostRelease:
+                    if (_counters_maps.count(f) != 0)
+                        throw f->dump() + " already has a counter associated";
+                    _counters_maps[f] = _nb_counters++;
+                    break;
+                default:
+                    break;
+            }
+            // recursive calls
+            this->map_costop_to_counters(fbin->left());
+            this->map_costop_to_counters(fbin->right());
+            break;
+        }
         default:
+            // nothing to do
             break;
     }
-    formula->left()->accept(*this);
-    formula->right()->accept(*this);
 }
 
 CltlTranslator::FormulaList CltlTranslator::_unique_sort(const CltlTranslator::FormulaList &terms) {

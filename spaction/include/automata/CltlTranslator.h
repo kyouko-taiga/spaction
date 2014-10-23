@@ -23,7 +23,6 @@
 #include <vector>
 
 #include "CltlFormula.h"
-#include "CltlFormulaVisitor.h"
 #include "automata/RegisterAutomaton.h"
 #include "automata/TransitionSystem.h"
 
@@ -33,7 +32,7 @@ namespace automata {
 struct Node;
 struct TransitionLabel;
 
-class CltlTranslator : public CltlFormulaVisitor {
+class CltlTranslator {
 public:
     /// Type definition for a set of CLTL formulae.
     typedef std::vector<CltlFormulaPtr> FormulaList;
@@ -51,13 +50,8 @@ public:
     void automaton_dot(const std::string &dotfile) const { _transition_system.to_dot(dotfile); }
 
 private:
-    /// CltlFormulaVisitor methods
-    /// Inheriting from visitor allows to visit the input formula to associate a counter to each
-    /// of its cost operator.
-    void visit(const std::shared_ptr<AtomicProposition> &formula) final {}
-    void visit(const std::shared_ptr<ConstantExpression> &formula) final {}
-    void visit(const std::shared_ptr<UnaryOperator> &formula) final;
-    void visit(const std::shared_ptr<BinaryOperator> &formula) final;
+    /// map occurrences of cost operator to counters
+    void map_costop_to_counters(const CltlFormulaPtr &f);
     
     /// Helper class representing the states of the temporary transition system.
     ///
