@@ -39,14 +39,10 @@ void CltlTranslator::build_automaton() {
 void CltlTranslator::map_costop_to_counters(const CltlFormulaPtr &f) {
     switch (f->formula_type()) {
         case CltlFormula::kUnaryOperator:
-            this->map_costop_to_counters(
-                // this cast is safe
-                reinterpret_cast<const std::shared_ptr<UnaryOperator> &>(f)->operand());
+            this->map_costop_to_counters(static_cast<UnaryOperator*>(f.get())->operand());
             break;
         case CltlFormula::kBinaryOperator: {
-            // this cast is safe
-            const std::shared_ptr<BinaryOperator> &fbin =
-                reinterpret_cast<const std::shared_ptr<BinaryOperator> &>(f);
+            BinaryOperator *fbin = static_cast<BinaryOperator*>(f.get());
             switch (fbin->operator_type()) {
                 case BinaryOperator::kCostUntil:
                 case BinaryOperator::kCostRelease:
