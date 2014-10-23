@@ -156,10 +156,10 @@ protected:
         StateContainer(TransitionSystem<Q,S> *ts): _ts(ts) {}
         virtual ~StateContainer() {}
 
-        virtual _StateIterator begin() const {
+        _StateIterator begin() const {
             return _StateIterator(_ts->_state_begin());
         }
-        virtual _StateIterator end() const {
+        _StateIterator end() const {
             return _StateIterator(_ts->_state_end());
         }
 
@@ -189,13 +189,13 @@ protected:
         explicit SuccessorContainer(StateWrapper *state_wrapper, const S* label=nullptr) :
             RelationshipContainer(state_wrapper, label) { }
 
-        virtual _TransitionIterator begin() const {
+        _TransitionIterator begin() const {
             TransitionSystem<Q,S> *ts = this->_state_wrapper->transition_system();
             return _TransitionIterator(ts->_successor_begin(this->_state_wrapper->state(),
                                                             this->_label));
         }
 
-        virtual _TransitionIterator end() const {
+        _TransitionIterator end() const {
             TransitionSystem<Q,S> *ts = this->_state_wrapper->transition_system();
             return _TransitionIterator(ts->_successor_end(this->_state_wrapper->state()));
         }

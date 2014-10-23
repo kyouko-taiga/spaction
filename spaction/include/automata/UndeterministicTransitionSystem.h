@@ -45,7 +45,7 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
         }
 
         /// Constructor that builds the end iterator.
-        TransitionBaseIterator(typename std::unordered_map<S, std::vector<Transition<Q,S>*>>::iterator end) :
+        explicit TransitionBaseIterator(typename std::unordered_map<S, std::vector<Transition<Q,S>*>>::iterator end) :
             _it(end), _end(end),
             _transition_it(typename std::vector<Transition<Q,S>*>::iterator()) { }
 
@@ -92,6 +92,11 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
             _it = _transition_system->_graph.begin();
             _end = _transition_system->_graph.end();
         }
+
+        /// Constructor that builds the end iterator.
+        explicit StateBaseIterator(typename std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q,S>*>>>::iterator end)
+        : _it(end), _end(end)
+        {}
 
         virtual bool is_equal(const typename TransitionSystem<Q,S>::StateBaseIterator& rhs) const {
             const StateBaseIterator& bi = static_cast<const StateBaseIterator&>(rhs);
@@ -161,9 +166,8 @@ protected:
     virtual typename TransitionSystem<Q,S>::StateBaseIterator *_state_begin() {
         return new StateBaseIterator(this);
     }
-    /// @note This method is not implemented yet.
     virtual typename TransitionSystem<Q,S>::StateBaseIterator *_state_end() {
-        return nullptr;
+        return new StateBaseIterator(_graph.end());
     }
 };
 
