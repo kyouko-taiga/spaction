@@ -29,56 +29,20 @@ namespace automata {
 
 CltlTranslator::CltlTranslator(const CltlFormulaPtr &formula) :
     _formula(formula->to_nnf()), _nb_counters(0) {
-        _formula->accept(*this);
 }
 
 void CltlTranslator::build_automaton() {
     _build_transition_system();
 }
 
-void CltlTranslator::visit(const std::shared_ptr<UnaryOperator> &formula) {
-    formula->operand()->accept(*this);
-}
-
-void CltlTranslator::visit(const std::shared_ptr<BinaryOperator> &formula) {
-    switch (formula->operator_type()) {
-        case BinaryOperator::kCostUntil:
-        case BinaryOperator::kCostRelease:
-            _counters_maps[formula] = _nb_counters++;
-            break;
-        default:
-            break;
-    }
-    formula->left()->accept(*this);
-    formula->right()->accept(*this);
-}
-
-CltlTranslator::FormulaList CltlTranslator::_unique_sort(const CltlTranslator::FormulaList &terms) {
-    FormulaList result(terms);
-    // sort
-    std::sort(result.begin(), result.end(),
-              [](const CltlFormulaPtr &l, const CltlFormulaPtr &r){
-                  return (l->height() == r->height()) ? (l < r) : (l->height() < r->height());
-              });
-    // remove duplicates
-    auto last = std::unique(result.begin(), result.end());
-    // remove shrinked values
-    result.erase(last, result.end());
-    return result;
-}
-
 CltlTranslator::Node *CltlTranslator::_build_node(const FormulaList &terms) {
-    FormulaList canonical = _unique_sort(terms);
     // search for a pre-existing instance of the node
     for (auto n : _nodes) {
-        if (n->terms() == canonical) return n;
+        if (n->terms() == terms) return n;
     }
 
     // build a new instance and stores its pointer
-    Node *n = new Node(canonical);
-
-    if (n->is_consistent())
-        _transition_system.add_state(n);
+    Node *n = new Node(terms);
     _nodes.push_back(n);
     return n;
 }
@@ -106,13 +70,13 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         // (f = f1 || f2) => [_,_,_]-> (f1)
         //                   [_,_,_]-> (f2)
         case BinaryOperator::kOr: {
-            Node *s0 = _build_node(_insert(leftover, {bo->left()}));
+            Node *s0 = _build_node(_insert(leftover, bo->left()));
             if (s0->is_consistent()) {
                 _transition_system.add_transition(node, s0, new TransitionLabel());
                 successors.push_back(s0);
             }
 
-            Node *s1 = _build_node(_insert(leftover, {bo->right()}));
+            Node *s1 = _build_node(_insert(leftover, bo->right()));
             if (s1->is_consistent()) {
                 _transition_system.add_transition(node, s1, new TransitionLabel());
                 successors.push_back(s1);
@@ -123,7 +87,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
 
         // (f = f1 && f2) => [_,_,_]-> (f1, f2)
         case BinaryOperator::kAnd: {
-            Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
+            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
             if (s0->is_consistent()) {
                 _transition_system.add_transition(node, s0, new TransitionLabel());
                 successors.push_back(s0);
@@ -135,13 +99,14 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         // (f = f1 U f2) => [_,_,_]-> (f2)
         //                  [_,_,f]-> (f1, X(f))
         case BinaryOperator::kUntil: {
-            Node *s0 = _build_node(_insert(leftover, {bo->right()}));
+            Node *s0 = _build_node(_insert(leftover, bo->right()));
             if (s0->is_consistent()) {
                 _transition_system.add_transition(node, s0, new TransitionLabel());
                 successors.push_back(s0);
             }
 
-            Node *s1 = _build_node(_insert(leftover, {bo->left(), bo->creator()->make_next(f)}));
+            Node *s1 = _build_node(_insert(_insert(leftover, bo->left()),
+                                              bo->creator()->make_next(f)));
             if (s1->is_consistent()) {
                 _transition_system.add_transition(node, s1, new TransitionLabel({},{},f));
                 successors.push_back(s1);
@@ -153,13 +118,14 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         // (f = f1 R f2) => [_,_,_]-> (f1, f2)
         //                  [_,_,_]-> (f2, X(f))
         case BinaryOperator::kRelease: {
-            Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
+            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
             if (s0->is_consistent()) {
                 _transition_system.add_transition(node, s0, new TransitionLabel());
                 successors.push_back(s0);
             }
 
-            Node *s1 = _build_node(_insert(leftover, {bo->right(), bo->creator()->make_next(f)}));
+            Node *s1 = _build_node(_insert(_insert(leftover, bo->right()),
+                                              bo->creator()->make_next(f)));
             if (s1->is_consistent()) {
                 _transition_system.add_transition(node, s1, new TransitionLabel());
                 successors.push_back(s1);
@@ -172,26 +138,25 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         //                   [_,_,f]-> (f1, X(f))
         //                   [_,ic,f]-> (X(f))
         case BinaryOperator::kCostUntil: {
-            std::size_t current_counter = _counters_maps[f];
-            std::vector<std::string> counters(_nb_counters, "");
+            std::vector<std::string> counters(++_nb_counters, "");
 
-            Node *s0 = _build_node(_insert(leftover, {bo->right()}));
+            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
             if (s0->is_consistent()) {
-                counters[current_counter] = "r";
+                counters[_nb_counters-1] = "r";
                 _transition_system.add_transition(node, s0, new TransitionLabel({},counters));
                 successors.push_back(s0);
             }
 
-            Node *s1 = _build_node(_insert(leftover, {bo->left(), bo->creator()->make_next(f)}));
+            Node *s1 = _build_node(_insert(_insert(leftover, bo->right()),
+                                              bo->creator()->make_next(f)));
             if (s1->is_consistent()) {
-                counters[current_counter] = "";
-                _transition_system.add_transition(node, s1, new TransitionLabel({},counters,f));
+                _transition_system.add_transition(node, s1, new TransitionLabel({},{},f));
                 successors.push_back(s1);
             }
 
-            Node *s2 = _build_node(_insert(leftover,{bo->creator()->make_next(f)}));
+            Node *s2 = _build_node({bo->creator()->make_next(f)});
             if (s2->is_consistent()) {
-                counters[current_counter] = "ic";
+                counters[_nb_counters-1] = "ic";
                 _transition_system.add_transition(node, s2, new TransitionLabel({},counters,f));
                 successors.push_back(s2);
             }
@@ -203,26 +168,25 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         //                   [_,_,_]-> (f2, X(f))
         //                   [_,ic,_]-> (X(f))
         case BinaryOperator::kCostRelease: {
-            std::size_t current_counter = _counters_maps[f];
-            std::vector<std::string> counters(_nb_counters, "");
+            std::vector<std::string> counters(++_nb_counters, "");
 
-            Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
+            Node *s0 = _build_node(_insert(_insert(leftover, bo->left()), bo->right()));
             if (s0->is_consistent()) {
-                counters[current_counter] = "r";
+                counters[_nb_counters-1] = "r";
                 _transition_system.add_transition(node, s0, new TransitionLabel({},counters));
                 successors.push_back(s0);
             }
 
-            Node *s1 = _build_node(_insert(leftover, {bo->right(), bo->creator()->make_next(f)}));
+            Node *s1 = _build_node(_insert(_insert(leftover, bo->right()),
+                                              bo->creator()->make_next(f)));
             if (s1->is_consistent()) {
-                counters[current_counter] = "";
-                _transition_system.add_transition(node, s1, new TransitionLabel({},counters));
+                _transition_system.add_transition(node, s1, new TransitionLabel());
                 successors.push_back(s1);
             }
 
             Node *s2 = _build_node({bo->creator()->make_next(f)});
             if (s2->is_consistent()) {
-                counters[current_counter] = "ic";
+                counters[_nb_counters-1] = "ic";
                 _transition_system.add_transition(node, s2, new TransitionLabel({},counters));
                 successors.push_back(s2);
             }
@@ -304,9 +268,15 @@ void CltlTranslator::_process_fire() {
 }
 
 CltlTranslator::FormulaList CltlTranslator::_insert(const FormulaList &list,
-                                                    const std::initializer_list<CltlFormulaPtr> &add_list) const {
+                                                    const CltlFormulaPtr &formula) const {
     FormulaList result(list);
-    result.insert(result.end(), add_list);
+    FormulaList::iterator it = result.begin();
+
+    // seek for the position at which insert the new element
+    while((it != result.end()) and (*it)->height() < formula->height())
+        it++;
+
+    result.insert(it, formula);
     return result;
 }
 
@@ -337,35 +307,12 @@ bool CltlTranslator::Node::is_consistent() const {
     return true;
 }
 
-const std::string CltlTranslator::Node::dump(const std::string &sep) const {
+const std::string CltlTranslator::Node::dump() const {
     std::string node_name = "";
     for (const auto t : _terms) {
-        node_name += "[" + t->dump() + "]" + sep + " ";
+        node_name += "[" + t->dump() + "], ";
     }
     return node_name;
-}
-
-const std::string CltlTranslator::TransitionLabel::dump() const {
-    std::string result = "";
-    if (propositions.empty()) {
-        result += "true";
-    } else {
-        auto it = propositions.begin();
-        result += (*it)->dump();
-        for (++it; it != propositions.end(); ++it) {
-            result += " && " + (*it)->dump();
-        }
-    }
-
-    result += "\\n";
-    for (auto c : counter_actions) {
-        result += c + "/";
-    }
-    if (postponed != nullptr) {
-        result += "\\n";
-        result += "PP { " + postponed->dump() + " }";
-    }
-    return result;
 }
 
 }  // namespace automata

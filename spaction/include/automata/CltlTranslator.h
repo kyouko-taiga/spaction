@@ -23,9 +23,8 @@
 #include <vector>
 
 #include "CltlFormula.h"
-#include "CltlFormulaVisitor.h"
 #include "automata/RegisterAutomaton.h"
-#include "automata/TransitionSystem.h"
+#include "automata/UndeterministicTransitionSystem.h"
 
 namespace spaction {
 namespace automata {
@@ -33,32 +32,16 @@ namespace automata {
 struct Node;
 struct TransitionLabel;
 
-class CltlTranslator : public CltlFormulaVisitor {
+class CltlTranslator {
 public:
     /// Type definition for a set of CLTL formulae.
     typedef std::vector<CltlFormulaPtr> FormulaList;
 
     explicit CltlTranslator(const CltlFormulaPtr &formula);
 
-    /// @note
-    ///     Both Node and TransitionLabel objects might create memory leaks once the translator
-    ///     that built them goes out of scope. Consider using std::unique_ptr or std::shared_ptr
-    ///     to manage these objects.
-    ~CltlTranslator() { }
-
     void build_automaton();
 
-    void automaton_dot(const std::string &dotfile) const { _transition_system.to_dot(dotfile); }
-
 private:
-    /// CltlFormulaVisitor methods
-    /// Inheriting from visitor allows to visit the input formula to associate a counter to each
-    /// of its cost operator.
-    void visit(const std::shared_ptr<AtomicProposition> &formula) final {}
-    void visit(const std::shared_ptr<ConstantExpression> &formula) final {}
-    void visit(const std::shared_ptr<UnaryOperator> &formula) final;
-    void visit(const std::shared_ptr<BinaryOperator> &formula) final;
-    
     /// Helper class representing the states of the temporary transition system.
     ///
     /// This struct is used to represent states and pseudo-states of the the temporary transition
@@ -66,8 +49,6 @@ private:
     /// pseudo-states are those obtained by building the epsilon-transitions from actual states.
     class Node {
     public:
-        /// `terms` is assumed to be sorted according to `_unique_sort` (see below)
-        /// this constructor is therefore not supposed to be called outside of `_build_node`
         explicit inline Node(const CltlTranslator::FormulaList &terms) :
             _terms(terms), _is_reduced(false) {
         }
@@ -79,7 +60,7 @@ private:
 
         bool is_consistent() const;
 
-        const std::string dump(const std::string &sep=",") const;
+        const std::string dump() const;
 
     private:
         /// List of subformulae corresponding to this pseudo-state.
@@ -107,11 +88,9 @@ private:
 
         explicit inline TransitionLabel(const CltlTranslator::FormulaList &propositions={},
                                         const std::vector<std::string> &counter_actions={},
-                                        const CltlFormulaPtr &postponed=nullptr) :
-            propositions(propositions), counter_actions(counter_actions), postponed(postponed) {
+                                        const CltlFormulaPtr &postoned=0) :
+            propositions(propositions), counter_actions(counter_actions), postponed(postoned) {
         }
-
-        const std::string dump() const;
     };
 
     typedef std::vector<Node*> NodeList;
@@ -127,17 +106,11 @@ private:
     UndeterministicTransitionSystem<Node*, TransitionLabel*> _transition_system;
 
     std::size_t _nb_counters;
-    /// Associates each Cost sub-formula to a counter
-    std::map<CltlFormulaPtr, std::size_t> _counters_maps;
 
     std::stack<Node*> _to_be_reduced;
     std::stack<Node*> _to_be_fired;
     std::vector<Node*> _states;
 
-    /// a helper function that returns from a list of terms a sorted set, to ease comparison.
-    /// Sorting is done according to height, so that the last element of the list
-    /// is also (one of) the highest.
-    static FormulaList _unique_sort(const CltlTranslator::FormulaList &terms);
     /// Either builds or returns an existing node for the given set of `terms`.
     Node *_build_node(const FormulaList &terms);
 
@@ -155,10 +128,10 @@ private:
     void _process_fire();
 
     /// Helper method that inserts a formula into a FormulaList and keeps the result sorted.
-    FormulaList _insert(const FormulaList &list, const std::initializer_list<CltlFormulaPtr> &add_list) const;
+    FormulaList _insert(const FormulaList &list, const CltlFormulaPtr &formula) const;
 };
 
-}  // namespace automata
-}  // namespace spaction
+}  // namespact automata
+}  // namespact spaction
 
 #endif  // defined SPACTION_INCLUDE_CLTLTRANSLATOR_H_

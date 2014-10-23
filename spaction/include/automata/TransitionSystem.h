@@ -18,40 +18,132 @@
 #ifndef SPACTION_INCLUDE_TRANSITIONSYSTEM_H_
 #define SPACTION_INCLUDE_TRANSITIONSYSTEM_H_
 
-#include <fstream>
-#include <map>
-#include <vector>
-#include <unordered_map>
+#include <typeinfo>
 
 namespace spaction {
 namespace automata {
 
 template<typename Q, typename S> class Transition;
 
-/// Base class for transition systems implementation.
-///
-/// A transition system is a tuple `<Q,S,T>` where `Q` is a set of states, `S` is an alphabet and
-/// `T` is a a subset of `QxSxQ` representing the transitions.
 template<typename Q, typename S> class TransitionSystem {
+protected:
+    class Iterator;
+    class StateWrapper;
+    class SuccessorContainer;
+    class PredecessorContainer;
+
 public:
+    typedef Iterator iterator;
+
     virtual ~TransitionSystem() { }
 
     virtual void add_state(const Q &state) = 0;
     virtual void remove_state(const Q &state) = 0;
-
     virtual bool has_state(const Q &state) const = 0;
 
+    virtual StateWrapper operator()(const Q &state) { return StateWrapper(this, state); }
+
     virtual Transition<Q,S> *add_transition(const Q &source, const Q &sink, const S &label) = 0;
-
-    /// Returns a pointer to an outgoing transition of `source` that is labeled by `label`, unless
-    /// returns `nullptr`.
-    virtual Transition<Q,S> *find_transition(const Q &source, const S &label) const = 0;
-
-    /// Returns a vector of all the outgoing transitions of `source` that are labeled by `label`.
-    virtual std::vector<Transition<Q,S>*> find_all_transitions(const Q &source,
-                                                               const S &label) const = 0;
+    virtual void remove_transition(const Q &source, const Q &sink, const S &label) = 0;
 
 protected:
+    class BaseIterator {
+    public:
+        virtual ~BaseIterator() { }
+
+        bool operator!=(const BaseIterator& rhs) const {
+            // unfortunately, using rtti here is probably better than other alternative
+            // see http://stackoverflow.com/questions/11332075
+            return (typeid(*this) != typeid(rhs)) or !is_equal(rhs);
+        }
+
+        virtual bool is_equal(const BaseIterator& rhs) const = 0;
+
+        virtual Transition<Q,S>* operator*() = 0;
+        virtual const BaseIterator& operator++() = 0;
+    };
+
+    class StateWrapper {
+    public:
+        explicit StateWrapper(TransitionSystem *transition_system, const Q& state) :
+        _transition_system(transition_system), _state(state) {}
+
+        TransitionSystem *transition_system() const { return _transition_system; }
+        const Q &state() const { return _state; }
+
+        SuccessorContainer successors() {
+            return SuccessorContainer(this);
+        }
+
+        SuccessorContainer successors(const S& label) {
+            return SuccessorContainer(this, &label);
+        }
+
+        /// @note This method is not implemented yet.
+        PredecessorContainer predecessors();
+        /// @note This method is not implemented yet.
+        PredecessorContainer predecessors(const S& label);
+
+    private:
+        TransitionSystem *_transition_system;
+        const Q _state;
+    };
+
+    class Iterator {
+    public:
+        explicit Iterator(BaseIterator *base_iterator) :
+            _base_iterator(base_iterator) { }
+        virtual ~Iterator() { delete _base_iterator; }
+
+        bool operator!=(const Iterator& rhs) const {
+            return *(_base_iterator) != *(rhs._base_iterator);
+        }
+
+        Transition<Q,S>* operator*() { return **_base_iterator; }
+
+        const Iterator& operator++() {
+            ++(*_base_iterator);
+            return *this;
+        }
+
+    private:
+        BaseIterator *_base_iterator;
+    };
+
+    class RelationshipContainer {
+    public:
+        explicit RelationshipContainer(StateWrapper *state_wrapper, const S* label=nullptr) :
+            _state_wrapper(state_wrapper), _label(label) { }
+        virtual ~RelationshipContainer() { }
+
+        const StateWrapper *state() const { return _state_wrapper; }
+        const S *label() const { return _label; }
+
+        virtual Iterator begin() const = 0;
+        virtual Iterator end() const = 0;
+
+    protected:
+        StateWrapper *_state_wrapper;
+        const S *_label;
+    };
+
+    class SuccessorContainer : public RelationshipContainer {
+    public:
+        explicit SuccessorContainer(StateWrapper *state_wrapper, const S* label=nullptr) :
+            RelationshipContainer(state_wrapper, label) { }
+
+        virtual Iterator begin() const {
+            TransitionSystem<Q,S> *ts = this->_state_wrapper->transition_system();
+            return Iterator(ts->_successor_begin(this->_state_wrapper->state(),
+                                                             this->_label));
+        }
+
+        virtual Iterator end() const {
+            TransitionSystem<Q,S> *ts = this->_state_wrapper->transition_system();
+            return Iterator(ts->_successor_end(this->_state_wrapper->state()));
+        }
+    };
+
     /// Internal method to build transitions.
     /// @remarks
     ///     Instances of the class Transition shouldn't be constructed outside a TransitionSystem.
@@ -62,156 +154,12 @@ protected:
             return nullptr;
         return new Transition<Q,S>(source, sink, label);
     }
-};
 
-/// Class that stores a deterministic transition system.
-///
-/// A deterministic transition system is a transition system where for each state `q` of `Q` and
-/// each symbol `s` of `S`, there is at most one outgoing transition from `q` labeled by `s`.
-template<typename Q, typename S> class DeterministicTransitionSystem :
-    public TransitionSystem<Q,S> {
-public:
-    virtual ~DeterministicTransitionSystem() {}
+    virtual BaseIterator *_successor_begin(const Q &state, const S *label) = 0;
+    virtual BaseIterator *_successor_end(const Q &state) = 0;
 
-    virtual void add_state(const Q &state) {
-        if (_graph.count(state) > 0) return;
-        _graph[state];
-    }
-
-    virtual void remove_state(const Q &state) {
-        if (!has_state(state)) return;
-
-        _graph.erase(state);
-        for (auto source : _graph) {
-            for (auto t = source.second.begin(); t != source.second.end(); ++t) {
-                if ((*t)->sink() == state)
-                    t = source.second.erase(t);
-            }
-        }
-    }
-
-    virtual inline bool has_state(const Q &state) const {
-        return _graph.count(state) > 0;
-    }
-
-    virtual Transition<Q,S> *add_transition(const Q &source, const Q &sink, const S &label) {
-        if (!has_state(source) or !has_state(sink))
-            return nullptr;
-        
-        Transition<Q,S> *t = this->_make_transition(source, sink, label);
-        _graph[source][label] = t;
-        return t;
-    }
-
-    virtual Transition<Q,S> *find_transition(const Q &source, const S &label) const {
-        return this->_graph.at(source).at(label);
-    }
-
-    virtual std::vector<Transition<Q,S>*> find_all_transitions(const Q &source,
-                                                               const S &label) const {
-        return std::vector<Transition<Q,S>*>({find_transition(source, label)});
-    }
-
-protected:
-    /// Stores the transition system as a subset of `QxSxT`.
-    std::unordered_map<Q, std::unordered_map<S, Transition<Q,S>*>> _graph;
-};
-
-/// Class that stores an undeterministic transition system.
-///
-/// A undeterministic transition system is a transition system where for each state `q` of `Q` and
-/// each symbol `s` of `S`, there can be more than one outgoing transition from `q` labeled by `s`.
-template<typename Q, typename S> class UndeterministicTransitionSystem :
-    public TransitionSystem<Q,S> {
-public:
-    virtual ~UndeterministicTransitionSystem() {}
-    
-    virtual void add_state(const Q &state) {
-        if (_graph.count(state) > 0) return;
-        _graph[state];
-    }
-
-    virtual void remove_state(const Q &state) {
-        if (!has_state(state)) return;
-
-        _graph.erase(state);
-        for (auto source : _graph) {
-            for (auto transitions : source.second) {
-                for (auto t = transitions.second.begin(); t != transitions.second.end(); ++t) {
-                    if ((*t)->sink() == state)
-                        t = transitions.second.erase(t);
-                }
-            }
-        }
-    }
-
-    virtual inline bool has_state(const Q &state) const {
-        return _graph.count(state) > 0;
-    }
-
-    virtual Transition<Q,S> *add_transition(const Q &source, const Q &sink,
-                                          const S &label) {
-        if (!has_state(source) or !has_state(sink))
-            return nullptr;
-        
-        Transition<Q,S> *t = this->_make_transition(source, sink, label);
-        _graph[source][label].push_back(t);
-        return t;
-    }
-
-    /// @warning
-    ///     If `source` has several outgoing transitions labeled by `label`, this method will return
-    ///     the first it will find.
-    virtual Transition<Q,S> *find_transition(const Q &source, const S &label) const {
-        return this->_graph.at(source).at(label).at(0);
-    }
-
-    virtual std::vector<Transition<Q,S>*> find_all_transitions(const Q &source,
-                                                               const S &label) const {
-        return this->_graph.at(source).at(label);
-    }
-
-    /// an export to graphviz
-    void to_dot(const std::string &dotfile) const {
-        // open output file
-        std::ofstream o;
-        o.open(dotfile);
-
-        // initial dot file
-        o << "digraph G {" << std::endl;
-//        o << "0 [label=\"\", style=invis, height=0];" << std::endl;
-//        o << "0 -> 1;" << std::endl;
-
-        // export system's nodes
-        unsigned int i = 1;
-        std::map<Q, unsigned int> node_map;
-        for (auto n : _graph) {
-            auto it = node_map.insert(std::make_pair(n.first, i));
-            // increment i if n.first was not already in node_map
-            if (it.second) ++i;
-
-            o << it.first->second << " [label=\"" << n.first->dump("\\n") << "\" ];" << std::endl;
-            for (auto vt : n.second) {
-                for (auto t : vt.second) {
-                    auto jt = node_map.insert(std::make_pair(t->sink(), i));
-                    // increment i if t.sink was not already in node_map
-                    if (jt.second) ++i;
-
-                    o << it.first->second << "->" << jt.first->second << " [label=\"" << t->label()->dump() << "\" ];" << std::endl;
-                }
-            }
-        }
-
-        // end of graph definition
-        o << "}" << std::endl;
-        
-        // close output file
-        o.close();
-    }
-
-protected:
-    /// Stores the transition system as a subset of `QxSx<QxSx<T*>>`.
-    std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q,S>*>>> _graph;
+    virtual BaseIterator *_predecessor_begin(const Q &state, const S *label) = 0;
+    virtual BaseIterator *_predecessor_end(const Q &state) = 0;
 };
 
 /// Class that represents a transition in a TransitionSystem.
@@ -219,7 +167,7 @@ template <typename Q, typename S> class Transition {
 public:
     const Q &source() const { return _source; }
     const Q &sink()   const { return _sink; }
-    const S &label()       const { return _label; }
+    const S &label()  const { return _label; }
 
 protected:
     friend class TransitionSystem<Q,S>;
@@ -229,8 +177,7 @@ protected:
     const S _label;
 
     explicit Transition(const Q &source, const Q &sink, const S &label) :
-    _source(source), _sink(sink), _label(label) {
-    }
+        _source(source), _sink(sink), _label(label) { }
 
 private:
     /// Copy construction is forbidden.
