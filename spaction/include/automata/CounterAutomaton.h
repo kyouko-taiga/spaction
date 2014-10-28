@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <ostream>
 #include <unordered_map>
 #include <vector>
 
@@ -147,8 +148,10 @@ public:
 
     inline const S &letter() const { return _letter; }
 
+    inline std::size_t num_counters() const { return _operations.size(); }
+
     /// Sets a CounterOperation on a counter.
-    inline const CounterOperationList counter_operation(std::size_t counter) const {
+    inline const CounterOperationList counter_operations(std::size_t counter) const {
         return _operations[counter];
     }
 
@@ -184,7 +187,20 @@ private:
     mutable bool _hash_dirty;
     mutable std::size_t _hash_value;
 };
-    
+
+/// Output operator for CounterLabel.
+template<typename S>
+std::ostream &operator<<(std::ostream &os, const CounterLabel<S>& label) {
+    os << "\"" << label.letter() <<  "\":[";
+    for (std::size_t i = 0; i < label.num_counters(); ++i) {
+        const CounterOperationList &counter = label.counter_operations(i);
+        os << "(";
+        std::copy(counter.begin(), counter.end(), std::ostream_iterator<int>(os, ","));
+        os << "),";
+    }
+    return os;
+}
+
 }  // namespace automata
 }  // namespace spaction
 

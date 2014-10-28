@@ -51,7 +51,7 @@ public:
 
     void automaton_dot(const std::string &dotfile) {
         TSPrinter<Node*, TransitionLabel*> p(_transition_system);
-        p.print_to_file(dotfile);
+        p.dump(dotfile);
     }
 
 private:
