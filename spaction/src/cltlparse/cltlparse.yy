@@ -63,6 +63,8 @@ typedef std::list<parse_error> parse_error_list;
 %type   <b_type>                    binary
 
 %token                              END         0
+%token                              LPAR
+%token                              RPAR
 %token                              TRUE
 %token                              FALSE
 %token                              NOT
@@ -95,6 +97,7 @@ formula
 | constant                  { $$ = $1; }
 | unary formula             { $$ = _factory().make_unary($1, $2); }
 | formula binary formula    { $$ = _factory().make_binary($2, $1, $3); }
+| LPAR formula RPAR         { $$ = $2; }
 ;
 
 atomic: ATOM                { $$ = _factory().make_atomic($1); };

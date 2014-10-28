@@ -30,6 +30,9 @@ typedef yy::parser::token token;
 
 %%
 
+"("                 {   return token::LPAR; }
+")"                 {   return token::RPAR; }
+
 "true"              {   return token::TRUE; }
 "false"             {   return token::FALSE; }
 
