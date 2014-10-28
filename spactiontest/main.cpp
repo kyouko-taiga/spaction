@@ -25,6 +25,7 @@
 
 #include "automata/CltlTranslator.h"
 #include "automata/CounterAutomaton.h"
+#include "automata/TransitionSystemPrinter.h"
 #include "automata/UndeterministicTransitionSystem.h"
 
 #include "automata/RegisterAutomaton.h"
@@ -63,6 +64,10 @@ void test_counter_automata() {
                                     CounterOperation::kReset}}));
 
     automaton.add_acceptance_transition(0, t);
+
+    spaction::automata::TSPrinter<qt, spaction::automata::CounterLabel<st>> printer(*automaton.transition_system());
+    // printer.dump("/tmp/counter.dot");
+    printer.dump(std::cout);
 }
 
 /// Runs a simple test of the Cost Register Automaton library.

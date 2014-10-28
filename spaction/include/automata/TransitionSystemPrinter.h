@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_TSPRINTER_H_
-#define SPACTION_INCLUDE_TSPRINTER_H_
+#ifndef SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
+#define SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
 
 #include <fstream>
 
@@ -25,19 +25,20 @@
 namespace spaction {
 namespace automata {
 
-template<typename Q, typename S>
-class TSPrinter {
+template<typename Q, typename S> class TSPrinter {
  public:
-    TSPrinter(TransitionSystem<Q,S> &s): _system(s) {}
-    ~TSPrinter() {}
+    explicit TSPrinter(TransitionSystem<Q,S> &s): _system(s) { }
+    ~TSPrinter() { }
 
-    void print_to_file(const std::string &dotfile) {
-        // open output file
-        std::ofstream o;
-        o.open(dotfile);
+    void dump(const std::string &filename) {
+        std::ofstream ofs(filename);
+        this->dump(ofs);
+        ofs.close();
+    }
 
+    void dump(std::ostream &os) {
         // initiate dot file
-        o << "digraph G {" << std::endl;
+        os << "digraph G {" << std::endl;
         //        o << "0 [label=\"\", style=invis, height=0];" << std::endl;
         //        o << "0 -> 1;" << std::endl;
 
@@ -45,26 +46,27 @@ class TSPrinter {
         unsigned int i = 1;
         std::map<Q, unsigned int> node_map;
         for (auto current_node : _system.states()) {
+            // it is of type pair<iterator, bool>
             auto it = node_map.insert(std::make_pair(current_node, i));
             // increment i if current_node was not already in node_map
             if (it.second) ++i;
 
-            o << it.first->second << " [label=\"" << current_node->dump("\\n") << "\" ];" << std::endl;
+            os << it.first->second << " [label=\"" << current_node << "\" ];" << std::endl;
             for (auto current_transition : _system(current_node).successors()) {
                 auto jt = node_map.insert(std::make_pair(current_transition->sink(), i));
                 // increment i if current_transition->sink was not already in node_map
                 if (jt.second) ++i;
 
-                o << it.first->second << "->" << jt.first->second << " [label=\"" << current_transition->label()->dump() << "\" ];" << std::endl;
+                os << it.first->second << "->" << jt.first->second
+                   << " [label=\"" << current_transition->label() << "\" ];"
+                   << std::endl;
             }
         }
 
         // end of graph definition
-        o << "}" << std::endl;
-
-        // close output file
-        o.close();
+        os << "}" << std::endl;
     }
+
  private:
     TransitionSystem<Q,S> &_system;
 };
@@ -72,4 +74,4 @@ class TSPrinter {
 }  // namespace automata
 }  // namespace spaction
 
-#endif  // defined SPACTION_INCLUDE_TSPRINTER_H_
+#endif  // defined SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
