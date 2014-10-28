@@ -25,7 +25,7 @@
 
 #include "CltlFormula.h"
 #include "automata/RegisterAutomaton.h"
-#include "automata/TSPrinter.h"
+#include "automata/TransitionSystemPrinter.h"
 #include "automata/UndeterministicTransitionSystem.h"
 
 namespace spaction {

@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_TSPRINTER_H_
-#define SPACTION_INCLUDE_TSPRINTER_H_
+#ifndef SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
+#define SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
 
 #include <fstream>
 
@@ -74,4 +74,4 @@ template<typename Q, typename S> class TSPrinter {
 }  // namespace automata
 }  // namespace spaction
 
-#endif  // defined SPACTION_INCLUDE_TSPRINTER_H_
+#endif  // defined SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
