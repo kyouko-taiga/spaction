@@ -191,7 +191,7 @@ private:
 /// Output operator for CounterLabel.
 template<typename S>
 std::ostream &operator<<(std::ostream &os, const CounterLabel<S>& label) {
-    os << "\"" << label.letter() <<  "\":[";
+    os << label.letter() <<  ":[";
     for (std::size_t i = 0; i < label.num_counters(); ++i) {
         const CounterOperationList &counter = label.counter_operations(i);
         os << "(";
