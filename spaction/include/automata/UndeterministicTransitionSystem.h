@@ -28,7 +28,63 @@ namespace automata {
 
 template<typename Q, typename S>
 class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
+public:
+    virtual void add_state(const Q &state) {
+        if (_graph.count(state) > 0) return;
+        _graph[state];
+    }
 
+    virtual void remove_state(const Q &state) { }
+
+    virtual bool has_state(const Q &state) const {
+        return _graph.count(state) > 0;
+    }
+
+    virtual Transition<Q,S> *add_transition(const Q &source, const Q &sink, const S &label) {
+        assert(has_state(source) and has_state(sink));
+
+        Transition<Q,S> *t = this->_make_transition(source, sink, label);
+        _graph[source][label].push_back(t);
+        return t;
+    }
+
+    virtual void remove_transition(const Q &source, const Q &sink, const S &label) { }
+
+private:
+    class TransitionBaseIterator;
+
+protected:
+    std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q,S>*>>> _graph;
+
+    virtual typename TransitionSystem<Q,S>::TransitionBaseIterator *_successor_begin(const Q &state,
+                                                                                     const S *label) {
+        return new TransitionBaseIterator(this, &state, label);
+    }
+
+    virtual typename TransitionSystem<Q,S>::TransitionBaseIterator *_successor_end(const Q &state) {
+        return new TransitionBaseIterator(_graph[state].end());
+    }
+
+    /// @note This method is not implemented yet.
+    virtual typename TransitionSystem<Q,S>::TransitionBaseIterator *_predecessor_begin(const Q &state,
+                                                                                       const S *label) {
+        return nullptr;
+    }
+
+    /// @note This method is not implemented yet.
+    virtual typename TransitionSystem<Q,S>::TransitionBaseIterator *_predecessor_end(const Q &state) {
+        return nullptr;
+    }
+
+    virtual typename TransitionSystem<Q,S>::StateBaseIterator *_state_begin() {
+        return new StateBaseIterator(this);
+    }
+
+    virtual typename TransitionSystem<Q,S>::StateBaseIterator *_state_end() {
+        return new StateBaseIterator(_graph.end());
+    }
+
+private:
     class TransitionBaseIterator : public TransitionSystem<Q,S>::TransitionBaseIterator {
     public:
         explicit TransitionBaseIterator(UndeterministicTransitionSystem<Q,S> *transition_system,
@@ -45,7 +101,8 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
         }
 
         /// Constructor that builds the end iterator.
-        explicit TransitionBaseIterator(typename std::unordered_map<S, std::vector<Transition<Q,S>*>>::iterator end) :
+        explicit TransitionBaseIterator(typename std::unordered_map<S,
+                                        std::vector<Transition<Q,S>*>>::iterator end) :
             _it(end), _end(end),
             _transition_it(typename std::vector<Transition<Q,S>*>::iterator()) { }
 
@@ -86,17 +143,15 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
 
     class StateBaseIterator : public TransitionSystem<Q,S>::StateBaseIterator {
     public:
-        explicit StateBaseIterator(UndeterministicTransitionSystem<Q,S> *transition_system)
-        : _transition_system(transition_system)
-        {
+        explicit StateBaseIterator(UndeterministicTransitionSystem<Q,S> *transition_system) :
+            _transition_system(transition_system) {
             _it = _transition_system->_graph.begin();
             _end = _transition_system->_graph.end();
         }
 
         /// Constructor that builds the end iterator.
-        explicit StateBaseIterator(typename std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q,S>*>>>::iterator end)
-        : _it(end), _end(end)
-        {}
+        explicit StateBaseIterator(typename std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q,S>*>>>::iterator end) :
+            _it(end), _end(end) { }
 
         virtual bool is_equal(const typename TransitionSystem<Q,S>::StateBaseIterator& rhs) const {
             const StateBaseIterator& bi = static_cast<const StateBaseIterator&>(rhs);
@@ -117,58 +172,6 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
 
         UndeterministicTransitionSystem<Q,S> *_transition_system;
     };
-
-public:
-    virtual void add_state(const Q &state) {
-        if (_graph.count(state) > 0) return;
-        _graph[state];
-    }
-
-    virtual void remove_state(const Q &state) { }
-
-    virtual bool has_state(const Q &state) const {
-        return _graph.count(state) > 0;
-    }
-
-    virtual Transition<Q,S> *add_transition(const Q &source, const Q &sink, const S &label) {
-        assert(has_state(source) and has_state(sink));
-
-        Transition<Q,S> *t = this->_make_transition(source, sink, label);
-        _graph[source][label].push_back(t);
-        return t;
-    }
-
-    virtual void remove_transition(const Q &source, const Q &sink, const S &label) { }
-
-protected:
-    std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q,S>*>>> _graph;
-
-    virtual typename TransitionSystem<Q,S>::TransitionBaseIterator *_successor_begin(const Q &state,
-                                                                                     const S *label) {
-        return new TransitionBaseIterator(this, &state, label);
-    }
-
-    virtual typename TransitionSystem<Q,S>::TransitionBaseIterator *_successor_end(const Q &state) {
-        return new TransitionBaseIterator(_graph[state].end());
-    }
-
-    /// @note This method is not implemented yet.
-    virtual typename TransitionSystem<Q,S>::TransitionBaseIterator *_predecessor_begin(const Q &state,
-                                                                                       const S *label) {
-        return nullptr;
-    }
-
-    /// @note This method is not implemented yet.
-    virtual typename TransitionSystem<Q,S>::TransitionBaseIterator *_predecessor_end(const Q &state) {
-        return nullptr;
-    }
-
-    virtual typename TransitionSystem<Q,S>::StateBaseIterator *_state_begin() {
-        return new StateBaseIterator(this);
-    }
-    virtual typename TransitionSystem<Q,S>::StateBaseIterator *_state_end() {
-        return new StateBaseIterator(_graph.end());
-    }
 };
 
 }  // namespace automata
