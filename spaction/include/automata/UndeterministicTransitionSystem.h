@@ -34,11 +34,14 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
         explicit TransitionBaseIterator(UndeterministicTransitionSystem<Q,S> *transition_system,
                                         const Q *q, const S *s) : _transition_system(transition_system) {
             _labeled = s != nullptr;
-            _it = _transition_system->_graph[*q].begin();
+            if (_labeled) {
+                _it = _transition_system->_graph[*q].find(*s);
+            } else {
+                _it = _transition_system->_graph[*q].begin();
+            }
             _end = _transition_system->_graph[*q].end();
-            
-            if(_labeled) {
-                _transition_it = _transition_system->_graph[*q][*s].begin();
+            if (_it == _end) {
+                _transition_it = typename std::vector<Transition<Q,S>*>::iterator();
             } else {
                 _transition_it = _it->second.begin();
             }
@@ -69,7 +72,12 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
             // increment the label iterator, unless we were constructed for a specific label
             if((++_it != _end) and !_labeled) {
                 _transition_it = _it->second.begin();
+                /// @note
+                ///     this assert holds if `remove_state` and `remove_transition` behave correctly
+                assert(_transition_it != _it->second.end());
             } else {
+                // if `_labeled`, ensure that `_it` is set to `_end` for proper comparison with end
+                _it = _end;
                 _transition_it = typename std::vector<Transition<Q,S>*>::iterator();
             }
 
@@ -124,6 +132,8 @@ public:
         _graph[state];
     }
 
+    /// @note
+    ///     this method should ensure that a label with no successors does not appear in the maps
     virtual void remove_state(const Q &state) { }
 
     virtual bool has_state(const Q &state) const {
@@ -138,6 +148,8 @@ public:
         return t;
     }
 
+    /// @note
+    ///     this method should ensure that a label with no successors does not appear in the maps
     virtual void remove_transition(const Q &source, const Q &sink, const S &label) { }
 
 protected:
