@@ -68,6 +68,10 @@ public:
             static_cast<TransitionSystem<Q, CounterLabel<S>>*>(new transition_system_t());
     }
 
+    // a convenient default constructor
+    // @todo restrict its usage?
+    explicit CounterAutomaton(): CounterAutomaton(0, 0) {};
+
     ~CounterAutomaton() {
         // delete the pointer to the initial state, if ever created
         if (_initial_state)
