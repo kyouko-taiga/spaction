@@ -24,11 +24,51 @@
 #include "spotcheck.h"
 
 #include "automata/CltlTranslator.h"
+#include "automata/CounterAutomaton.h"
+#include "automata/TransitionSystemPrinter.h"
+#include "automata/UndeterministicTransitionSystem.h"
+
 #include "automata/RegisterAutomaton.h"
 
 #include "cltlparse/public.h"
 
 // this file is strongly inspired from spot/iface/dve2/dve2check.cc
+
+/// Runs a simple test of the CounterAutomaton library.
+/// @remarks
+///     This function creates a B counter automaton that recognize any word over the alphabet {a,b}
+///     where 'b' occurs infinitely often. In addition, the automaton uses its counter to count the
+///     largest block of consecutive 'a's.
+void test_counter_automata() {
+    using spaction::automata::CounterOperation;
+
+    typedef std::string qt;
+    typedef char st;
+
+    // create the automaton
+    typedef spaction::automata::CounterAutomaton<qt, st,
+        spaction::automata::UndeterministicTransitionSystem> Automaton;
+    Automaton automaton(1, 1);
+
+    // populate the transition system
+    automaton.transition_system()->add_state("q");
+    automaton.set_initial_state("q");
+
+    automaton.transition_system()->add_transition("q", "q",
+        automaton.make_label('a', {{CounterOperation::kIncrement,
+                                    CounterOperation::kCheck}}));
+
+    Automaton::transition_t *t =
+    automaton.transition_system()->add_transition("q", "q",
+        automaton.make_label('b', {{CounterOperation::kIncrement,
+                                    CounterOperation::kReset}}));
+
+    automaton.add_acceptance_transition(0, t);
+
+    spaction::automata::TSPrinter<qt, spaction::automata::CounterLabel<st>> printer(*automaton.transition_system());
+    // printer.dump("/tmp/counter.dot");
+    printer.dump(std::cout);
+}
 
 /// Runs a simple test of the Cost Register Automaton library.
 /// @remarks
@@ -40,7 +80,7 @@ void test_cost_register_automata(const std::string &str = "aabaaacba") {
     // create a cost register automaton with 2 registers
     spaction::automata::RegisterAutomaton<char> automaton(2);
 
-    // build the automaton state
+    // build the automaton state 
     automaton.add_state("q0", true);
 
     // build the automaton transitions:
@@ -75,6 +115,8 @@ void test_cost_register_automata(const std::string &str = "aabaaacba") {
 }
 
 int main(int argc, char* argv[]) {
+    test_counter_automata();
+
     std::string cltl_string = "";
     std::string dot_file = "";
 

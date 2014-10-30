@@ -64,7 +64,7 @@
 		4A2541A819F54A2300E52660 /* stack.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = stack.hh; path = ../src/cltlparse/stack.hh; sourceTree = "<group>"; };
 		4A2541A919F6657C00E52660 /* CLTLScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CLTLScanner.h; path = cltlparse/CLTLScanner.h; sourceTree = "<group>"; };
 		4A2541AA19F6657C00E52660 /* public.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = public.h; path = cltlparse/public.h; sourceTree = "<group>"; };
-		4A2541B719F91FA500E52660 /* TSPrinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TSPrinter.h; sourceTree = "<group>"; };
+		4A2541B719F91FA500E52660 /* TransitionSystemPrinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransitionSystemPrinter.h; sourceTree = "<group>"; };
 		4AB890DC196EE51200F7BB44 /* cpplint.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = cpplint.py; sourceTree = "<group>"; };
 		753EF59719DDA16200106D3C /* CltlTranslator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CltlTranslator.cpp; sourceTree = "<group>"; };
 		753EF59919DEEA6900106D3C /* TransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TransitionSystem.h; sourceTree = "<group>"; };
@@ -91,6 +91,7 @@
 		756EE61619CC1C78002261FF /* Instantiator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Instantiator.h; sourceTree = "<group>"; };
 		7582518219F55299008D042D /* DeterministicTransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeterministicTransitionSystem.h; sourceTree = "<group>"; };
 		7582518319F55299008D042D /* UndeterministicTransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UndeterministicTransitionSystem.h; sourceTree = "<group>"; };
+		75910D1419F94C90008AEF98 /* CounterAutomaton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CounterAutomaton.h; sourceTree = "<group>"; };
 		759343D31970051200DD5475 /* RegisterAutomaton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RegisterAutomaton.h; sourceTree = "<group>"; };
 		75AFC89A196EAE3D00BAE38C /* spaction.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = spaction.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		75AFC89F196EAE3D00BAE38C /* spaction.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = spaction.1; sourceTree = "<group>"; };
@@ -211,12 +212,13 @@
 		759343D21970051200DD5475 /* automata */ = {
 			isa = PBXGroup;
 			children = (
-				75EF898619B8518E00441B56 /* CltlTranslator.h */,
-				759343D31970051200DD5475 /* RegisterAutomaton.h */,
 				753EF59919DEEA6900106D3C /* TransitionSystem.h */,
-				4A2541B719F91FA500E52660 /* TSPrinter.h */,
+				4A2541B719F91FA500E52660 /* TransitionSystemPrinter.h */,
 				7582518219F55299008D042D /* DeterministicTransitionSystem.h */,
 				7582518319F55299008D042D /* UndeterministicTransitionSystem.h */,
+				75910D1419F94C90008AEF98 /* CounterAutomaton.h */,
+				759343D31970051200DD5475 /* RegisterAutomaton.h */,
+				75EF898619B8518E00441B56 /* CltlTranslator.h */,
 			);
 			path = automata;
 			sourceTree = "<group>";

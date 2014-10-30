@@ -71,15 +71,11 @@ typedef std::list<parse_error> parse_error_list;
 %token                              NEXT
 %token                              AND
 %token                              OR
-/*
 %token                              IMPLY
-*/
 %token                              UNTIL
 %token                              RELEASE
-/*
 %token                              FINALLY
 %token                              GLOBALLY
-*/
 %token                              COSTUNTIL
 %token                              COSTRELEASE
 /*
@@ -87,6 +83,18 @@ typedef std::list<parse_error> parse_error_list;
 %token                              COSTGLOBALLY
 */
 %token  <apval>                     ATOM
+
+/* Priorities */
+
+%right IMPLY
+%left OR
+%left AND
+
+%right UNTIL RELEASE COSTUNTIL COSTRELEASE
+%nonassoc FINALLY GLOBALLY
+%nonassoc NEXT
+
+%nonassoc NOT
 
 %%
 
@@ -96,8 +104,11 @@ formula
 : atomic                    { $$ = $1; }
 | constant                  { $$ = $1; }
 | unary formula             { $$ = _factory().make_unary($1, $2); }
+| formula IMPLY formula     { $$ = _factory().make_imply($1, $3); }
 | formula binary formula    { $$ = _factory().make_binary($2, $1, $3); }
 | LPAR formula RPAR         { $$ = $2; }
+| FINALLY formula           { $$ = _factory().make_finally($2); }
+| GLOBALLY formula          { $$ = _factory().make_globally($2); }
 ;
 
 atomic: ATOM                { $$ = _factory().make_atomic($1); };

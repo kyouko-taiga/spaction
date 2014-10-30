@@ -94,17 +94,15 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
 
     class StateBaseIterator : public TransitionSystem<Q,S>::StateBaseIterator {
     public:
-        explicit StateBaseIterator(UndeterministicTransitionSystem<Q,S> *transition_system)
-        : _transition_system(transition_system)
-        {
+        explicit StateBaseIterator(UndeterministicTransitionSystem<Q,S> *transition_system) :
+            _transition_system(transition_system) {
             _it = _transition_system->_graph.begin();
             _end = _transition_system->_graph.end();
         }
 
         /// Constructor that builds the end iterator.
-        explicit StateBaseIterator(typename std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q,S>*>>>::iterator end)
-        : _it(end), _end(end)
-        {}
+        explicit StateBaseIterator(typename std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q,S>*>>>::iterator end) :
+            _it(end), _end(end) { }
 
         virtual bool is_equal(const typename TransitionSystem<Q,S>::StateBaseIterator& rhs) const {
             const StateBaseIterator& bi = static_cast<const StateBaseIterator&>(rhs);

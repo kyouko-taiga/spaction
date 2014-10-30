@@ -39,7 +39,10 @@ typedef yy::parser::token token;
 "&&"                {   return token::AND; }
 "||"                {   return token::OR; }
 "!"                 {   return token::NOT; }
+"->"                {   return token::IMPLY; }
 
+"F"                 {   return token::FINALLY; }
+"G"                 {   return token::GLOBALLY; }
 "U"                 {   return token::UNTIL; }
 "R"                 {   return token::RELEASE; }
 "X"                 {   return token::NEXT; }
