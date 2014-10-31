@@ -28,18 +28,27 @@
 
 namespace spaction {
 namespace automata {
-    enum CounterOperation : unsigned char {
-        kIncrement  = 1,
-        kCheck      = 2,
-        kReset      = 4
-    };
 
-    typedef std::vector<CounterOperation> CounterOperationList;
-    template<typename S> class CounterLabel;
+enum CounterOperation : unsigned int {
+    kIncrement  = 1,
+    kCheck      = 2,
+    kReset      = 4
+};
 
-    std::string print_counter_operation(CounterOperation c);
+typedef std::vector<CounterOperation> CounterOperationList;
+template<typename S> class CounterLabel;
+
+inline CounterOperation operator|(const CounterOperation &l, const CounterOperation &r) {
+    return static_cast<CounterOperation>(static_cast<unsigned int>(l) | static_cast<unsigned int>(r));
 }
+inline CounterOperation operator&(const CounterOperation &l, const CounterOperation &r) {
+    return static_cast<CounterOperation>(static_cast<unsigned int>(l) & static_cast<unsigned int>(r));
 }
+
+std::string print_counter_operation(CounterOperation c);
+
+}  // namespace automata
+}  // namespace spaction
 
 namespace std {
 
