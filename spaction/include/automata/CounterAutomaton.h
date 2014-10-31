@@ -36,6 +36,8 @@ namespace automata {
 
     typedef std::vector<CounterOperation> CounterOperationList;
     template<typename S> class CounterLabel;
+
+    std::string print_counter_operation(CounterOperation c);
 }
 }
 

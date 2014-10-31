@@ -370,7 +370,8 @@ const std::string CltlTranslator::TransitionLabel::dump() const {
 
     result += "\\n";
     for (auto c : counter_actions) {
-        result += c + "/";
+        result += print_counter_operation(c);
+        result += "/";
     }
     if (postponed != nullptr) {
         result += "\\n";
