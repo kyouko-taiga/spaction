@@ -184,25 +184,25 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         //                   [_,ic,f]-> (X(f))
         case BinaryOperator::kCostUntil: {
             std::size_t current_counter = _counters_maps[f];
-            std::vector<std::string> counters(_nb_counters, "");
+            std::vector<CounterOperation> counters(_nb_counters, _e());
 
             Node *s0 = _build_node(_insert(leftover, {bo->right()}));
             if (s0->is_consistent()) {
-                counters[current_counter] = "r";
+                counters[current_counter] = _r();
                 _transition_system.add_transition(node, s0, new TransitionLabel({},counters));
                 successors.push_back(s0);
             }
 
             Node *s1 = _build_node(_insert(leftover, {bo->left(), bo->creator()->make_next(f)}));
             if (s1->is_consistent()) {
-                counters[current_counter] = "";
+                counters[current_counter] = _e();
                 _transition_system.add_transition(node, s1, new TransitionLabel({},counters,f));
                 successors.push_back(s1);
             }
 
             Node *s2 = _build_node(_insert(leftover,{bo->creator()->make_next(f)}));
             if (s2->is_consistent()) {
-                counters[current_counter] = "ic";
+                counters[current_counter] = _ic();
                 _transition_system.add_transition(node, s2, new TransitionLabel({},counters,f));
                 successors.push_back(s2);
             }
@@ -215,25 +215,25 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         //                   [_,ic,_]-> (X(f))
         case BinaryOperator::kCostRelease: {
             std::size_t current_counter = _counters_maps[f];
-            std::vector<std::string> counters(_nb_counters, "");
+            std::vector<CounterOperation> counters(_nb_counters, _e());
 
             Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
             if (s0->is_consistent()) {
-                counters[current_counter] = "r";
+                counters[current_counter] = _r();
                 _transition_system.add_transition(node, s0, new TransitionLabel({},counters));
                 successors.push_back(s0);
             }
 
             Node *s1 = _build_node(_insert(leftover, {bo->right(), bo->creator()->make_next(f)}));
             if (s1->is_consistent()) {
-                counters[current_counter] = "";
+                counters[current_counter] = _e();
                 _transition_system.add_transition(node, s1, new TransitionLabel({},counters));
                 successors.push_back(s1);
             }
 
             Node *s2 = _build_node({bo->creator()->make_next(f)});
             if (s2->is_consistent()) {
-                counters[current_counter] = "ic";
+                counters[current_counter] = _ic();
                 _transition_system.add_transition(node, s2, new TransitionLabel({},counters));
                 successors.push_back(s2);
             }

@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "CltlFormula.h"
-#include "automata/RegisterAutomaton.h"
+#include "automata/CounterAutomaton.h"
 #include "automata/TransitionSystemPrinter.h"
 #include "automata/UndeterministicTransitionSystem.h"
 
@@ -100,12 +100,12 @@ private:
         /// Set of propositions that needs to be satisfied to fire the transition.
         CltlTranslator::FormulaList propositions;
         /// Vector of actions on the counters
-        std::vector<std::string> counter_actions;
+        std::vector<CounterOperation> counter_actions;
         /// Optional until formula that would have been postponed.
         CltlFormulaPtr postponed;
 
         explicit inline TransitionLabel(const CltlTranslator::FormulaList &propositions={},
-                                        const std::vector<std::string> &counter_actions={},
+                                        const std::vector<CounterOperation> &counter_actions={},
                                         const CltlFormulaPtr &postoned=0) :
             propositions(propositions), counter_actions(counter_actions), postponed(postoned) {
         }
@@ -132,6 +132,11 @@ private:
     std::stack<Node*> _to_be_reduced;
     std::stack<Node*> _to_be_fired;
     std::vector<Node*> _states;
+
+    /// Helper functions for counter actions
+    inline static CounterOperation _r()     { return kReset; }
+    inline static CounterOperation _ic()    { return static_cast<CounterOperation>(kIncrement | kCheck); }
+    inline static CounterOperation _e()     { return static_cast<CounterOperation>(0); }
 
     /// a helper function that returns from a list of terms a sorted set, to ease comparison.
     /// Sorting is done according to height, so that the last element of the list
