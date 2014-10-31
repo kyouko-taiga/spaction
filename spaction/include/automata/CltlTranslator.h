@@ -125,6 +125,9 @@ private:
     /// Stores the temporar transition system that is used to build the automata.
     UndeterministicTransitionSystem<Node*, TransitionLabel*> _transition_system;
 
+    std::size_t _nb_acceptances;
+    /// Associates each Until sub-formula to an acceptance condition
+    std::map<CltlFormulaPtr, std::size_t> _acceptances_maps;
     std::size_t _nb_counters;
     /// Associates each Cost sub-formula to a counter
     std::map<CltlFormulaPtr, std::size_t> _counters_maps;

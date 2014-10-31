@@ -28,7 +28,7 @@ namespace spaction {
 namespace automata {
 
 CltlTranslator::CltlTranslator(const CltlFormulaPtr &formula) :
-    _formula(formula->to_nnf()), _nb_counters(0) {
+    _formula(formula->to_nnf()), _nb_acceptances(0), _nb_counters(0) {
         this->map_costop_to_counters(_formula);
 }
 
@@ -49,6 +49,11 @@ void CltlTranslator::map_costop_to_counters(const CltlFormulaPtr &f) {
                     if (_counters_maps.count(f) != 0)
                         throw f->dump() + " already has a counter associated";
                     _counters_maps[f] = _nb_counters++;
+                    // no break here, as the following also applies to Cost operators
+                case BinaryOperator::kUntil:
+                    if (_acceptances_maps.count(f) != 0)
+                        throw f->dump() + " already has an acceptance condition associated";
+                    _acceptances_maps[f] = _nb_acceptances++;
                     break;
                 default:
                     break;
