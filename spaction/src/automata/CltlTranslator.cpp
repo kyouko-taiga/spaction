@@ -189,7 +189,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         //                   [_,ic,f]-> (X(f))
         case BinaryOperator::kCostUntil: {
             std::size_t current_counter = _counters_maps[f];
-            std::vector<CounterOperation> counters(_nb_counters, _e());
+            CounterOperationList counters(_nb_counters, _e());
 
             Node *s0 = _build_node(_insert(leftover, {bo->right()}));
             if (s0->is_consistent()) {
@@ -220,7 +220,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         //                   [_,ic,_]-> (X(f))
         case BinaryOperator::kCostRelease: {
             std::size_t current_counter = _counters_maps[f];
-            std::vector<CounterOperation> counters(_nb_counters, _e());
+            CounterOperationList counters(_nb_counters, _e());
 
             Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
             if (s0->is_consistent()) {

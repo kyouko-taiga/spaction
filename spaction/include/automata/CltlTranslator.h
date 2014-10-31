@@ -100,12 +100,12 @@ private:
         /// Set of propositions that needs to be satisfied to fire the transition.
         CltlTranslator::FormulaList propositions;
         /// Vector of actions on the counters
-        std::vector<CounterOperation> counter_actions;
+        CounterOperationList counter_actions;
         /// Optional until formula that would have been postponed.
         CltlFormulaPtr postponed;
 
         explicit inline TransitionLabel(const CltlTranslator::FormulaList &propositions={},
-                                        const std::vector<CounterOperation> &counter_actions={},
+                                        const CounterOperationList &counter_actions={},
                                         const CltlFormulaPtr &postoned=0) :
             propositions(propositions), counter_actions(counter_actions), postponed(postoned) {
         }
@@ -138,7 +138,7 @@ private:
 
     /// Helper functions for counter actions
     inline static CounterOperation _r()     { return kReset; }
-    inline static CounterOperation _ic()    { return static_cast<CounterOperation>(kIncrement | kCheck); }
+    inline static CounterOperation _ic()    { return kIncrement | kCheck; }
     inline static CounterOperation _e()     { return static_cast<CounterOperation>(0); }
 
     /// a helper function that returns from a list of terms a sorted set, to ease comparison.
