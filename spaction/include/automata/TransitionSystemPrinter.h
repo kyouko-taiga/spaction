@@ -19,6 +19,7 @@
 #define SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
 
 #include <fstream>
+#include <map>
 
 #include "TransitionSystem.h"
 
