@@ -381,3 +381,19 @@ const std::string CltlTranslator::TransitionLabel::dump() const {
 
 }  // namespace automata
 }  // namespace spaction
+
+namespace std {
+
+ostream&
+operator<<(ostream &os, const spaction::automata::CltlTranslator::Node &n) {
+    os << n.dump();
+    return os;
+}
+
+ostream&
+operator<<(ostream &os, const spaction::automata::CltlTranslator::TransitionLabel &l) {
+    os << l.dump();
+    return os;
+}
+
+} // namespace std
