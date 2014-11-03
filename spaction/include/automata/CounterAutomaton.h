@@ -97,6 +97,26 @@ public:
         delete _transition_system;
     }
 
+    /// delete some assignment operators, better safe than sorry
+    CounterAutomaton &operator=(CounterAutomaton &) = delete;
+    CounterAutomaton &operator=(const CounterAutomaton &) = delete;
+    CounterAutomaton &operator=(const CounterAutomaton &&) = delete;
+
+    CounterAutomaton &operator=(CounterAutomaton &&other) {
+        if (_initial_state)
+            delete _initial_state;
+        delete _transition_system;
+
+        std::swap(_counters, other._counters);
+        std::swap(_nb_acceptance, other._nb_acceptance);
+        std::swap(_initial_state, other._initial_state);
+        std::swap(_transition_system, other._transition_system);
+        other._initial_state = nullptr;
+        other._transition_system = nullptr;
+
+        return *this;
+    }
+
     inline std::size_t num_counters()        const { return _counters.size(); }
     inline std::size_t num_acceptance_sets() const { return _nb_acceptance; }
 
