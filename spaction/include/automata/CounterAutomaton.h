@@ -57,7 +57,10 @@ namespace std {
 /// Hash function for CounterLabel type, so it can be used as a key in map-like STL containers.
 template<typename S>
 struct hash<spaction::automata::CounterLabel<S>> {
-    std::size_t operator()(const spaction::automata::CounterLabel<S> &cl) const {
+    typedef spaction::automata::CounterLabel<S> argument_type;
+    typedef std::size_t result_type;
+
+    result_type operator()(const argument_type &cl) const {
         return cl.hash();
     }
 };
