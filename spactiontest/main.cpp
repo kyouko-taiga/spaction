@@ -56,14 +56,11 @@ void test_counter_automata() {
 
     automaton.transition_system()->add_transition("q", "q",
         automaton.make_label('a', {{CounterOperation::kIncrement,
-                                    CounterOperation::kCheck}}));
+                                    CounterOperation::kCheck}}, std::set<std::size_t>()));
 
-    Automaton::transition_t *t =
     automaton.transition_system()->add_transition("q", "q",
         automaton.make_label('b', {{CounterOperation::kIncrement,
-                                    CounterOperation::kReset}}));
-
-    automaton.add_acceptance_transition(0, t);
+                                    CounterOperation::kReset}}, {0}));
 
     spaction::automata::TSPrinter<qt, spaction::automata::CounterLabel<st>> printer(*automaton.transition_system());
     // printer.dump("/tmp/counter.dot");
