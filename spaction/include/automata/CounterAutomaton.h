@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "automata/TransitionSystem.h"
+#include "automata/TransitionSystemPrinter.h"
 
 namespace spaction {
 namespace automata {
@@ -122,6 +123,11 @@ public:
         return CounterLabel<S>(letter, operations, accs);
     }
 
+    void print(const std::string &dotfile) const {
+        TSPrinter<Q, CounterLabel<S>> p(*_transition_system);
+        p.dump(dotfile);
+    }
+
 private:
     TransitionSystem<Q, CounterLabel<S>> *_transition_system;
 
@@ -208,6 +214,7 @@ private:
 /// Output operator for CounterLabel.
 template<typename S>
 std::ostream &operator<<(std::ostream &os, const CounterLabel<S>& label) {
+    // @TODO also print acceptance conditions
     os << label.letter() <<  ":[";
     for (std::size_t i = 0; i < label.num_counters(); ++i) {
         const CounterOperationList &counter = label.counter_operations(i);
