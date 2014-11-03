@@ -240,13 +240,19 @@ private:
 /// Output operator for CounterLabel.
 template<typename S>
 std::ostream &operator<<(std::ostream &os, const CounterLabel<S>& label) {
-    // @TODO also print acceptance conditions
-    os << label.letter() <<  ":[";
+    os << "{" << label.letter() << "}" <<  ":[";
     for (std::size_t i = 0; i < label.num_counters(); ++i) {
         const CounterOperationList &counter = label.counter_operations(i);
         os << "(";
-        std::copy(counter.begin(), counter.end(), std::ostream_iterator<int>(os, ","));
+        for (auto c : counter) {
+            os << print_counter_operation(c) << ",";
+        }
         os << "),";
+    }
+    os << "]" << std::endl;
+    // print acceptance conditions
+    for (auto a: label.get_acceptance()) {
+        os << "Acc(" << a << ")" << std::endl;
     }
     return os;
 }
