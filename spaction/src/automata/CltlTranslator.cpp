@@ -289,9 +289,9 @@ void CltlTranslator::_process_reduce() {
         Node *s = _to_be_reduced.top();
         _to_be_reduced.pop();
 
-        if (s->is_reduced())
+        if (s->is_processed())
             continue;
-        s->set_reduced();
+        s->set_processed();
 
         // build the epsilon successors of `s` and put it to the reduce stack
         NodeList successors = _build_epsilon_successors(s);
@@ -322,12 +322,9 @@ void CltlTranslator::_process_fire() {
 }
 
 void CltlTranslator::_build_automaton() {
-    // the TS underlying the real automaton
-    auto automaton_ts = _automaton.transition_system();
-
     // the initial state
     Node *initial_node = _build_node({_formula});
-    automaton_ts->add_state(initial_node);
+    _automaton.transition_system()->add_state(initial_node);
     _automaton.set_initial_state(initial_node);
 
     _to_remove_epsilon.push(initial_node);
@@ -352,7 +349,7 @@ void CltlTranslator::_process_remove_epsilon(Node *source, Node *s,
     // base case
     if (s->is_reduced()) {
         for (auto succ: _transition_system(s).successors()) {
-            std::vector<TransitionLabel*> new_trace;
+            std::vector<TransitionLabel*> new_trace = trace;
             new_trace.push_back(succ->label());
             _add_nonepsilon_transition(source, succ->sink(), new_trace);
             if (_done_remove_epsilon.count(succ->sink()) == 0) {
@@ -384,7 +381,7 @@ void CltlTranslator::_add_nonepsilon_transition(Node *source, Node *sink,
             // there should not be several actions on the same counter along a single trace
             assert(!(counter_actions[i] and t->counter_actions[i]));
 
-            counter_actions[i] = counter_actions[i] | t->counter_actions[i];
+            counter_actions[i] = (counter_actions[i] | t->counter_actions[i]);
         }
     }
 
@@ -413,8 +410,10 @@ void CltlTranslator::_add_nonepsilon_transition(Node *source, Node *sink,
     }
 
     // add into the automaton
+    std::vector<CounterOperationList> tmp(_nb_counters);
+    std::transform(counter_actions.begin(), counter_actions.end(), tmp.begin(), [](CounterOperation c) -> CounterOperationList { return {c}; });
     _automaton.transition_system()->add_transition(source, sink,
-                                                   _automaton.make_label(props, {counter_actions}, accs));
+                                                   _automaton.make_label(props, tmp, accs));
 }
 
 CltlTranslator::FormulaList CltlTranslator::_insert(const FormulaList &list,
@@ -422,6 +421,14 @@ CltlTranslator::FormulaList CltlTranslator::_insert(const FormulaList &list,
     FormulaList result(list);
     result.insert(result.end(), add_list);
     return result;
+}
+
+bool CltlTranslator::Node::is_reduced() const {
+    // reduced = atoms or X
+    // therefore, non-reduced <=> binaryop
+    return std::find_if(_terms.begin(), _terms.end(),
+                        [](CltlFormulaPtr f){ return f->formula_type() == CltlFormula::kBinaryOperator; })
+    == _terms.end();
 }
 
 bool CltlTranslator::Node::is_consistent() const {
@@ -490,7 +497,7 @@ namespace std {
 
 ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::FormulaList &fl) {
     for (auto f : fl) {
-        os << f;
+        os << f->dump();
         os << ",";
     }
     return os;

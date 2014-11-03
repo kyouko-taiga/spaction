@@ -69,13 +69,17 @@ public:
         /// `terms` is assumed to be sorted according to `_unique_sort` (see below)
         /// this constructor is therefore not supposed to be called outside of `_build_node`
         explicit inline Node(const CltlTranslator::FormulaList &terms) :
-            _terms(terms), _is_reduced(false) {
+            _terms(terms), _is_processed(false) {
         }
 
         const inline CltlTranslator::FormulaList &terms() const { return _terms; }
 
-        void inline set_reduced(bool reduced=true) { _is_reduced = reduced; }
-        bool inline is_reduced() const { return _is_reduced; }
+        void inline set_processed(bool processed=true) { _is_processed = processed; }
+        bool inline is_processed() const { return _is_processed; }
+
+        /// returns true only if the node contains atomic props or X props
+        /// useful for epsilon removal
+        bool is_reduced() const;
 
         bool is_consistent() const;
 
@@ -88,7 +92,7 @@ public:
         ///     the latest element of the list is the biggest formula.
         const CltlTranslator::FormulaList _terms;
 
-        bool _is_reduced;
+        bool _is_processed;
     };
 
     /// Helper struct representing the alphabet of the temporary transition system.
