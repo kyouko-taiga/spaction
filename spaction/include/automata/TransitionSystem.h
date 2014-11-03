@@ -246,6 +246,12 @@ private:
     Transition &operator=(const Transition &) = delete;
 };
 
+/// making `operator==` non member allows easy specialization if needed (no class specialization needed)
+template<typename Q, typename S>
+bool operator==(const spaction::automata::Transition<Q,S> &lhs, const spaction::automata::Transition<Q,S> &rhs) {
+    return lhs.source() == rhs.source() and lhs.sink() == rhs.sink() and lhs.label() == rhs.label();
+}
+
 }  // namespace automata
 }  // namespace spaction
 
