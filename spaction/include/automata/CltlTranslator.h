@@ -58,10 +58,6 @@ public:
         TSPrinter<Node*, TransitionLabel*> p(_transition_system);
         p.dump(dotfile);
     }
-
-private:
-    /// map occurrences of cost operator to counters
-    void map_costop_to_counters(const CltlFormulaPtr &f);
     
     /// Helper class representing the states of the temporary transition system.
     ///
@@ -117,7 +113,10 @@ private:
 
         const std::string dump() const;
     };
-
+private:
+    /// map occurrences of cost operator to counters
+    void map_costop_to_counters(const CltlFormulaPtr &f);
+    
     typedef std::vector<Node*> NodeList;
 
     /// Stores the formula being translated by this translator.
@@ -188,7 +187,8 @@ private:
 namespace std {
 
 ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::FormulaList &fl);
-
+ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::Node &n);
+ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::TransitionLabel &l);
 }  // namespace std
 
 #endif  // defined SPACTION_INCLUDE_CLTLTRANSLATOR_H_

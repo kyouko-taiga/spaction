@@ -496,4 +496,14 @@ ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::Formu
     return os;
 }
 
+ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::Node &n) {
+    os << n.dump();
+    return os;
+}
+
+ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::TransitionLabel &l) {
+    os << l.dump();
+    return os;
+}
+
 }  // namespace std
