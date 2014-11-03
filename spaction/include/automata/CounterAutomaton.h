@@ -152,7 +152,9 @@ public:
     }
 
     bool operator==(const CounterLabel<S>& rhs) const {
-        return this->hash() == rhs.hash();
+        return      this->_letter == rhs._letter
+                and this->_operations == rhs._operations
+                and this->_acceptance_conditions == rhs._acceptance_conditions;
     }
 
     std::size_t hash() const {
@@ -164,6 +166,7 @@ public:
                     i ^= operation;
                 _hash_value ^= i;
             }
+            _hash_dirty = false;
         }
         return _hash_value;
     }
