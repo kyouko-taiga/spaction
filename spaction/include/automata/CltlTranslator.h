@@ -19,6 +19,7 @@
 #define SPACTION_INCLUDE_CLTLTRANSLATOR_H_
 
 #include <map>
+#include <set>
 #include <stack>
 #include <string>
 #include <vector>
@@ -124,6 +125,8 @@ private:
 
     /// Stores the temporar transition system that is used to build the automata.
     UndeterministicTransitionSystem<Node*, TransitionLabel*> _transition_system;
+    /// Stores the actual automaton
+    CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem> _automaton;
 
     std::size_t _nb_acceptances;
     /// Associates each Until sub-formula to an acceptance condition
@@ -132,9 +135,14 @@ private:
     /// Associates each Cost sub-formula to a counter
     std::map<CltlFormulaPtr, std::size_t> _counters_maps;
 
+    /// for the intermediate automaton construction
     std::stack<Node*> _to_be_reduced;
     std::stack<Node*> _to_be_fired;
     std::vector<Node*> _states;
+
+    /// for the epsilon-removal
+    std::stack<Node*> _to_remove_epsilon;
+    std::set<Node*> _done_remove_epsilon;
 
     /// Helper functions for counter actions
     inline static CounterOperation _r()     { return kReset; }
@@ -160,6 +168,11 @@ private:
     void _build_transition_system();
     void _process_reduce();
     void _process_fire();
+    /// Builds the actual automaton by removing epsilon-transitions
+    void _build_automaton();
+    void _process_remove_epsilon();
+    void _process_remove_epsilon(Node *source, Node *s, const std::vector<TransitionLabel*> &trace);
+    void _add_nonepsilon_transition(Node *source, Node *sink, const std::vector<TransitionLabel*> &trace);
 
     /// Helper method that inserts a formula into a FormulaList and keeps the result sorted.
     FormulaList _insert(const FormulaList &list, const std::initializer_list<CltlFormulaPtr> &add_list) const;

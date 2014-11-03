@@ -30,10 +30,12 @@ namespace automata {
 CltlTranslator::CltlTranslator(const CltlFormulaPtr &formula) :
     _formula(formula->to_nnf()), _nb_acceptances(0), _nb_counters(0) {
         this->map_costop_to_counters(_formula);
+        _automaton = CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem>(_nb_counters, _nb_acceptances);
 }
 
 void CltlTranslator::build_automaton() {
     _build_transition_system();
+    _build_automaton();
 }
 
 void CltlTranslator::map_costop_to_counters(const CltlFormulaPtr &f) {
@@ -317,6 +319,102 @@ void CltlTranslator::_process_fire() {
         if (!t->terms().empty())
             _to_be_reduced.push(t);
     }
+}
+
+void CltlTranslator::_build_automaton() {
+    // the TS underlying the real automaton
+    auto automaton_ts = _automaton.transition_system();
+
+    // the initial state
+    Node *initial_node = _build_node({_formula});
+    automaton_ts->add_state(initial_node);
+    _automaton.set_initial_state(initial_node);
+
+    _to_remove_epsilon.push(initial_node);
+    while (!_to_remove_epsilon.empty()) {
+        _process_remove_epsilon();
+    }
+}
+
+void CltlTranslator::_process_remove_epsilon() {
+    // fetch the next state to be processed
+    Node *s = _to_remove_epsilon.top();
+    _to_remove_epsilon.pop();
+
+    // on fait un parcours en profondeur depuis 's'
+    // on coupe une branche dès qu'on atteint un état réduit
+    _process_remove_epsilon(s, s, {});
+    _done_remove_epsilon.insert(s);
+}
+
+void CltlTranslator::_process_remove_epsilon(Node *source, Node *s,
+                                             const std::vector<TransitionLabel*> &trace) {
+    // base case
+    if (s->is_reduced()) {
+        for (auto succ: _transition_system(s).successors()) {
+            std::vector<TransitionLabel*> new_trace;
+            new_trace.push_back(succ->label());
+            _add_nonepsilon_transition(source, succ->sink(), new_trace);
+            if (_done_remove_epsilon.count(succ->sink()) == 0) {
+                _to_remove_epsilon.push(succ->sink());
+            }
+        }
+        return;
+    }
+
+    // recursive case
+    for (auto succ: _transition_system(s).successors()) {
+        std::vector<TransitionLabel*> new_trace = trace;
+        new_trace.push_back(succ->label());
+        _process_remove_epsilon(source, succ->sink(), new_trace);
+    }
+}
+
+void CltlTranslator::_add_nonepsilon_transition(Node *source, Node *sink,
+                                                const std::vector<TransitionLabel*> &trace) {
+    // add source and sink to the transition system
+    _automaton.transition_system()->add_state(source);
+    _automaton.transition_system()->add_state(sink);
+
+    // build counter actions
+    CounterOperationList counter_actions(_nb_counters);
+    for (auto t: trace) {
+        assert(t->counter_actions.size() == _nb_counters);
+        for (std::size_t i = 0 ; i != _nb_counters ; ++i) {
+            // there should not be several actions on the same counter along a single trace
+            assert(!(counter_actions[i] and t->counter_actions[i]));
+
+            counter_actions[i] = counter_actions[i] | t->counter_actions[i];
+        }
+    }
+
+    // build label
+    // only the last element should have a proposition (thank you, lambda functions)
+    assert([&trace](void){
+                auto it = std::find_if(trace.begin(), trace.end(), [](TransitionLabel *t) { return !(t->propositions.empty()); });
+                return (it == trace.end()) or (++it == trace.end()); } ());
+
+    auto it = std::find_if(trace.begin(), trace.end(),
+                           [](TransitionLabel *t) { return !(t->propositions.empty()); } );
+    FormulaList props;
+    if (it != trace.end())
+        props = (*it)->propositions;
+
+    // build acceptance conditions
+    std::set<std::size_t> accs;
+    // @TODO using std::generate would be better
+    for (std::size_t i = 0 ; i != _nb_acceptances ; ++i) {
+        accs.insert(i);
+    }
+    for (auto t: trace) {
+        auto it = _acceptances_maps.find(t->postponed);
+        if (it != _acceptances_maps.end())
+            accs.erase(it->second);
+    }
+
+    // add into the automaton
+    _automaton.transition_system()->add_transition(source, sink,
+                                                   _automaton.make_label(props, {counter_actions}, accs));
 }
 
 CltlTranslator::FormulaList CltlTranslator::_insert(const FormulaList &list,
