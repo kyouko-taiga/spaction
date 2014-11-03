@@ -51,6 +51,9 @@ public:
     void build_automaton();
 
     void automaton_dot(const std::string &dotfile) {
+        _automaton.print(dotfile);
+    }
+    void epsilon_dot(const std::string &dotfile) {
         TSPrinter<Node*, TransitionLabel*> p(_transition_system);
         p.dump(dotfile);
     }
@@ -180,5 +183,11 @@ private:
 
 }  // namespace automata
 }  // namespace spaction
+
+namespace std {
+
+ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::FormulaList &fl);
+
+}  // namespace std
 
 #endif  // defined SPACTION_INCLUDE_CLTLTRANSLATOR_H_

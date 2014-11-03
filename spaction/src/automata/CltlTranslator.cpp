@@ -485,3 +485,15 @@ const std::string CltlTranslator::TransitionLabel::dump() const {
 
 }  // namespace automata
 }  // namespace spaction
+
+namespace std {
+
+ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::FormulaList &fl) {
+    for (auto f : fl) {
+        os << f;
+        os << ",";
+    }
+    return os;
+}
+
+}  // namespace std
