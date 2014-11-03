@@ -28,6 +28,7 @@
 #include "automata/CounterAutomaton.h"
 #include "automata/TransitionSystemPrinter.h"
 #include "automata/UndeterministicTransitionSystem.h"
+#include "hash/hash.h"
 
 namespace spaction {
 namespace automata {
