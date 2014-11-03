@@ -124,13 +124,13 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         case BinaryOperator::kOr: {
             Node *s0 = _build_node(_insert(leftover, {bo->left()}));
             if (s0->is_consistent()) {
-                _transition_system.add_transition(node, s0, new TransitionLabel());
+                _transition_system.add_transition(node, s0, new TransitionLabel({}, CounterOperationList(_nb_counters)));
                 successors.push_back(s0);
             }
 
             Node *s1 = _build_node(_insert(leftover, {bo->right()}));
             if (s1->is_consistent()) {
-                _transition_system.add_transition(node, s1, new TransitionLabel());
+                _transition_system.add_transition(node, s1, new TransitionLabel({}, CounterOperationList(_nb_counters)));
                 successors.push_back(s1);
             }
 
@@ -141,7 +141,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         case BinaryOperator::kAnd: {
             Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
             if (s0->is_consistent()) {
-                _transition_system.add_transition(node, s0, new TransitionLabel());
+                _transition_system.add_transition(node, s0, new TransitionLabel({}, CounterOperationList(_nb_counters)));
                 successors.push_back(s0);
             }
 
@@ -153,13 +153,13 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         case BinaryOperator::kUntil: {
             Node *s0 = _build_node(_insert(leftover, {bo->right()}));
             if (s0->is_consistent()) {
-                _transition_system.add_transition(node, s0, new TransitionLabel());
+                _transition_system.add_transition(node, s0, new TransitionLabel({}, CounterOperationList(_nb_counters)));
                 successors.push_back(s0);
             }
 
             Node *s1 = _build_node(_insert(leftover, {bo->left(), bo->creator()->make_next(f)}));
             if (s1->is_consistent()) {
-                _transition_system.add_transition(node, s1, new TransitionLabel({},{},f));
+                _transition_system.add_transition(node, s1, new TransitionLabel({}, CounterOperationList(_nb_counters), f));
                 successors.push_back(s1);
             }
 
@@ -177,7 +177,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
 
             Node *s1 = _build_node(_insert(leftover, {bo->right(), bo->creator()->make_next(f)}));
             if (s1->is_consistent()) {
-                _transition_system.add_transition(node, s1, new TransitionLabel());
+                _transition_system.add_transition(node, s1, new TransitionLabel({}, CounterOperationList(_nb_counters)));
                 successors.push_back(s1);
             }
 
@@ -194,21 +194,21 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
             Node *s0 = _build_node(_insert(leftover, {bo->right()}));
             if (s0->is_consistent()) {
                 counters[current_counter] = _r();
-                _transition_system.add_transition(node, s0, new TransitionLabel({},counters));
+                _transition_system.add_transition(node, s0, new TransitionLabel({}, counters));
                 successors.push_back(s0);
             }
 
             Node *s1 = _build_node(_insert(leftover, {bo->left(), bo->creator()->make_next(f)}));
             if (s1->is_consistent()) {
                 counters[current_counter] = _e();
-                _transition_system.add_transition(node, s1, new TransitionLabel({},counters,f));
+                _transition_system.add_transition(node, s1, new TransitionLabel({}, counters, f));
                 successors.push_back(s1);
             }
 
             Node *s2 = _build_node(_insert(leftover,{bo->creator()->make_next(f)}));
             if (s2->is_consistent()) {
                 counters[current_counter] = _ic();
-                _transition_system.add_transition(node, s2, new TransitionLabel({},counters,f));
+                _transition_system.add_transition(node, s2, new TransitionLabel({}, counters, f));
                 successors.push_back(s2);
             }
 
@@ -225,21 +225,21 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
             Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
             if (s0->is_consistent()) {
                 counters[current_counter] = _r();
-                _transition_system.add_transition(node, s0, new TransitionLabel({},counters));
+                _transition_system.add_transition(node, s0, new TransitionLabel({}, counters));
                 successors.push_back(s0);
             }
 
             Node *s1 = _build_node(_insert(leftover, {bo->right(), bo->creator()->make_next(f)}));
             if (s1->is_consistent()) {
                 counters[current_counter] = _e();
-                _transition_system.add_transition(node, s1, new TransitionLabel({},counters));
+                _transition_system.add_transition(node, s1, new TransitionLabel({}, counters));
                 successors.push_back(s1);
             }
 
             Node *s2 = _build_node({bo->creator()->make_next(f)});
             if (s2->is_consistent()) {
                 counters[current_counter] = _ic();
-                _transition_system.add_transition(node, s2, new TransitionLabel({},counters));
+                _transition_system.add_transition(node, s2, new TransitionLabel({}, counters));
                 successors.push_back(s2);
             }
 
@@ -267,7 +267,7 @@ CltlTranslator::Node *CltlTranslator::_build_actual_successor(Node *node) {
     }
 
     Node *suc = _build_node(successor_terms);
-    _transition_system.add_transition(node, suc, new TransitionLabel(propositions));
+    _transition_system.add_transition(node, suc, new TransitionLabel(propositions, CounterOperationList(_nb_counters)));
     return suc;
 }
 
