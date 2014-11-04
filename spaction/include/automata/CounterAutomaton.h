@@ -102,17 +102,24 @@ public:
     CounterAutomaton &operator=(const CounterAutomaton &) = delete;
     CounterAutomaton &operator=(const CounterAutomaton &&) = delete;
 
+    /// move constructor
+    explicit CounterAutomaton(CounterAutomaton &&other) {
+        // compiler wants me to use std::move here, but I am not sure why...
+        *this = std::move(other);
+    }
+
+    /// move assignment operator
     CounterAutomaton &operator=(CounterAutomaton &&other) {
         if (_initial_state)
             delete _initial_state;
         delete _transition_system;
 
+        std::swap(_transition_system, other._transition_system);
         std::swap(_counters, other._counters);
         std::swap(_nb_acceptance, other._nb_acceptance);
         std::swap(_initial_state, other._initial_state);
-        std::swap(_transition_system, other._transition_system);
-        other._initial_state = nullptr;
         other._transition_system = nullptr;
+        other._initial_state = nullptr;
 
         return *this;
     }
