@@ -56,14 +56,11 @@ void test_counter_automata() {
 
     automaton.transition_system()->add_transition("q", "q",
         automaton.make_label('a', {{CounterOperation::kIncrement,
-                                    CounterOperation::kCheck}}));
+                                    CounterOperation::kCheck}}, std::set<std::size_t>()));
 
-    Automaton::transition_t *t =
     automaton.transition_system()->add_transition("q", "q",
         automaton.make_label('b', {{CounterOperation::kIncrement,
-                                    CounterOperation::kReset}}));
-
-    automaton.add_acceptance_transition(0, t);
+                                    CounterOperation::kReset}}, {0}));
 
     spaction::automata::TSPrinter<qt, spaction::automata::CounterLabel<st>> printer(*automaton.transition_system());
     // printer.dump("/tmp/counter.dot");
@@ -114,24 +111,33 @@ void test_cost_register_automata(const std::string &str = "aabaaacba") {
     std::cout << "μ(q0) = " << automaton.register_value(0) << std::endl;
 }
 
+void usage() {
+    // @TODO print usage help message
+}
+
 int main(int argc, char* argv[]) {
-    test_counter_automata();
+//    test_counter_automata();
 
     std::string cltl_string = "";
-    std::string dot_file = "";
+    std::string epsilon_dot_file = "";
+    std::string automaton_dot_file = "";
 
     int c;
-    while ((c = getopt(argc, argv, "f:o:")) != -1) {
+    while ((c = getopt(argc, argv, "f:e:a:")) != -1) {
         switch (c) {
             case 'f':
                 cltl_string = optarg;
                 break;
-            case 'o':
-                dot_file = optarg;
+            case 'e':
+                epsilon_dot_file = optarg;
+                break;
+            case 'a':
+                automaton_dot_file = optarg;
                 break;
             default:
                 std::cerr << "unknown option " << c << std::endl;
                 std::cerr << "abort" << std::endl;
+                usage();
                 return 1;
         }
     }
@@ -154,9 +160,13 @@ int main(int argc, char* argv[]) {
 
     spaction::automata::CltlTranslator translator(f);
     translator.build_automaton();
-    if (dot_file != "") {
-        translator.automaton_dot(dot_file);
-        std::cerr << "automaton was printed to file " << dot_file << std::endl;
+    if (automaton_dot_file != "") {
+        translator.automaton_dot(automaton_dot_file);
+        std::cerr << "automaton was printed to file " << automaton_dot_file << std::endl;
+    }
+    if (epsilon_dot_file != "") {
+        translator.epsilon_dot(epsilon_dot_file);
+        std::cerr << "epsilon-automaton was printed to file " << epsilon_dot_file << std::endl;
     }
 
     return 0;

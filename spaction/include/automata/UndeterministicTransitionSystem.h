@@ -142,7 +142,9 @@ public:
         assert(has_state(source) and has_state(sink));
 
         Transition<Q,S> *t = this->_make_transition(source, sink, label);
-        _graph[source][label].push_back(t);
+        auto &v = _graph[source][label];
+        if (std::find_if(v.begin(), v.end(), [&t](Transition<Q,S> *o) { return *t == *o; }) == v.end())
+            v.push_back(t);
         return t;
     }
 
