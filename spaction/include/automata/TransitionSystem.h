@@ -62,6 +62,7 @@ protected:
         }
 
         virtual bool is_equal(const TransitionBaseIterator& rhs) const = 0;
+        virtual TransitionBaseIterator *clone() const = 0;
 
         virtual Transition<Q,S>* operator*() = 0;
         virtual const TransitionBaseIterator& operator++() = 0;
@@ -78,6 +79,7 @@ protected:
         }
 
         virtual bool is_equal(const StateBaseIterator& rhs) const = 0;
+        virtual StateBaseIterator *clone() const = 0;
 
         virtual Q operator*() = 0;
         virtual const StateBaseIterator& operator++() = 0;
@@ -115,6 +117,19 @@ protected:
             _base_iterator(base_iterator) { }
         virtual ~_TransitionIterator() { delete _base_iterator; }
 
+        // copy constructor
+        _TransitionIterator(const _TransitionIterator &other) :
+            _base_iterator(other._base_iterator->clone()) { }
+
+        // copy assignment operator
+        _TransitionIterator &operator=(const _TransitionIterator &other) {
+            if (this != &other) {
+                delete _base_iterator;
+                _base_iterator = other._base_iterator->clone();
+            }
+            return *this;
+        }
+
         bool operator!=(const _TransitionIterator& rhs) const {
             return *(_base_iterator) != *(rhs._base_iterator);
         }
@@ -133,8 +148,19 @@ protected:
     class _StateIterator {
     public:
         explicit _StateIterator(StateBaseIterator *base_iterator) :
-        _base_iterator(base_iterator) { }
+            _base_iterator(base_iterator) { }
         virtual ~_StateIterator() { delete _base_iterator; }
+
+        _StateIterator(const _StateIterator &other) :
+            _base_iterator(other._base_iterator->clone()) { }
+
+        _StateIterator &operator=(const _StateIterator &other) {
+            if (this != &other) {
+                delete _base_iterator;
+                _base_iterator = other._base_iterator->clone();
+            }
+            return *this;
+        }
 
         bool operator!=(const _StateIterator& rhs) const {
             return *(_base_iterator) != *(rhs._base_iterator);

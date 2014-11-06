@@ -84,6 +84,10 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
             return *this;
         }
 
+        virtual typename TransitionSystem<Q, S>::TransitionBaseIterator *clone() const {
+            return new TransitionBaseIterator(*this);
+        }
+
     private:
         typename std::unordered_map<S, std::vector<Transition<Q,S>*>>::iterator _it, _end;
         typename std::vector<Transition<Q,S>*>::iterator _transition_it;
@@ -116,6 +120,10 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
         virtual const typename TransitionSystem<Q,S>::StateBaseIterator& operator++() {
             ++_it;
             return *this;
+        }
+
+        virtual typename TransitionSystem<Q,S>::StateBaseIterator *clone() const {
+            return new StateBaseIterator(*this);
         }
 
     private:
