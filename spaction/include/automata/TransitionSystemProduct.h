@@ -150,6 +150,8 @@ protected:
             return res;
         }
 
+        /// @note   this method returns a newly created pointer, causing a major leak
+        ///         this will be fixed by the upcoming addition of a smart-pointer for Transition
         virtual Transition<Q,S>* operator*() override {
             assert(_lhs != _lend and _rhs != _rend);
             Transition<Q1,S1> *l = *_lhs;
@@ -157,9 +159,6 @@ protected:
             auto res = _ts->add_transition(std::make_pair(l->source(), r->source()),
                                            std::make_pair(l->sink(), r->sink()),
                                            _ts->_helper.build(l->label(), r->label()));
-            // @todo if l and r get deleted, the memory gets corrupted...
-//            delete l;
-//            delete r;
             return res;
         }
 
