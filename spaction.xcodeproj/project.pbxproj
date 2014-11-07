@@ -275,7 +275,7 @@
 /* Begin PBXLegacyTarget section */
 		4AB890DE196F047900F7BB44 /* checkstyle */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "-c \"$(PROJECT_DIR)/cpplint.custom \\`find spaction/include -type f -name \\*.h\\` \\`find spaction/src -type -f -name \\*.cpp\\` spactiontest/*.cpp 2>&1 > /dev/null | sed 's/: /: warning: /' \"";
+			buildArgumentsString = "-c \"$(PROJECT_DIR)/cpplint.custom \\`find spaction/include -type f -name \\*.h\\` \\`find spaction/src -type f -name \\*.cpp\\` spactiontest/*.cpp 2>&1 > /dev/null | sed 's/: /: warning: /' \"";
 			buildConfigurationList = 4AB890DF196F047900F7BB44 /* Build configuration list for PBXLegacyTarget "checkstyle" */;
 			buildPhases = (
 			);
