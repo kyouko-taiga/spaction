@@ -60,6 +60,10 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
         }
 
         virtual Transition<Q,S>* operator*() {
+            assert(_it != _end);
+            assert(_transition_it != _it->second.end());
+            // @todo why does the following assertion fail?
+            // assert(_transition_it != (typename std::vector<Transition<Q,S>*>::iterator()));
             return *_transition_it;
         }
 
