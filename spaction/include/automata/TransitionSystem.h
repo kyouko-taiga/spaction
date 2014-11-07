@@ -231,11 +231,20 @@ protected:
     /// @remarks
     ///     Instances of the class Transition shouldn't be constructed outside a TransitionSystem.
     ///     Subclasses may use this method within their implementation of `add_transition` to
-    ///     actually create the transitions object.
+    ///     actually create the Transition objects.
     virtual Transition<Q,S> *_make_transition(const Q &source, const Q &sink, const S &label) {
         if (!has_state(source) or !has_state(sink))
             return nullptr;
         return new Transition<Q,S>(source, sink, label);
+    }
+    /// Internal method to destroy transitions.
+    /// @remarks
+    ///     TransitionSystem being being responsible for the construction of Transition, it is also
+    ///     responsible for their destruction.
+    ///     Subclasses may use this method within their implementation of `remove_transition` to
+    ///     actually delete the Transition objects.
+    virtual void _delete_transition(const Transition<Q,S> *t) {
+        delete t;
     }
 
     virtual TransitionBaseIterator *_successor_begin(const Q &state, const S *label) = 0;
@@ -256,15 +265,19 @@ public:
     const S &label()  const { return _label; }
 
 protected:
+    /// A Transition may only be built and destroyed from the related TransitionSystem.
     friend class TransitionSystem<Q,S>;
 
     const Q _source;
     const Q _sink;
     const S _label;
 
+    /// Constructor
     explicit Transition(const Q &source, const Q &sink, const S &label) :
         _source(source), _sink(sink), _label(label) { }
 
+    /// Destructor (virtual to allow inheritance)
+    virtual ~Transition() {}
 private:
     /// Copy construction is forbidden.
     Transition(const Transition &) = delete;
