@@ -133,6 +133,16 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q,S> {
     };
 
 public:
+    ~UndeterministicTransitionSystem() {
+        for (auto &it : _graph) {
+            for (auto &jt : it.second) {
+                for (auto &trans : jt.second) {
+                    this->_delete_transition(trans);
+                }
+            }
+        }
+    }
+
     virtual void add_state(const Q &state) {
         if (_graph.count(state) > 0) return;
         _graph[state];
@@ -140,7 +150,9 @@ public:
 
     /// @note
     ///     this method should ensure that a label with no successors does not appear in the maps
-    virtual void remove_state(const Q &state) { }
+    virtual void remove_state(const Q &state) {
+        // @todo
+    }
 
     virtual bool has_state(const Q &state) const {
         return _graph.count(state) > 0;
@@ -151,14 +163,23 @@ public:
 
         Transition<Q,S> *t = this->_make_transition(source, sink, label);
         auto &v = _graph[source][label];
-        if (std::find_if(v.begin(), v.end(), [&t](Transition<Q,S> *o) { return *t == *o; }) == v.end())
+        auto it = std::find_if(v.begin(), v.end(), [&t](Transition<Q,S> *o) { return *t == *o; });
+        if (it == v.end()) {
+            // if the transition is not already stored, add it
             v.push_back(t);
-        return t;
+            return t;
+        } else {
+            // else destroy the temporary and return the stored one
+            this->_delete_transition(t);
+            return *it;
+        }
     }
 
     /// @note
     ///     this method should ensure that a label with no successors does not appear in the maps
-    virtual void remove_transition(const Q &source, const Q &sink, const S &label) { }
+    virtual void remove_transition(const Q &source, const Q &sink, const S &label) {
+        // @todo
+    }
 
 protected:
     std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q,S>*>>> _graph;
