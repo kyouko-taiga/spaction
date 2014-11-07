@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
-#define SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
+#ifndef SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRINTER_H_
+#define SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRINTER_H_
 
 #include <fstream>
 #include <map>
@@ -28,7 +28,7 @@ namespace automata {
 
 template<typename Q, typename S> class TSPrinter {
  public:
-    explicit TSPrinter(TransitionSystem<Q,S> &s): _system(s) { }
+    explicit TSPrinter(TransitionSystem<Q, S> &s): _system(s) { }
     ~TSPrinter() { }
 
     void dump(const std::string &filename) {
@@ -71,7 +71,7 @@ template<typename Q, typename S> class TSPrinter {
     }
 
  private:
-    TransitionSystem<Q,S> &_system;
+    TransitionSystem<Q, S> &_system;
 
     /// a helper class to handle pointers
     template <typename A>
@@ -87,8 +87,8 @@ template<typename Q, typename S> class TSPrinter {
 
     /// a specialization to handle pairs
     template<typename A, typename B>
-    struct PrinterHelper<std::pair<A,B>> {
-        static void print(std::ostream &os, const std::pair<A,B> &p) {
+    struct PrinterHelper<std::pair<A, B>> {
+        static void print(std::ostream &os, const std::pair<A, B> &p) {
             os << "(";
             PrinterHelper<A>::print(os, p.first);
             os << ",";
@@ -101,4 +101,4 @@ template<typename Q, typename S> class TSPrinter {
 }  // namespace automata
 }  // namespace spaction
 
-#endif  // defined SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
+#endif  // SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRINTER_H_

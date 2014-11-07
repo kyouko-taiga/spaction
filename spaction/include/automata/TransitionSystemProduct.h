@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_TRANSITIONSYSTEM_PRODUCT_H_
-#define SPACTION_INCLUDE_TRANSITIONSYSTEM_PRODUCT_H_
+#ifndef SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRODUCT_H_
+#define SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRODUCT_H_
 
 #include "automata/TransitionSystem.h"
 
@@ -26,14 +26,14 @@ namespace automata {
 /// @todo add loads of comments
 
 /// The product of two states, merely a typedef for now
-template<typename A, typename B> using StateProd = std::pair<A,B>;
+template<typename A, typename B> using StateProd = std::pair<A, B>;
 
 /// An interface for the product of two labels.
 /// An instance of this class serves as a helper for the product transition system, to build a
 /// product labels from two labels, and to retrieve the underlying labels in a product label.
 template<typename A, typename B, typename C>
 class ILabelProd {
-public:
+ public:
     virtual ~ILabelProd() {}
 
     /// @todo   this typedef is not very explicit, give it a better name (such as prod_type)
@@ -54,24 +54,26 @@ public:
 template<   typename Q1, typename S1,
             typename Q2, typename S2,
             template<typename S1_, typename S2_> class LabelProd>
-class TransitionSystemProduct : public TransitionSystem<StateProd<Q1,Q2>, typename LabelProd<S1,S2>::type> {
+class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typename LabelProd<S1, S2>::type> {
     /// Enforce the label product type to implement ILabelProd
     static_assert(std::is_base_of<ILabelProd<S1, S2, typename LabelProd<S1, S2>::type>, LabelProd<S1, S2>>(),
                   "Template argument LabelProd does not derive from ILabelProd");
 
     /// useful typedefs for state and label product types
-    typedef StateProd<Q1,Q2> Q;
-    typedef typename LabelProd<S1,S2>::type S;
+    typedef StateProd<Q1, Q2> Q;
+    typedef typename LabelProd<S1, S2>::type S;
     /// a typedef for the base class
-    typedef TransitionSystem<StateProd<Q1,Q2>, typename LabelProd<S1,S2>::type> super_type;
-public:
+    typedef TransitionSystem<StateProd<Q1, Q2>, typename LabelProd<S1, S2>::type> super_type;
+
+ public:
     /// default constructor
     // @todo check whether the helper is default-constructible
-    explicit TransitionSystemProduct(): TransitionSystemProduct(nullptr, nullptr, LabelProd<S1, S2>()) {}
+    explicit TransitionSystemProduct():
+        TransitionSystemProduct(nullptr, nullptr, LabelProd<S1, S2>()) {}
 
     /// constructor
     /// @note the product does not become responsible for its operands `lhs` and `rhs`
-    explicit TransitionSystemProduct(TransitionSystem<Q1,S1> *lhs, TransitionSystem<Q2,S2> *rhs, const LabelProd<S1, S2> &h)
+    explicit TransitionSystemProduct(TransitionSystem<Q1, S1> *lhs, TransitionSystem<Q2, S2> *rhs, const LabelProd<S1, S2> &h)
     : _lhs(lhs), _rhs(rhs), _helper(h) {}
 
     /// Destructor.
@@ -98,39 +100,39 @@ public:
         assert(false);
     }
 
-protected:
+ protected:
     /// the left-hand side of the product
-    TransitionSystem<Q1,S1> *_lhs;
+    TransitionSystem<Q1, S1> *_lhs;
     /// the right-hand side of the product
-    TransitionSystem<Q2,S2> *_rhs;
+    TransitionSystem<Q2, S2> *_rhs;
     /// the helper for label products
     const LabelProd<S1, S2> _helper;
 
     /// Underlying transition iterator class.
     class TransitionBaseIterator : public super_type::TransitionBaseIterator {
-    public:
-        explicit TransitionBaseIterator(const typename TransitionSystem<Q1,S1>::TransitionIterator &l,
-                                        const typename TransitionSystem<Q1,S1>::TransitionIterator &lend,
-                                        const typename TransitionSystem<Q2,S2>::TransitionIterator &r,
-                                        const typename TransitionSystem<Q2,S2>::TransitionIterator &rbegin,
-                                        const typename TransitionSystem<Q2,S2>::TransitionIterator &rend,
+     public:
+        explicit TransitionBaseIterator(const typename TransitionSystem<Q1, S1>::TransitionIterator &l,
+                                        const typename TransitionSystem<Q1, S1>::TransitionIterator &lend,
+                                        const typename TransitionSystem<Q2, S2>::TransitionIterator &r,
+                                        const typename TransitionSystem<Q2, S2>::TransitionIterator &rbegin,
+                                        const typename TransitionSystem<Q2, S2>::TransitionIterator &rend,
                                         TransitionSystemProduct *t)
         : _lhs(l)
         , _lend(lend)
         , _rhs(r)
         , _rbegin(rbegin)
         , _rend(rend)
-        , _ts(t)
-        {
-            if (! (_rbegin != _rend)) {
+        , _ts(t) {
+            if (!(_rbegin != _rend)) {
                 _lhs = _lend;
                 _rhs = _rend;
             }
-            if (! (_lhs != _lend)) {
+            if (!(_lhs != _lend)) {
                 _rhs = _rend;
             }
             assert((_lhs != _lend) or (!(_rhs != _rend)));
         }
+
         virtual ~TransitionBaseIterator() { }
 
         virtual typename super_type::TransitionBaseIterator *clone() const override {
@@ -142,20 +144,18 @@ protected:
             assert(!(_lend != other._lend or _rend != other._rend));
             assert(!(other._lhs != other._lend));
             assert(!(other._rhs != other._rend));
-            bool res = ! (_lhs != other._lhs or _rhs != other._rhs);
+            bool res = !(_lhs != other._lhs or _rhs != other._rhs);
             assert((_lhs != _lend) or (!(_rhs != _rend)));
-            assert(
-                   (!(_lhs != _lend))?res:true
-            );
+            assert((!(_lhs != _lend))?res:true);
             return res;
         }
 
         /// @note   this method returns a newly created pointer, causing a major leak
         ///         this will be fixed by the upcoming addition of a smart-pointer for Transition
-        virtual Transition<Q,S>* operator*() override {
+        virtual Transition<Q, S>* operator*() override {
             assert(_lhs != _lend and _rhs != _rend);
-            Transition<Q1,S1> *l = *_lhs;
-            Transition<Q2,S2> *r = *_rhs;
+            Transition<Q1, S1> *l = *_lhs;
+            Transition<Q2, S2> *r = *_rhs;
             auto res = _ts->add_transition(std::make_pair(l->source(), r->source()),
                                            std::make_pair(l->sink(), r->sink()),
                                            _ts->_helper.build(l->label(), r->label()));
@@ -176,14 +176,14 @@ protected:
             return *this;
         }
 
-    protected:
-        typename TransitionSystem<Q1,S1>::TransitionIterator _lhs, _lend;
-        typename TransitionSystem<Q2,S2>::TransitionIterator _rhs, _rbegin, _rend;
+     protected:
+        typename TransitionSystem<Q1, S1>::TransitionIterator _lhs, _lend;
+        typename TransitionSystem<Q2, S2>::TransitionIterator _rhs, _rbegin, _rend;
         TransitionSystemProduct *_ts;
     };
 
     class StateBaseIterator : public super_type::StateBaseIterator {
-    public:
+     public:
         explicit StateBaseIterator(const typename TransitionSystem<Q1, S1>::StateIterator &l,
                                    const typename TransitionSystem<Q1, S1>::StateIterator &lend,
                                    const typename TransitionSystem<Q2, S2>::StateIterator &r,
@@ -193,9 +193,8 @@ protected:
         , _lend(lend)
         , _rhs(r)
         , _rbegin(rbegin)
-        , _rend(rend)
-        {
-            if (! (_rbegin != _rend)) {
+        , _rend(rend) {
+            if (!(_rbegin != _rend)) {
                 _lhs = _lend;
                 _rhs = _rend;
             }
@@ -209,7 +208,7 @@ protected:
 
         virtual bool is_equal(const typename super_type::StateBaseIterator& rhs) const override {
             const StateBaseIterator &other = static_cast<const StateBaseIterator &>(rhs);
-            return ! (_lhs != other._lhs or _rhs != other._rhs);
+            return !(_lhs != other._lhs or _rhs != other._rhs);
         }
 
         virtual Q operator*() override {
@@ -227,7 +226,7 @@ protected:
             return *this;
         }
 
-    protected:
+     protected:
         typename TransitionSystem<Q1, S1>::StateIterator _lhs, _lend;
         typename TransitionSystem<Q2, S2>::StateIterator _rhs, _rbegin, _rend;
     };
@@ -279,4 +278,4 @@ protected:
 }  // namespace automata
 }  // namespace spaction
 
-#endif  // defined SPACTION_INCLUDE_TRANSITIONSYSTEM_PRODUCT_H_
+#endif  // SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRODUCT_H_

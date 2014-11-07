@@ -192,7 +192,7 @@ std::ostream &operator<<(std::ostream &os, const CounterLabel<std::pair<A, B>>& 
     }
     os << "]" << std::endl;
     // print acceptance conditions
-    for (auto a: label.get_acceptance()) {
+    for (auto a : label.get_acceptance()) {
         os << "Acc(" << a << ")" << std::endl;
     }
     return os;

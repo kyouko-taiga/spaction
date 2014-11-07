@@ -207,7 +207,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
                 successors.push_back(s1);
             }
 
-            Node *s2 = _build_node(_insert(leftover,{bo->creator()->make_next(f)}));
+            Node *s2 = _build_node(_insert(leftover, {bo->creator()->make_next(f)}));
             if (s2->is_consistent()) {
                 counters[current_counter] = _ic();
                 _transition_system.add_transition(node, s2, new TransitionLabel({}, counters, f));
@@ -295,10 +295,12 @@ void CltlTranslator::_process_reduce() {
 
         // build the epsilon successors of `s` and put it to the reduce stack
         NodeList successors = _build_epsilon_successors(s);
-        if (successors.empty())
+        if (successors.empty()) {
             _to_be_fired.push(s);
-        else for (auto t : successors) {
-            _to_be_reduced.push(t);
+        } else {
+            for (auto t : successors) {
+                _to_be_reduced.push(t);
+            }
         }
     }
 }
@@ -348,7 +350,7 @@ void CltlTranslator::_process_remove_epsilon(Node *source, Node *s,
                                              const std::vector<TransitionLabel*> &trace) {
     // base case
     if (s->is_reduced()) {
-        for (auto succ: _transition_system(s).successors()) {
+        for (auto succ : _transition_system(s).successors()) {
             std::vector<TransitionLabel*> new_trace = trace;
             new_trace.push_back(succ->label());
             _add_nonepsilon_transition(source, succ->sink(), new_trace);
@@ -360,7 +362,7 @@ void CltlTranslator::_process_remove_epsilon(Node *source, Node *s,
     }
 
     // recursive case
-    for (auto succ: _transition_system(s).successors()) {
+    for (auto succ : _transition_system(s).successors()) {
         std::vector<TransitionLabel*> new_trace = trace;
         new_trace.push_back(succ->label());
         _process_remove_epsilon(source, succ->sink(), new_trace);
@@ -375,7 +377,7 @@ void CltlTranslator::_add_nonepsilon_transition(Node *source, Node *sink,
 
     // build counter actions
     CounterOperationList counter_actions(_nb_counters);
-    for (auto t: trace) {
+    for (auto t : trace) {
         assert(t->counter_actions.size() == _nb_counters);
         for (std::size_t i = 0 ; i != _nb_counters ; ++i) {
             // there should not be several actions on the same counter along a single trace
@@ -387,9 +389,10 @@ void CltlTranslator::_add_nonepsilon_transition(Node *source, Node *sink,
 
     // build label
     // only the last element should have a proposition (thank you, lambda functions)
-    assert([&trace](void){
-                auto it = std::find_if(trace.begin(), trace.end(), [](TransitionLabel *t) { return !(t->propositions.empty()); });
-                return (it == trace.end()) or (++it == trace.end()); } ());
+    assert([&trace](void) {
+        auto it = std::find_if(trace.begin(), trace.end(),
+                               [](TransitionLabel *t) { return !(t->propositions.empty()); });
+        return (it == trace.end()) or (++it == trace.end()); } ());
 
     auto it = std::find_if(trace.begin(), trace.end(),
                            [](TransitionLabel *t) { return !(t->propositions.empty()); } );
@@ -403,7 +406,7 @@ void CltlTranslator::_add_nonepsilon_transition(Node *source, Node *sink,
     for (std::size_t i = 0 ; i != _nb_acceptances ; ++i) {
         accs.insert(i);
     }
-    for (auto t: trace) {
+    for (auto t : trace) {
         auto it = _acceptances_maps.find(t->postponed);
         if (it != _acceptances_maps.end())
             accs.erase(it->second);
@@ -428,7 +431,7 @@ bool CltlTranslator::Node::is_reduced() const {
     // therefore, non-reduced <=> binaryop
     return std::find_if(_terms.begin(), _terms.end(),
                         [](CltlFormulaPtr f){ return f->formula_type() == CltlFormula::kBinaryOperator; })
-    == _terms.end();
+        == _terms.end();
 }
 
 bool CltlTranslator::Node::is_consistent() const {

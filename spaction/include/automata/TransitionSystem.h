@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_TRANSITIONSYSTEM_H_
-#define SPACTION_INCLUDE_TRANSITIONSYSTEM_H_
+#ifndef SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEM_H_
+#define SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEM_H_
 
 #include <typeinfo>
 
@@ -26,7 +26,7 @@ namespace automata {
 template<typename Q, typename S> class Transition;
 
 template<typename Q, typename S> class TransitionSystem {
-protected:
+ protected:
     class _TransitionIterator;
     class _StateIterator;
     class StateWrapper;
@@ -34,7 +34,7 @@ protected:
     class SuccessorContainer;
     class PredecessorContainer;
 
-public:
+ public:
     typedef _TransitionIterator TransitionIterator;
     typedef _StateIterator StateIterator;
 
@@ -47,12 +47,12 @@ public:
     virtual StateWrapper operator()(const Q &state) { return StateWrapper(this, state); }
     virtual StateContainer states() { return StateContainer(this); }
 
-    virtual Transition<Q,S> *add_transition(const Q &source, const Q &sink, const S &label) = 0;
+    virtual Transition<Q, S> *add_transition(const Q &source, const Q &sink, const S &label) = 0;
     virtual void remove_transition(const Q &source, const Q &sink, const S &label) = 0;
 
-protected:
+ protected:
     class TransitionBaseIterator {
-    public:
+     public:
         virtual ~TransitionBaseIterator() { }
 
         bool operator!=(const TransitionBaseIterator& rhs) const {
@@ -64,12 +64,12 @@ protected:
         virtual bool is_equal(const TransitionBaseIterator& rhs) const = 0;
         virtual TransitionBaseIterator *clone() const = 0;
 
-        virtual Transition<Q,S>* operator*() = 0;
+        virtual Transition<Q, S>* operator*() = 0;
         virtual const TransitionBaseIterator& operator++() = 0;
     };
 
     class StateBaseIterator {
-    public:
+     public:
         virtual ~StateBaseIterator() { }
 
         bool operator!=(const StateBaseIterator& rhs) const {
@@ -86,9 +86,9 @@ protected:
     };
 
     class StateWrapper {
-    public:
+     public:
         explicit StateWrapper(TransitionSystem *transition_system, const Q& state) :
-        _transition_system(transition_system), _state(state) {}
+            _transition_system(transition_system), _state(state) {}
 
         TransitionSystem *transition_system() const { return _transition_system; }
         const Q &state() const { return _state; }
@@ -106,13 +106,13 @@ protected:
         /// @note This method is not implemented yet.
         PredecessorContainer predecessors(const S& label);
 
-    private:
+     private:
         TransitionSystem *_transition_system;
         const Q _state;
     };
 
     class _TransitionIterator {
-    public:
+     public:
         explicit _TransitionIterator(TransitionBaseIterator *base_iterator) :
             _base_iterator(base_iterator) { }
         virtual ~_TransitionIterator() { delete _base_iterator; }
@@ -134,19 +134,19 @@ protected:
             return *(_base_iterator) != *(rhs._base_iterator);
         }
 
-        Transition<Q,S>* operator*() { return **_base_iterator; }
+        Transition<Q, S>* operator*() { return **_base_iterator; }
 
         const _TransitionIterator& operator++() {
             ++(*_base_iterator);
             return *this;
         }
 
-    private:
+     private:
         TransitionBaseIterator *_base_iterator;
     };
 
     class _StateIterator {
-    public:
+     public:
         explicit _StateIterator(StateBaseIterator *base_iterator) :
             _base_iterator(base_iterator) { }
         virtual ~_StateIterator() { delete _base_iterator; }
@@ -173,13 +173,13 @@ protected:
             return *this;
         }
 
-    private:
+     private:
         StateBaseIterator *_base_iterator;
     };
 
     class StateContainer {
-    public:
-        StateContainer(TransitionSystem<Q,S> *ts): _ts(ts) {}
+     public:
+        StateContainer(TransitionSystem<Q, S> *ts): _ts(ts) {}
         virtual ~StateContainer() {}
 
         _StateIterator begin() const {
@@ -189,13 +189,13 @@ protected:
             return _StateIterator(_ts->_state_end());
         }
 
-    private:
-        TransitionSystem<Q,S> *_ts;
+     private:
+        TransitionSystem<Q, S> *_ts;
     };
 
     class RelationshipContainer {
-    public:
-        explicit RelationshipContainer(StateWrapper *state_wrapper, const S* label=nullptr) :
+     public:
+        explicit RelationshipContainer(StateWrapper *state_wrapper, const S* label = nullptr) :
             _state_wrapper(state_wrapper), _label(label) { }
         virtual ~RelationshipContainer() { }
 
@@ -205,7 +205,7 @@ protected:
         virtual _TransitionIterator begin() const = 0;
         virtual _TransitionIterator end() const = 0;
 
-    protected:
+     protected:
         StateWrapper *_state_wrapper;
         const S *_label;
     };
@@ -232,10 +232,10 @@ protected:
     ///     Instances of the class Transition shouldn't be constructed outside a TransitionSystem.
     ///     Subclasses may use this method within their implementation of `add_transition` to
     ///     actually create the Transition objects.
-    virtual Transition<Q,S> *_make_transition(const Q &source, const Q &sink, const S &label) {
+    virtual Transition<Q, S> *_make_transition(const Q &source, const Q &sink, const S &label) {
         if (!has_state(source) or !has_state(sink))
             return nullptr;
-        return new Transition<Q,S>(source, sink, label);
+        return new Transition<Q, S>(source, sink, label);
     }
     /// Internal method to destroy transitions.
     /// @remarks
@@ -243,7 +243,7 @@ protected:
     ///     responsible for their destruction.
     ///     Subclasses may use this method within their implementation of `remove_transition` to
     ///     actually delete the Transition objects.
-    virtual void _delete_transition(const Transition<Q,S> *t) {
+    virtual void _delete_transition(const Transition<Q, S> *t) {
         delete t;
     }
 
@@ -259,14 +259,14 @@ protected:
 
 /// Class that represents a transition in a TransitionSystem.
 template <typename Q, typename S> class Transition {
-public:
+ public:
     const Q &source() const { return _source; }
     const Q &sink()   const { return _sink; }
     const S &label()  const { return _label; }
 
-protected:
+ protected:
     /// A Transition may only be built and destroyed from the related TransitionSystem.
-    friend class TransitionSystem<Q,S>;
+    friend class TransitionSystem<Q, S>;
 
     const Q _source;
     const Q _sink;
@@ -278,20 +278,22 @@ protected:
 
     /// Destructor (virtual to allow inheritance)
     virtual ~Transition() {}
-private:
+
+ private:
     /// Copy construction is forbidden.
     Transition(const Transition &) = delete;
     /// Copy assignement is forbidden.
     Transition &operator=(const Transition &) = delete;
 };
 
-/// making `operator==` non member allows easy specialization if needed (no class specialization needed)
+/// making `operator==` non member allows easy specialization if needed (no class specialization)
 template<typename Q, typename S>
-bool operator==(const spaction::automata::Transition<Q,S> &lhs, const spaction::automata::Transition<Q,S> &rhs) {
+bool operator==(const spaction::automata::Transition<Q, S> &lhs,
+                const spaction::automata::Transition<Q, S> &rhs) {
     return lhs.source() == rhs.source() and lhs.sink() == rhs.sink() and lhs.label() == rhs.label();
 }
 
 }  // namespace automata
 }  // namespace spaction
 
-#endif  // defined SPACTION_INCLUDE_CLTLTRANSLATOR_H_
+#endif  // SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEM_H_
