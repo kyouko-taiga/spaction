@@ -84,6 +84,18 @@ template<typename Q, typename S> class TSPrinter {
     struct PrinterHelper<A*> {
         static void print(std::ostream &os, const A * const a) { PrinterHelper<A>::print(os, *a); }
     };
+
+    /// a specialization to handle pairs
+    template<typename A, typename B>
+    struct PrinterHelper<std::pair<A,B>> {
+        static void print(std::ostream &os, const std::pair<A,B> &p) {
+            os << "(";
+            PrinterHelper<A>::print(os, p.first);
+            os << ",";
+            PrinterHelper<B>::print(os, p.second);
+            os << ")";
+        }
+    };
 };
 
 }  // namespace automata
