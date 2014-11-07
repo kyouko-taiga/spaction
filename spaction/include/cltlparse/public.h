@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_PUBLIC_H_
-#define SPACTION_INCLUDE_PUBLIC_H_
+#ifndef SPACTION_INCLUDE_CLTLPARSE_PUBLIC_H_
+#define SPACTION_INCLUDE_CLTLPARSE_PUBLIC_H_
 
 #include <string>
 #include "CltlFormula.h"
@@ -29,4 +29,4 @@ CltlFormulaPtr parse_formula(const std::string &ltl_string);
 }  // namespace cltlparse
 }  // namespace spaction
 
-#endif  // defined SPACTION_INCLUDE_PUBLIC_H_
+#endif  // SPACTION_INCLUDE_CLTLPARSE_PUBLIC_H_

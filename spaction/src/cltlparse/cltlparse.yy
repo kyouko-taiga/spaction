@@ -22,7 +22,7 @@
 #include <string>
 #include "CltlFormula.h"
 #include "CltlFormulaFactory.h"
-#include "cltlparse/cltlscanner.hh"
+#include "cltlparse/CLTLScanner.h"
 
 // wrap a static default factory for CLTL formulae
 static spaction::CltlFormulaFactory & _factory();
@@ -39,7 +39,7 @@ struct union_tag {
 #define YYSTYPE union_tag
 
 // custom lex function
-static int yylex(YYSTYPE*, spaction::cltlparse::CLTLScanner&);
+static int yylex(YYSTYPE*, spaction::cltlparse::CLTLScanner &);
 
 // NOTE error handling is copied from SPOT LTL parser
 /// \brief A parse diagnostic with its location.
@@ -63,21 +63,19 @@ typedef std::list<parse_error> parse_error_list;
 %type   <b_type>                    binary
 
 %token                              END         0
+%token                              LPAR
+%token                              RPAR
 %token                              TRUE
 %token                              FALSE
 %token                              NOT
 %token                              NEXT
 %token                              AND
 %token                              OR
-/*
 %token                              IMPLY
-*/
 %token                              UNTIL
 %token                              RELEASE
-/*
 %token                              FINALLY
 %token                              GLOBALLY
-*/
 %token                              COSTUNTIL
 %token                              COSTRELEASE
 /*
@@ -85,6 +83,18 @@ typedef std::list<parse_error> parse_error_list;
 %token                              COSTGLOBALLY
 */
 %token  <apval>                     ATOM
+
+/* Priorities */
+
+%right IMPLY
+%left OR
+%left AND
+
+%right UNTIL RELEASE COSTUNTIL COSTRELEASE
+%nonassoc FINALLY GLOBALLY
+%nonassoc NEXT
+
+%nonassoc NOT
 
 %%
 
@@ -94,7 +104,11 @@ formula
 : atomic                    { $$ = $1; }
 | constant                  { $$ = $1; }
 | unary formula             { $$ = _factory().make_unary($1, $2); }
+| formula IMPLY formula     { $$ = _factory().make_imply($1, $3); }
 | formula binary formula    { $$ = _factory().make_binary($2, $1, $3); }
+| LPAR formula RPAR         { $$ = $2; }
+| FINALLY formula           { $$ = _factory().make_finally($2); }
+| GLOBALLY formula          { $$ = _factory().make_globally($2); }
 ;
 
 atomic: ATOM                { $$ = _factory().make_atomic($1); };
@@ -135,7 +149,7 @@ int yylex(YYSTYPE *yylval, spaction::cltlparse::CLTLScanner &scanner) {
 
 #include <sstream>
 
-#include "cltlparse/public.hh"
+#include "cltlparse/public.h"
 
 namespace spaction {
 namespace cltlparse {

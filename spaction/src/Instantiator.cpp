@@ -81,7 +81,7 @@ void Instantiator::visit(const std::shared_ptr<BinaryOperator> &formula) {
     }
 
     delete instantiator;
-    
+
 }
 
 // recall that left and right are assumed to be LTL (already instantiated)

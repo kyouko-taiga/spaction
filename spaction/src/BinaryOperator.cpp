@@ -24,7 +24,7 @@
 #include "CltlFormulaVisitor.h"
 
 namespace spaction {
-    
+
 BinaryOperator::BinaryOperator(BinaryOperatorType type, const CltlFormulaPtr &left,
                                const CltlFormulaPtr &right, CltlFormulaFactory *creator) :
     CltlFormula(creator), _type(type), _left(left), _right(right) {

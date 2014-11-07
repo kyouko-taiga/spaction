@@ -17,15 +17,56 @@
 
 #include <iostream>
 #include <string>
+#include <unistd.h>
 
 #include "CltlFormula.h"
 #include "CltlFormulaFactory.h"
 #include "spotcheck.h"
 
 #include "automata/CltlTranslator.h"
+#include "automata/CounterAutomaton.h"
+#include "automata/CounterAutomatonProduct.h"
+#include "automata/TransitionSystemPrinter.h"
+#include "automata/UndeterministicTransitionSystem.h"
+
 #include "automata/RegisterAutomaton.h"
 
+#include "cltlparse/public.h"
+
 // this file is strongly inspired from spot/iface/dve2/dve2check.cc
+
+/// Runs a simple test of the CounterAutomaton library.
+/// @remarks
+///     This function creates a B counter automaton that recognize any word over the alphabet {a,b}
+///     where 'b' occurs infinitely often. In addition, the automaton uses its counter to count the
+///     largest block of consecutive 'a's.
+void test_counter_automata() {
+    using spaction::automata::CounterOperation;
+
+    typedef std::string qt;
+    typedef char st;
+
+    // create the automaton
+    typedef spaction::automata::CounterAutomaton<qt, st,
+        spaction::automata::UndeterministicTransitionSystem> Automaton;
+    Automaton automaton(1, 1);
+
+    // populate the transition system
+    automaton.transition_system()->add_state("q");
+    automaton.set_initial_state("q");
+
+    automaton.transition_system()->add_transition("q", "q",
+        automaton.make_label('a', {{CounterOperation::kIncrement,
+                                    CounterOperation::kCheck}}, std::set<std::size_t>()));
+
+    automaton.transition_system()->add_transition("q", "q",
+        automaton.make_label('b', {{CounterOperation::kIncrement,
+                                    CounterOperation::kReset}}, {0}));
+
+    spaction::automata::TSPrinter<qt, spaction::automata::CounterLabel<st>> printer(*automaton.transition_system());
+    // printer.dump("/tmp/counter.dot");
+    printer.dump(std::cout);
+}
 
 /// Runs a simple test of the Cost Register Automaton library.
 /// @remarks
@@ -37,7 +78,7 @@ void test_cost_register_automata(const std::string &str = "aabaaacba") {
     // create a cost register automaton with 2 registers
     spaction::automata::RegisterAutomaton<char> automaton(2);
 
-    // build the automaton state
+    // build the automaton state 
     automaton.add_state("q0", true);
 
     // build the automaton transitions:
@@ -71,45 +112,82 @@ void test_cost_register_automata(const std::string &str = "aabaaacba") {
     std::cout << "μ(q0) = " << automaton.register_value(0) << std::endl;
 }
 
-int main(int argc, char* argv[]) {
-    test_cost_register_automata();
+void usage() {
+    // @TODO print usage help message
+}
 
-    if (argc != 2) {
-        std::cerr << "wrong number of arguments" << std::endl;
-        std::cerr << "usage: spaction model.dve" << std::endl;
+void test_product() {
+    spaction::CltlFormulaPtr f1 = spaction::cltlparse::parse_formula("\"a\" UN \"b\"");
+    spaction::CltlFormulaPtr f2 = spaction::cltlparse::parse_formula("\"c\" UN \"d\"");
+
+    spaction::automata::CltlTranslator t1(f1);
+    t1.build_automaton();
+    spaction::automata::CltlTranslator t2(f2);
+    t2.build_automaton();
+
+    t1.get_automaton().print("aut1.dot");
+    t2.get_automaton().print("aut2.dot");
+
+    auto prod = spaction::automata::make_aut_product(t1.get_automaton(), t2.get_automaton());
+    prod.print("prod.dot");
+
+    std::cerr << "product test ended" << std::endl;
+}
+
+int main(int argc, char* argv[]) {
+//    test_counter_automata();
+    test_product();
+
+    std::string cltl_string = "";
+    std::string epsilon_dot_file = "";
+    std::string automaton_dot_file = "";
+
+    int c;
+    while ((c = getopt(argc, argv, "f:e:a:")) != -1) {
+        switch (c) {
+            case 'f':
+                cltl_string = optarg;
+                break;
+            case 'e':
+                epsilon_dot_file = optarg;
+                break;
+            case 'a':
+                automaton_dot_file = optarg;
+                break;
+            default:
+                std::cerr << "unknown option " << c << std::endl;
+                std::cerr << "abort" << std::endl;
+                usage();
+                return 1;
+        }
+    }
+
+    if (cltl_string == "") {
+        std::cerr << "no input formula, abort" << std::endl;
         return 1;
     }
 
-    // a test formula: (a + b) * c * (d + a) == acd + ac + bcd + abc
-    spaction::CltlFormulaFactory f;
-    spaction::CltlFormulaPtr k = f.make_and(f.make_and(f.make_or(f.make_atomic("a"),
-                                                                 f.make_atomic("b")),
-                                                       f.make_atomic("c")),
-                                            f.make_or(f.make_atomic("d"), f.make_atomic("a")));
+    spaction::CltlFormulaPtr f = spaction::cltlparse::parse_formula(cltl_string);
+    if (f == nullptr) {
+        std::cerr << "parsing went wrong, abort" << std::endl;
+        return 1;
+    }
 
-    std::cout << "input: " << k->dump() << std::endl;
-    std::cout << "nnf:   " << k->to_nnf()->dump() << std::endl;
-    std::cout << "dnf:   " << k->to_dnf()->dump() << std::endl;
+    std::cout << "input: " << cltl_string << std::endl;
+    std::cout << "nnf:   " << f->to_nnf()->dump() << std::endl;
+    std::cout << "dnf:   " << f->to_dnf()->dump() << std::endl;
+    std::cout << "the input formula is " << f->dump() << std::endl;
 
-    // a test formula: G(a + b), and its equivalent automaton
-    k = f.make_release(f.make_constant(false), f.make_or(f.make_atomic("a"), f.make_atomic("b")));
-    spaction::automata::CltlTranslator translator(k);
+    spaction::automata::CltlTranslator translator(f);
     translator.build_automaton();
-
-    // a test formula
-    // \todo atoms are not properly deleted here
-    k = f.make_costuntil(f.make_atomic("P_0.wait"), f.make_atomic("P_0.CS"));
-
-    // G(wait -> F CS)
-    /* cltl_formula *f = cltl_factory::make_not(cltl_factory::make_globally(
-     * cltl_factory::make_imply(cltl_factory::make_atomic("P_0.wait"),
-     *  cltl_factory::make_finally(
-     *  cltl_factory::make_atomic("P_0.CS"))))); */
-
-    std::cout << k->dump() << std::endl;
-
-    int bound = spaction::find_bound_min(k, argv[1]);
-    std::cout << "the bound for " << k->dump() << " is " << bound << std::endl;
+    if (automaton_dot_file != "") {
+        translator.automaton_dot(automaton_dot_file);
+        std::cerr << "automaton was printed to file " << automaton_dot_file << std::endl;
+    }
+    if (epsilon_dot_file != "") {
+        translator.epsilon_dot(epsilon_dot_file);
+        std::cerr << "epsilon-automaton was printed to file " << epsilon_dot_file << std::endl;
+    }
 
     return 0;
 }

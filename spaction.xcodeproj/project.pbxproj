@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4A2541A319F5465B00E52660 /* cltllex.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4A2541A119F5465B00E52660 /* cltllex.cc */; };
+		4A2541A419F5465B00E52660 /* cltlparse.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4A2541A219F5465B00E52660 /* cltlparse.cc */; };
+		4A5ACA361A037C1700246E63 /* CounterAutomaton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A5ACA351A037C1700246E63 /* CounterAutomaton.cpp */; };
 		753EF59819DDA16200106D3C /* CltlTranslator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 753EF59719DDA16200106D3C /* CltlTranslator.cpp */; };
 		755CEA36196EB78C00DD3677 /* libbdd.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755CEA32196EB78C00DD3677 /* libbdd.dylib */; };
 		755CEA39196EB78C00DD3677 /* libspotdve2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755CEA35196EB78C00DD3677 /* libspotdve2.dylib */; };
@@ -52,6 +55,21 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4A25419A19F5301500E52660 /* cltllex.ll */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm.llvm; name = cltllex.ll; path = cltlparse/cltllex.ll; sourceTree = "<group>"; };
+		4A25419B19F5301500E52660 /* cltlparse.yy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = cltlparse.yy; path = cltlparse/cltlparse.yy; sourceTree = "<group>"; };
+		4A2541A119F5465B00E52660 /* cltllex.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cltllex.cc; path = cltlparse/cltllex.cc; sourceTree = "<group>"; };
+		4A2541A219F5465B00E52660 /* cltlparse.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cltlparse.cc; path = cltlparse/cltlparse.cc; sourceTree = "<group>"; };
+		4A2541A519F54A2300E52660 /* cltlparse.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = cltlparse.hh; path = ../src/cltlparse/cltlparse.hh; sourceTree = "<group>"; };
+		4A2541A619F54A2300E52660 /* location.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = location.hh; path = ../src/cltlparse/location.hh; sourceTree = "<group>"; };
+		4A2541A719F54A2300E52660 /* position.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = position.hh; path = ../src/cltlparse/position.hh; sourceTree = "<group>"; };
+		4A2541A819F54A2300E52660 /* stack.hh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = stack.hh; path = ../src/cltlparse/stack.hh; sourceTree = "<group>"; };
+		4A2541A919F6657C00E52660 /* CLTLScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CLTLScanner.h; path = cltlparse/CLTLScanner.h; sourceTree = "<group>"; };
+		4A2541AA19F6657C00E52660 /* public.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = public.h; path = cltlparse/public.h; sourceTree = "<group>"; };
+		4A2541B719F91FA500E52660 /* TransitionSystemPrinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransitionSystemPrinter.h; sourceTree = "<group>"; };
+		4A5ACA351A037C1700246E63 /* CounterAutomaton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CounterAutomaton.cpp; sourceTree = "<group>"; };
+		4A7995D71A077F4900EB98A9 /* hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hash.h; path = hash/hash.h; sourceTree = "<group>"; };
+		4A7995D81A08C40F00EB98A9 /* CounterAutomatonProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CounterAutomatonProduct.h; sourceTree = "<group>"; };
+		4A7995D91A08C40F00EB98A9 /* TransitionSystemProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransitionSystemProduct.h; sourceTree = "<group>"; };
 		4AB890DC196EE51200F7BB44 /* cpplint.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = cpplint.py; sourceTree = "<group>"; };
 		753EF59719DDA16200106D3C /* CltlTranslator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CltlTranslator.cpp; sourceTree = "<group>"; };
 		753EF59919DEEA6900106D3C /* TransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TransitionSystem.h; sourceTree = "<group>"; };
@@ -78,6 +96,7 @@
 		756EE61619CC1C78002261FF /* Instantiator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Instantiator.h; sourceTree = "<group>"; };
 		7582518219F55299008D042D /* DeterministicTransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DeterministicTransitionSystem.h; sourceTree = "<group>"; };
 		7582518319F55299008D042D /* UndeterministicTransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = UndeterministicTransitionSystem.h; sourceTree = "<group>"; };
+		75910D1419F94C90008AEF98 /* CounterAutomaton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CounterAutomaton.h; sourceTree = "<group>"; };
 		759343D31970051200DD5475 /* RegisterAutomaton.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RegisterAutomaton.h; sourceTree = "<group>"; };
 		75AFC89A196EAE3D00BAE38C /* spaction.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = spaction.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		75AFC89F196EAE3D00BAE38C /* spaction.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = spaction.1; sourceTree = "<group>"; };
@@ -110,10 +129,43 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4A25419119F14D1A00E52660 /* cltlparse */ = {
+			isa = PBXGroup;
+			children = (
+				4A2541A919F6657C00E52660 /* CLTLScanner.h */,
+				4A2541AA19F6657C00E52660 /* public.h */,
+				4A2541A519F54A2300E52660 /* cltlparse.hh */,
+				4A2541A619F54A2300E52660 /* location.hh */,
+				4A2541A719F54A2300E52660 /* position.hh */,
+				4A2541A819F54A2300E52660 /* stack.hh */,
+			);
+			name = cltlparse;
+			sourceTree = "<group>";
+		};
+		4A25419819F52FF900E52660 /* cltlparse */ = {
+			isa = PBXGroup;
+			children = (
+				4A2541A119F5465B00E52660 /* cltllex.cc */,
+				4A2541A219F5465B00E52660 /* cltlparse.cc */,
+				4A25419A19F5301500E52660 /* cltllex.ll */,
+				4A25419B19F5301500E52660 /* cltlparse.yy */,
+			);
+			name = cltlparse;
+			sourceTree = "<group>";
+		};
+		4A7995D61A077F1E00EB98A9 /* hash */ = {
+			isa = PBXGroup;
+			children = (
+				4A7995D71A077F4900EB98A9 /* hash.h */,
+			);
+			name = hash;
+			sourceTree = "<group>";
+		};
 		753EF59619DDA14800106D3C /* automata */ = {
 			isa = PBXGroup;
 			children = (
 				753EF59719DDA16200106D3C /* CltlTranslator.cpp */,
+				4A5ACA351A037C1700246E63 /* CounterAutomaton.cpp */,
 			);
 			path = automata;
 			sourceTree = "<group>";
@@ -140,6 +192,8 @@
 		755CEA48196EBB6C00DD3677 /* include */ = {
 			isa = PBXGroup;
 			children = (
+				4A7995D61A077F1E00EB98A9 /* hash */,
+				4A25419119F14D1A00E52660 /* cltlparse */,
 				759343D21970051200DD5475 /* automata */,
 				755CEA4D196EBB6C00DD3677 /* spotcheck.h */,
 				75B92AF019C98888002F4972 /* CltlFormula.h */,
@@ -157,6 +211,7 @@
 		755CEA50196EBB6C00DD3677 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				4A25419819F52FF900E52660 /* cltlparse */,
 				753EF59619DDA14800106D3C /* automata */,
 				755CEA56196EBB6C00DD3677 /* spotcheck.cc */,
 				756EE60419C9BDA5002261FF /* CltlFormulaFactory.cpp */,
@@ -173,10 +228,14 @@
 			isa = PBXGroup;
 			children = (
 				75EF898619B8518E00441B56 /* CltlTranslator.h */,
-				759343D31970051200DD5475 /* RegisterAutomaton.h */,
+				75910D1419F94C90008AEF98 /* CounterAutomaton.h */,
+				4A7995D81A08C40F00EB98A9 /* CounterAutomatonProduct.h */,
 				753EF59919DEEA6900106D3C /* TransitionSystem.h */,
+				4A7995D91A08C40F00EB98A9 /* TransitionSystemProduct.h */,
 				7582518219F55299008D042D /* DeterministicTransitionSystem.h */,
 				7582518319F55299008D042D /* UndeterministicTransitionSystem.h */,
+				4A2541B719F91FA500E52660 /* TransitionSystemPrinter.h */,
+				759343D31970051200DD5475 /* RegisterAutomaton.h */,
 			);
 			path = automata;
 			sourceTree = "<group>";
@@ -216,7 +275,7 @@
 /* Begin PBXLegacyTarget section */
 		4AB890DE196F047900F7BB44 /* checkstyle */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "-c \"$(PROJECT_DIR)/cpplint.custom spaction/include/*.h spaction/src/*.cc spactiontest/*.cpp 2>&1 > /dev/null | sed 's/: /: warning: /' \"";
+			buildArgumentsString = "-c \"$(PROJECT_DIR)/cpplint.custom \\`find spaction/include -type f -name \\*.h\\` \\`find spaction/src -type f -name \\*.cpp\\` spactiontest/*.cpp 2>&1 > /dev/null | sed 's/: /: warning: /' \"";
 			buildConfigurationList = 4AB890DF196F047900F7BB44 /* Build configuration list for PBXLegacyTarget "checkstyle" */;
 			buildPhases = (
 			);
@@ -253,6 +312,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 75AFC8A3196EAE3D00BAE38C /* Build configuration list for PBXNativeTarget "spaction" */;
 			buildPhases = (
+				4A2541A019F544A400E52660 /* ShellScript */,
 				4AB890E2196FC87700F7BB44 /* ShellScript */,
 				75AFC896196EAE3D00BAE38C /* Sources */,
 				75AFC897196EAE3D00BAE38C /* Frameworks */,
@@ -296,6 +356,19 @@
 /* End PBXProject section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		4A2541A019F544A400E52660 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "cd $SRCROOT/spaction/src/cltlparse/\nflex cltllex.ll && mv lex.yy.c cltllex.cc\nbison -d -o cltlparse.cc cltlparse.yy";
+		};
 		4AB890E2196FC87700F7BB44 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -340,10 +413,13 @@
 				756EE61219CAD793002261FF /* UnaryOperator.cpp in Sources */,
 				755CEA5D196EBB6C00DD3677 /* spotcheck.cc in Sources */,
 				756EE60919C9C6D0002261FF /* Instantiator.cpp in Sources */,
+				4A2541A319F5465B00E52660 /* cltllex.cc in Sources */,
+				4A2541A419F5465B00E52660 /* cltlparse.cc in Sources */,
 				756EE61519CAD902002261FF /* BinaryOperator.cpp in Sources */,
 				753EF59819DDA16200106D3C /* CltlTranslator.cpp in Sources */,
 				756EE60619C9BDA5002261FF /* CltlFormulaFactory.cpp in Sources */,
 				756EE60C19CAD5C2002261FF /* AtomicProposition.cpp in Sources */,
+				4A5ACA361A037C1700246E63 /* CounterAutomaton.cpp in Sources */,
 				756EE60F19CAD6E8002261FF /* ConstantExpression.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -15,38 +15,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_CLTLSCANNER_HH_
-#define SPACTION_INCLUDE_CLTLSCANNER_HH_
+#ifndef SPACTION_INCLUDE_HASH_HASH_H_
+#define SPACTION_INCLUDE_HASH_HASH_H_
 
-#if ! defined(yyFlexLexerOnce)
-#include <FlexLexer.h>
-#endif
+#include <vector>
 
-#undef YY_DECL
-#define YY_DECL int spaction::cltlparse::CLTLScanner::yylex()
+namespace std {
 
-#include "cltlparse.hh"
+/// hash combination and magic numbers are taken from Boost `hash_combine_impl`
+template<typename S>
+struct hash<std::vector<S>> {
+    typedef std::vector<S> argument_type;
+    typedef std::size_t result_type;
 
-struct union_tag;
-
-namespace spaction {
-namespace cltlparse {
-
-class CLTLScanner : public yyFlexLexer {
- public:
-    CLTLScanner(std::istream *in): yyFlexLexer(in) {}
-
-    int yylex(struct union_tag *lval) {
-        yylval = lval;
-        return yylex();
+    result_type operator()(const argument_type &v) const {
+        hash<S> h;
+        result_type res = 0;
+        for (auto s : v) {
+            res ^= h(s) + 0x9e3779b9 + (res << 6) + (res >> 2);
+        }
+        return res;
     }
-    
- private:
-    struct union_tag *yylval;
-    int yylex();
 };
 
-}  // namespace cltlparse
-}  // namespace spaction
+}  // namespace std
 
-#endif  // defined SPACTION_INCLUDE_CLTLSCANNER_HH_
+#endif  // SPACTION_INCLUDE_HASH_HASH_H_

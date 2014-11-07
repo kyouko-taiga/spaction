@@ -17,17 +17,21 @@
 // limitations under the License.
 
 #include "cltlparse.hh"
-#include "cltlparse/cltlscanner.hh"
+#include "cltlparse/CLTLScanner.h"
 
 typedef yy::parser::token token;
 
 %}
 
 %option c++
+%option outfile="lex.yy.c"
 %option noyywrap warn 8bit batch
 %option yyclass="CLTLScanner"
 
 %%
+
+"("                 {   return token::LPAR; }
+")"                 {   return token::RPAR; }
 
 "true"              {   return token::TRUE; }
 "false"             {   return token::FALSE; }
@@ -35,7 +39,10 @@ typedef yy::parser::token token;
 "&&"                {   return token::AND; }
 "||"                {   return token::OR; }
 "!"                 {   return token::NOT; }
+"->"                {   return token::IMPLY; }
 
+"F"                 {   return token::FINALLY; }
+"G"                 {   return token::GLOBALLY; }
 "U"                 {   return token::UNTIL; }
 "R"                 {   return token::RELEASE; }
 "X"                 {   return token::NEXT; }
