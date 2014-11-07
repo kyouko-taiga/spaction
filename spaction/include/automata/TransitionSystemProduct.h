@@ -18,12 +18,45 @@
 #ifndef SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRODUCT_H_
 #define SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRODUCT_H_
 
+#include <set>
+
 #include "automata/TransitionSystem.h"
 
 namespace spaction {
 namespace automata {
 
-/// @todo add loads of comments
+/// A smart pointer manager with unique ownership semantics.
+template<typename T>
+class RefControlBlock : public ControlBlock<T> {
+ public:
+    explicit RefControlBlock(const std::function<void(const T *)> &d): _destroy(d) {}
+    ~RefControlBlock() {
+        for (auto &r : _pool) {
+            _destroy(r);
+        }
+//        _pool.clean();
+    }
+
+    /// Ensures that the declared object is not already managed.
+    /// Throws if already managed.
+    virtual void declare(const T *t) override {
+        if (_pool.count(t))
+            throw "object is already managed";
+
+        _pool.insert(t);
+    }
+
+    /// Called when an object is no longer managed.
+    virtual void release(const T *t) override {
+        _pool.erase(t);
+        _destroy(t);
+    }
+
+private:
+    /// @todo use another structure than std::set
+    std::set<const T *> _pool;
+    std::function<void(const T *)> _destroy;
+};
 
 /// The product of two states, merely a typedef for now
 template<typename A, typename B> using StateProd = std::pair<A, B>;
@@ -73,8 +106,12 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
 
     /// constructor
     /// @note the product does not become responsible for its operands `lhs` and `rhs`
-    explicit TransitionSystemProduct(TransitionSystem<Q1, S1> *lhs, TransitionSystem<Q2, S2> *rhs, const LabelProd<S1, S2> &h)
-    : _lhs(lhs), _rhs(rhs), _helper(h) {}
+    explicit TransitionSystemProduct(TransitionSystem<Q1, S1> *lhs,
+                                     TransitionSystem<Q2, S2> *rhs,
+                                     const LabelProd<S1, S2> &h):
+    super_type(new RefControlBlock<Transition<Q, S>>(
+         std::bind(&TransitionSystemProduct::_delete_transition, this, std::placeholders::_1))),
+    _lhs(lhs), _rhs(rhs), _helper(h) { }
 
     /// Destructor.
     /// @note the product does not become responsible for its operands.
@@ -150,16 +187,14 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
             return res;
         }
 
-        /// @note   this method returns a newly created pointer, causing a major leak
-        ///         this will be fixed by the upcoming addition of a smart-pointer for Transition
-        virtual Transition<Q, S>* operator*() override {
+        virtual TransitionPtr<Q, S> operator*() override {
             assert(_lhs != _lend and _rhs != _rend);
-            Transition<Q1, S1> *l = *_lhs;
-            Transition<Q2, S2> *r = *_rhs;
+            TransitionPtr<Q1, S1> l = *_lhs;
+            TransitionPtr<Q2, S2> r = *_rhs;
             auto res = _ts->add_transition(std::make_pair(l->source(), r->source()),
                                            std::make_pair(l->sink(), r->sink()),
                                            _ts->_helper.build(l->label(), r->label()));
-            return res;
+            return TransitionPtr<Q, S>(res, _ts->get_control_block());
         }
 
         virtual const typename super_type::TransitionBaseIterator& operator++() override {
@@ -182,6 +217,7 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
         TransitionSystemProduct *_ts;
     };
 
+    /// Underlying state iterator class.
     class StateBaseIterator : public super_type::StateBaseIterator {
      public:
         explicit StateBaseIterator(const typename TransitionSystem<Q1, S1>::StateIterator &l,
@@ -232,6 +268,7 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
     };
 
     virtual typename super_type::TransitionBaseIterator *_successor_begin(const Q &state, const S *label) override {
+        // differentiate the labeled and unlabeled versions
         if (label == nullptr) {
             auto lb = (*_lhs)(state.first).successors().begin();
             auto le = (*_lhs)(state.first).successors().end();
