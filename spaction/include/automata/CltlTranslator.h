@@ -117,6 +117,10 @@ public:
 
         const std::string dump() const;
     };
+
+    /// the type of the automaton built
+    typedef CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem> automaton_type;
+    inline automaton_type & get_automaton() { return _automaton; }
 private:
     /// map occurrences of cost operator to counters
     void map_costop_to_counters(const CltlFormulaPtr &f);
@@ -133,7 +137,7 @@ private:
     /// Stores the temporar transition system that is used to build the automata.
     UndeterministicTransitionSystem<Node*, TransitionLabel*> _transition_system;
     /// Stores the actual automaton
-    CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem> _automaton;
+    automaton_type _automaton;
 
     std::size_t _nb_acceptances;
     /// Associates each Until sub-formula to an acceptance condition

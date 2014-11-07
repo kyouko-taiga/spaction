@@ -88,7 +88,7 @@ public:
     // @todo restrict its usage?
     explicit CounterAutomaton(): CounterAutomaton(0, 0) {};
 
-    ~CounterAutomaton() {
+    virtual ~CounterAutomaton() {
         // delete the pointer to the initial state, if ever created
         if (_initial_state)
             delete _initial_state;
@@ -102,17 +102,24 @@ public:
     CounterAutomaton &operator=(const CounterAutomaton &) = delete;
     CounterAutomaton &operator=(const CounterAutomaton &&) = delete;
 
+    /// move constructor
+    explicit CounterAutomaton(CounterAutomaton &&other) {
+        // compiler wants me to use std::move here, but I am not sure why...
+        *this = std::move(other);
+    }
+
+    /// move assignment operator
     CounterAutomaton &operator=(CounterAutomaton &&other) {
         if (_initial_state)
             delete _initial_state;
         delete _transition_system;
 
+        std::swap(_transition_system, other._transition_system);
         std::swap(_counters, other._counters);
         std::swap(_nb_acceptance, other._nb_acceptance);
         std::swap(_initial_state, other._initial_state);
-        std::swap(_transition_system, other._transition_system);
-        other._initial_state = nullptr;
         other._transition_system = nullptr;
+        other._initial_state = nullptr;
 
         return *this;
     }
@@ -151,7 +158,7 @@ public:
         p.dump(dotfile);
     }
 
-private:
+protected:
     TransitionSystem<Q, CounterLabel<S>> *_transition_system;
 
     std::vector<std::size_t> _counters;
@@ -196,6 +203,7 @@ public:
     inline std::size_t num_counters() const { return _operations.size(); }
 
     /// Sets a CounterOperation on a counter.
+    /// @todo deprecated by `get_operations`?
     inline const CounterOperationList counter_operations(std::size_t counter) const {
         return _operations[counter];
     }
@@ -221,8 +229,10 @@ public:
         }
     }
 
-    /// Get the set of acceptance conditions
-    const std::set<std::size_t> & get_acceptance() const { return _acceptance_conditions; }
+    /// Gets the vector of counter operations.
+    const std::vector<CounterOperationList> &get_operations() const { return _operations; }
+    /// Gets the set of acceptance conditions.
+    const std::set<std::size_t> &get_acceptance() const { return _acceptance_conditions; }
 
 private:
     const S _letter;

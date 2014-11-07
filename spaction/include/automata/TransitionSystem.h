@@ -62,6 +62,7 @@ protected:
         }
 
         virtual bool is_equal(const TransitionBaseIterator& rhs) const = 0;
+        virtual TransitionBaseIterator *clone() const = 0;
 
         virtual Transition<Q,S>* operator*() = 0;
         virtual const TransitionBaseIterator& operator++() = 0;
@@ -78,6 +79,7 @@ protected:
         }
 
         virtual bool is_equal(const StateBaseIterator& rhs) const = 0;
+        virtual StateBaseIterator *clone() const = 0;
 
         virtual Q operator*() = 0;
         virtual const StateBaseIterator& operator++() = 0;
@@ -115,6 +117,19 @@ protected:
             _base_iterator(base_iterator) { }
         virtual ~_TransitionIterator() { delete _base_iterator; }
 
+        // copy constructor
+        _TransitionIterator(const _TransitionIterator &other) :
+            _base_iterator(other._base_iterator->clone()) { }
+
+        // copy assignment operator
+        _TransitionIterator &operator=(const _TransitionIterator &other) {
+            if (this != &other) {
+                delete _base_iterator;
+                _base_iterator = other._base_iterator->clone();
+            }
+            return *this;
+        }
+
         bool operator!=(const _TransitionIterator& rhs) const {
             return *(_base_iterator) != *(rhs._base_iterator);
         }
@@ -133,8 +148,19 @@ protected:
     class _StateIterator {
     public:
         explicit _StateIterator(StateBaseIterator *base_iterator) :
-        _base_iterator(base_iterator) { }
+            _base_iterator(base_iterator) { }
         virtual ~_StateIterator() { delete _base_iterator; }
+
+        _StateIterator(const _StateIterator &other) :
+            _base_iterator(other._base_iterator->clone()) { }
+
+        _StateIterator &operator=(const _StateIterator &other) {
+            if (this != &other) {
+                delete _base_iterator;
+                _base_iterator = other._base_iterator->clone();
+            }
+            return *this;
+        }
 
         bool operator!=(const _StateIterator& rhs) const {
             return *(_base_iterator) != *(rhs._base_iterator);
@@ -205,11 +231,20 @@ protected:
     /// @remarks
     ///     Instances of the class Transition shouldn't be constructed outside a TransitionSystem.
     ///     Subclasses may use this method within their implementation of `add_transition` to
-    ///     actually create the transitions object.
+    ///     actually create the Transition objects.
     virtual Transition<Q,S> *_make_transition(const Q &source, const Q &sink, const S &label) {
         if (!has_state(source) or !has_state(sink))
             return nullptr;
         return new Transition<Q,S>(source, sink, label);
+    }
+    /// Internal method to destroy transitions.
+    /// @remarks
+    ///     TransitionSystem being being responsible for the construction of Transition, it is also
+    ///     responsible for their destruction.
+    ///     Subclasses may use this method within their implementation of `remove_transition` to
+    ///     actually delete the Transition objects.
+    virtual void _delete_transition(const Transition<Q,S> *t) {
+        delete t;
     }
 
     virtual TransitionBaseIterator *_successor_begin(const Q &state, const S *label) = 0;
@@ -230,15 +265,19 @@ public:
     const S &label()  const { return _label; }
 
 protected:
+    /// A Transition may only be built and destroyed from the related TransitionSystem.
     friend class TransitionSystem<Q,S>;
 
     const Q _source;
     const Q _sink;
     const S _label;
 
+    /// Constructor
     explicit Transition(const Q &source, const Q &sink, const S &label) :
         _source(source), _sink(sink), _label(label) { }
 
+    /// Destructor (virtual to allow inheritance)
+    virtual ~Transition() {}
 private:
     /// Copy construction is forbidden.
     Transition(const Transition &) = delete;
