@@ -24,6 +24,8 @@ namespace spaction {
 namespace automata {
 
 template<typename Q, typename S> class Transition;
+template<typename T> class ControlBlock;
+template<typename Q, typename S> class TransitionPtr;
 
 template<typename Q, typename S> class TransitionSystem {
  protected:
@@ -38,7 +40,8 @@ template<typename Q, typename S> class TransitionSystem {
     typedef _TransitionIterator TransitionIterator;
     typedef _StateIterator StateIterator;
 
-    virtual ~TransitionSystem() { }
+    explicit TransitionSystem(ControlBlock<Transition<Q, S>> *cb): _control_block(cb) {}
+    virtual ~TransitionSystem() { delete _control_block; }
 
     virtual void add_state(const Q &state) = 0;
     virtual void remove_state(const Q &state) = 0;
@@ -47,10 +50,14 @@ template<typename Q, typename S> class TransitionSystem {
     virtual StateWrapper operator()(const Q &state) { return StateWrapper(this, state); }
     virtual StateContainer states() { return StateContainer(this); }
 
-    virtual Transition<Q, S> *add_transition(const Q &source, const Q &sink, const S &label) = 0;
+    virtual const Transition<Q, S> *add_transition(const Q &source, const Q &sink, const S &label) = 0;
     virtual void remove_transition(const Q &source, const Q &sink, const S &label) = 0;
 
+    virtual ControlBlock<Transition<Q, S>> *get_control_block() const { return _control_block; }
+
  protected:
+    ControlBlock<Transition<Q, S>> *_control_block;
+
     class TransitionBaseIterator {
      public:
         virtual ~TransitionBaseIterator() { }
@@ -64,7 +71,7 @@ template<typename Q, typename S> class TransitionSystem {
         virtual bool is_equal(const TransitionBaseIterator& rhs) const = 0;
         virtual TransitionBaseIterator *clone() const = 0;
 
-        virtual Transition<Q, S>* operator*() = 0;
+        virtual TransitionPtr<Q, S> operator*() = 0;
         virtual const TransitionBaseIterator& operator++() = 0;
     };
 
@@ -134,7 +141,13 @@ template<typename Q, typename S> class TransitionSystem {
             return *(_base_iterator) != *(rhs._base_iterator);
         }
 
-        Transition<Q, S>* operator*() { return **_base_iterator; }
+        /// Returns a pointer to a transition.
+        /// @remark This pointer is only valid during the lifetime of the related TransitionSystem.
+        ///         When it goes out of scope, this pointer becomes dangling, dereferencing it will
+        ///         cause undefined behavior.
+        ///         Note that the pointed Transition is const, so consider TransitionPtr<Q,S> as if
+        ///         of type 'const Transition<Q,S> *'
+        TransitionPtr<Q, S> operator*() { return **_base_iterator; }
 
         const _TransitionIterator& operator++() {
             ++(*_base_iterator);
@@ -211,18 +224,18 @@ template<typename Q, typename S> class TransitionSystem {
     };
 
     class SuccessorContainer : public RelationshipContainer {
-    public:
-        explicit SuccessorContainer(StateWrapper *state_wrapper, const S* label=nullptr) :
+     public:
+        explicit SuccessorContainer(StateWrapper *state_wrapper, const S* label = nullptr) :
             RelationshipContainer(state_wrapper, label) { }
 
         _TransitionIterator begin() const {
-            TransitionSystem<Q,S> *ts = this->_state_wrapper->transition_system();
+            TransitionSystem<Q, S> *ts = this->_state_wrapper->transition_system();
             return _TransitionIterator(ts->_successor_begin(this->_state_wrapper->state(),
                                                             this->_label));
         }
 
         _TransitionIterator end() const {
-            TransitionSystem<Q,S> *ts = this->_state_wrapper->transition_system();
+            TransitionSystem<Q, S> *ts = this->_state_wrapper->transition_system();
             return _TransitionIterator(ts->_successor_end(this->_state_wrapper->state()));
         }
     };
@@ -276,8 +289,8 @@ template <typename Q, typename S> class Transition {
     explicit Transition(const Q &source, const Q &sink, const S &label) :
         _source(source), _sink(sink), _label(label) { }
 
-    /// Destructor (virtual to allow inheritance)
-    virtual ~Transition() {}
+    /// Destructor
+    ~Transition() {}
 
  private:
     /// Copy construction is forbidden.
@@ -292,6 +305,112 @@ bool operator==(const spaction::automata::Transition<Q, S> &lhs,
                 const spaction::automata::Transition<Q, S> &rhs) {
     return lhs.source() == rhs.source() and lhs.sink() == rhs.sink() and lhs.label() == rhs.label();
 }
+
+/// Control block interface.
+/// Acts as the real memory manager: pass it newly acquired pointers,
+/// and tell it to destroy the pointer when ref count reaches 0.
+template<typename T>
+class ControlBlock {
+public:
+    virtual ~ControlBlock() { }
+
+    /// Called when an object starts being managed.
+    virtual void declare(const T *t) = 0;
+    /// Called when an object is no longer managed.
+    virtual void release(const T *t) = 0;
+};
+
+/// The structure actually stored by the smart pointer (see below).
+template<typename T>
+struct SmartBlock {
+    // are all default ctors, dtor, copy and move semantics OK?
+    std::size_t _refcount;
+    const T * const _pointer;
+    ControlBlock<T> * const _control;
+
+    /// constructor
+    explicit SmartBlock(size_t r, const T *p, ControlBlock<T> *cb):
+    _refcount(r), _pointer(p), _control(cb) {
+        // declare the newly managed pointer to the controller
+        _control->declare(_pointer);
+    }
+    /// destructor
+    ~SmartBlock() {
+        _control->release(_pointer);
+    }
+};
+
+
+/// A smart pointer class to handle class Transition outside of a TransitionSystem
+/// It more or less acts as a std::shared_ptr with a privileged owner. When this privileged owner
+/// goes out of scope, the pointer is destroyed, and other owners are left with dangling pointers.
+/// @todo specialize std::swap, std::hash, operator<, operator==
+/// @todo use nothrow when required
+/// @todo what about thread-safety?
+template<typename Q, typename S>
+class TransitionPtr {
+ public:
+    /// @todo restrict constructor visibility?
+    explicit TransitionPtr(const Transition<Q, S> *t, ControlBlock<Transition<Q, S>> *cb):
+        _data(new SmartBlock<Transition<Q, S>>(1, t, cb)) { }
+
+    /// destructor
+    ~TransitionPtr() {
+        if (decr()) {
+            delete _data;
+        }
+    }
+
+    /// copy semantics
+    explicit TransitionPtr(const TransitionPtr &other): _data(other._data) {
+        incr();
+    }
+
+    TransitionPtr & operator=(const TransitionPtr &other) {
+        if (this != &other) {
+            if (_data != other._data) {
+                if (decr()) {
+                    delete _data;
+                }
+            }
+            _data = other._data;
+            incr();
+        }
+        return *this;
+    }
+
+    /// move semantics
+    TransitionPtr(TransitionPtr &&other): _data(other._data) {
+        other._data = nullptr;
+    }
+
+    TransitionPtr & operator=(TransitionPtr &&other) {
+        if (decr() and _data != other._data) {
+            delete _data;
+            _data = other._data;
+        }
+        other._data = nullptr;
+        return *this;
+    }
+
+    /// Pointer interface: dereference
+    const Transition<Q, S> &operator*() const { return *_data->_pointer; }
+    /// Pointer interface: member access
+    const Transition<Q, S> *operator->() const { return _data->_pointer; }
+    /// Pointer interface: cast to bool
+    explicit operator bool() const { return _data->_pointer; }
+
+    /// Utility functions
+    std::size_t hash() const;
+    bool operator< (const TransitionPtr &) const;
+    bool operator==(const TransitionPtr &) const;
+
+ private:
+    SmartBlock<Transition<Q, S>> *_data;
+
+    inline void incr() { if (_data) ++_data->_refcount; }
+    inline bool decr() { return _data and not --_data->_refcount; }
+};
 
 }  // namespace automata
 }  // namespace spaction

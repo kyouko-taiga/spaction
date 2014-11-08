@@ -26,9 +26,20 @@
 namespace spaction {
 namespace automata {
 
+/// A dumb ControlBlock implementation, that does nothing.
+/// The real storage is in fact the UndeterministicTransitionSystem.
+template<typename T>
+class DumbControlBlock : public ControlBlock<T> {
+ public:
+    explicit DumbControlBlock() {}
+    ~DumbControlBlock() {}
+
+    void declare(const T *) override { }
+    void release(const T *) override { }
+};
+
 template<typename Q, typename S>
 class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
-
     class TransitionBaseIterator : public TransitionSystem<Q, S>::TransitionBaseIterator {
      public:
         explicit TransitionBaseIterator(UndeterministicTransitionSystem<Q, S> *transition_system,
@@ -42,16 +53,16 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
             }
             _end = _transition_system->_graph[*q].end();
             if (_it == _end) {
-                _transition_it = typename std::vector<Transition<Q, S>*>::iterator();
+                _transition_it = typename std::vector<const Transition<Q, S>*>::iterator();
             } else {
                 _transition_it = _it->second.begin();
             }
         }
 
         /// Constructor that builds the end iterator.
-        explicit TransitionBaseIterator(typename std::unordered_map<S, std::vector<Transition<Q, S>*>>::iterator end) :
+        explicit TransitionBaseIterator(typename std::unordered_map<S, std::vector<const Transition<Q, S>*>>::iterator end) :
             _it(end), _end(end),
-            _transition_it(typename std::vector<Transition<Q, S>*>::iterator()) { }
+            _transition_it(typename std::vector<const Transition<Q, S>*>::iterator()) { }
 
         virtual bool
         is_equal(const typename TransitionSystem<Q, S>::TransitionBaseIterator& rhs) const {
@@ -60,12 +71,12 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
             return b and ((_it == _end) or (_transition_it == bi._transition_it));
         }
 
-        virtual Transition<Q, S>* operator*() {
+        virtual TransitionPtr<Q, S> operator*() {
             assert(_it != _end);
             assert(_transition_it != _it->second.end());
             // @todo why does the following assertion fail?
             // assert(_transition_it != (typename std::vector<Transition<Q,S>*>::iterator()));
-            return *_transition_it;
+            return TransitionPtr<Q, S>(*_transition_it, _transition_system->get_control_block());
         }
 
         virtual const typename TransitionSystem<Q, S>::TransitionBaseIterator& operator++() {
@@ -83,7 +94,7 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
             } else {
                 // if `_labeled`, ensure that `_it` is set to `_end` for proper comparison with end
                 _it = _end;
-                _transition_it = typename std::vector<Transition<Q, S>*>::iterator();
+                _transition_it = typename std::vector<const Transition<Q, S>*>::iterator();
             }
 
             return *this;
@@ -94,8 +105,8 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
         }
 
      private:
-        typename std::unordered_map<S, std::vector<Transition<Q, S>*>>::iterator _it, _end;
-        typename std::vector<Transition<Q, S>*>::iterator _transition_it;
+        typename std::unordered_map<S, std::vector<const Transition<Q, S>*>>::iterator _it, _end;
+        typename std::vector<const Transition<Q, S>*>::iterator _transition_it;
 
         UndeterministicTransitionSystem<Q, S> *_transition_system;
         bool _labeled;
@@ -110,7 +121,7 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
         }
 
         /// Constructor that builds the end iterator.
-        explicit StateBaseIterator(typename std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q, S>*>>>::iterator end) :
+        explicit StateBaseIterator(typename std::unordered_map<Q, std::unordered_map<S, std::vector<const Transition<Q, S>*>>>::iterator end) :
             _it(end), _end(end) { }
 
         virtual bool is_equal(const typename TransitionSystem<Q, S>::StateBaseIterator& rhs) const {
@@ -132,12 +143,15 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
         }
 
      private:
-        typename std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q, S>*>>>::iterator _it, _end;
+        typename std::unordered_map<Q, std::unordered_map<S, std::vector<const Transition<Q, S>*>>>::iterator _it, _end;
 
         UndeterministicTransitionSystem<Q, S> *_transition_system;
     };
 
  public:
+    explicit UndeterministicTransitionSystem():
+        TransitionSystem<Q, S>(new DumbControlBlock<Transition<Q, S>>()) {}
+
     ~UndeterministicTransitionSystem() {
         for (auto &it : _graph) {
             for (auto &jt : it.second) {
@@ -163,12 +177,12 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
         return _graph.count(state) > 0;
     }
 
-    virtual Transition<Q, S> *add_transition(const Q &source, const Q &sink, const S &label) {
+    virtual const Transition<Q, S> *add_transition(const Q &source, const Q &sink, const S &label) {
         assert(has_state(source) and has_state(sink));
 
-        Transition<Q, S> *t = this->_make_transition(source, sink, label);
+        const Transition<Q, S> *t = this->_make_transition(source, sink, label);
         auto &v = _graph[source][label];
-        auto it = std::find_if(v.begin(), v.end(), [&t](Transition<Q, S> *o) { return *t == *o; });
+        auto it = std::find_if(v.begin(), v.end(), [&t](const Transition<Q, S> *o) { return *t == *o; });
         if (it == v.end()) {
             // if the transition is not already stored, add it
             v.push_back(t);
@@ -187,7 +201,7 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
     }
 
  protected:
-    std::unordered_map<Q, std::unordered_map<S, std::vector<Transition<Q, S>*>>> _graph;
+    std::unordered_map<Q, std::unordered_map<S, std::vector<const Transition<Q, S>*>>> _graph;
 
     virtual typename TransitionSystem<Q, S>::TransitionBaseIterator *_successor_begin(const Q &state,
                                                                                       const S *label) {
