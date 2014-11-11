@@ -122,6 +122,8 @@ class CltlTranslator {
     typedef CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem> automaton_type;
     inline automaton_type & get_automaton() { return _automaton; }
 
+    static std::function<bool (const CltlFormulaPtr &, const CltlFormulaPtr &)> get_formula_order();
+
  private:
     /// map occurrences of cost operator to counters
     void map_costop_to_counters(const CltlFormulaPtr &f);

@@ -71,13 +71,17 @@ void CltlTranslator::map_costop_to_counters(const CltlFormulaPtr &f) {
     }
 }
 
+std::function<bool (const CltlFormulaPtr &, const CltlFormulaPtr &)>
+    CltlTranslator::get_formula_order() {
+        return [](const CltlFormulaPtr &l, const CltlFormulaPtr &r){
+                    return (l->height() == r->height()) ? (l < r) : (l->height() < r->height());
+        };
+    }
+
 CltlTranslator::FormulaList CltlTranslator::_unique_sort(const CltlTranslator::FormulaList &terms) {
     FormulaList result(terms);
     // sort
-    std::sort(result.begin(), result.end(),
-              [](const CltlFormulaPtr &l, const CltlFormulaPtr &r){
-                  return (l->height() == r->height()) ? (l < r) : (l->height() < r->height());
-              });
+    std::sort(result.begin(), result.end(), get_formula_order());
     // remove duplicates
     auto last = std::unique(result.begin(), result.end());
     // remove shrinked values
