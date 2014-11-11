@@ -24,41 +24,94 @@
 namespace spaction {
 namespace automata {
 
-/// CAProd<Q1,L1,Q2,L2>             derives from        CA<pair<Q1,Q2>, pair<L1,L2>,TSProd>
-/// TSProd<Q1,S1,Q2,S2,LabelProd>   should derive from  TS<pair<Q1,Q2>, CounterLabel<pair<L1,L2>>>
+/// @todo Use these explanations to rename all the convoluted stuff below
+/// CAProd<Q1, L1, Q2, L2, ALabelProd>      derives from        CA<pair<Q1, Q2>, ALabelProd<L1, L2>::product_type, TSProd<Q1, CounterLabel<L1>, Q2, CounterLabel<L2>, CLWrapper<ALabelProd>::type>>
+/// TSProd<Q1, S1, Q2, S2, TSLabelProd>     derives from        TS<pair<Q1, Q2>, TSLabelProd<S1, S2>::product_type>
 ///
-///     The CAProd is built from
-/// CA<Q1,L1>                       and CA<Q2,L2>
+///     CAProd<Q1, L1, Q2, L2, ALabelProd> is built from
+/// CA<Q1, L1>                      and     CA<Q2, L2>
 ///     The underlying TSProd is thus built from
-/// TS<Q1,CounterLabel<L1>>         and TS<Q2,CounterLabel<T2>>
+/// TS<Q1, CounterLabel<L1>>        and     TS<Q2, CounterLabel<L2>>
 ///
-///     We thus want a match between
-/// S1 = CounterLabel<L1>           and S2 = CounterLabel<L2>
-/// LabelProd<S1,S2>::type = CounterLabel<pair<L1,L2>
-/// TSProd<Q1,S1,Q2,S2,LabelProd> <<= TS<pair<Q1,Q2>, CounterLabel<pair<L1,L2>>>
+///     The product TS underlying CAProd<Q1, L1, Q2, L2, ALabelProd> is
+/// TSProd<Q1, CounterLabel<L1>, Q2, CounterLabel<L2>, CLWrapper<ALabelProd>::type>
+///     which derives from
+/// TS<pair<Q1, Q2>, CLWrapper<ALabelProd>::type<CounterLabel<L1>, CounterLabel<L2>>::product_type>
+///     and should derive from
+/// TS<pair<Q1,Q2>, CounterLabel<ALabelProd<L1, L2>::product_type>>
+///
+///     (1) Therefore, we want the following equality to hold
+/// CLWrapper<ALabelProd>::type<CounterLabel<L1>, CounterLabel<L2>>::product_type
+///     =
+/// CounterLabel<ALabelProd<L1, L2>::product_type>
+///
+///     (2) ALabelProd<L1, L2> should have a type member `product_type`
+///     (3) CLWrapper<ALabelProd> should have a template member `type`
+///     (4) CLWrapper<ALabelProd>::type<CounterLabel<L1>, CounterLabel<L2>> should have a type member `product_type`
+///     (5) CLWrapper<ALabelProd>::type<CounterLabel<L1>, CounterLabel<L2>> should derive from ILabelProd<CounterLabel<L1>, CounterLabel<L2>, CounterLabel<ALabelProd<L1, L2>::product_type>>
+///     (6) We also need a template TSP to give to the original CA, such that
+///         TSP<pair<Q1, Q2>, CLWrapper<ALabelProd>::type<CounterLabel<L1>, CounterLabel<L2>>::product_type> = TSProd<Q1, CounterLabel<L1>, Q2, CounterLabel<L2>, CLWrapper<ALabelProd>::type>
 
-/// A trivial implementation of ILabelProd, serves as a general template for further specialization.
-template<typename A, typename B, typename C>
-class LabelProdImpl : public ILabelProd<A, B, C> {
-    const A lhs(const C &) const override;
-    const B rhs(const C &) const override;
-    const C build(const A &, const B &) const override;
+/// @remark To define a product automaton with your custom labels L1 and L2:
+///         Determine what label type to used in the product automata, say P;
+///         Declare a template class MyLabelProd with two template arguments;
+///         Define/Specialize so that MyLabelProd<L1, L2> implements IAutLabelProd<L1, L2, P>;
+///         Simply use CounterAutomatonProduct<Q1, L1, Q2, L2, MyLabelProd>.
+
+/// The interface for LabelProduct
+template<typename L, typename R, typename P>
+class IAutLabelProd {
+public:
+    typedef L lhs_type;
+    typedef R rhs_type;
+    typedef P product_type;
+
+    virtual ~IAutLabelProd() { }
+
+    virtual product_type build(const lhs_type &, const rhs_type &) const = 0;
+    virtual lhs_type lhs(const product_type &) const = 0;
+    virtual rhs_type rhs(const product_type &) const = 0;
 };
 
-/// Partial specialization of ILabelProd to use with CounterLabel
-template<typename A, typename B>
-class LabelProdImpl<CounterLabel<A>, CounterLabel<B>, CounterLabel<std::pair<A, B>>> :
-    public ILabelProd<CounterLabel<A>, CounterLabel<B>, CounterLabel<std::pair<A, B>>> {
+/// A helper struct to shorten labels type names
+/// @param L1               the lhs label type
+/// @param L2               the rhs label type
+/// @param LabelProduct     the label product, must implement IAutLabelProd<L1, L2, P> for some P.
+template<typename L1, typename L2, template<typename, typename> class LabelProduct>
+struct ALabel {
+    /// the product label type (in the counter automaton)
+    using autprod_label = typename LabelProduct<L1, L2>::product_type;
+    /// the product label type wrapped in a CounterLabel (for the underlying TS)
+    using tsprod_label = CounterLabel<autprod_label>;
+
+    /// Ensure that given LabelProduct implements ILabelProd.
+    static_assert(std::is_base_of<IAutLabelProd<L1, L2, autprod_label>, LabelProduct<L1, L2>>(),
+              "In ALabel: the template argument LabelProduct does not implement IAutLabelProduct.");
+};
+
+/// A trivial implementation of ILabelProd, serves as a general template for further specialization.
+template<typename L1, typename L2, typename P, template<typename, typename> class LabelProduct>
+class TSLabelProdImpl {};
+
+/// A specialization that handles the CounterLabel product, based on the handler for labels product.
+template<typename L1, typename L2, template<typename, typename> class LabelProduct>
+class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
+                        typename ALabel<L1, L2, LabelProduct>::tsprod_label, LabelProduct>:
+        public ILabelProd<  CounterLabel<L1>, CounterLabel<L2>,
+                            typename ALabel<L1, L2, LabelProduct>::tsprod_label> {
  public:
-    /// default constructor
-    explicit LabelProdImpl(): LabelProdImpl(0, 0) {}
-    explicit LabelProdImpl(std::size_t counter_offset, std::size_t acceptance_offset)
-    : _counter_offset(counter_offset)
+    /// a shortcut for the label product
+    using P = typename ALabel<L1, L2, LabelProduct>::autprod_label;
+
+    explicit TSLabelProdImpl() {}
+    explicit TSLabelProdImpl(std::size_t counter_offset, std::size_t acceptance_offset)
+    : _lhandler(LabelProduct<L1, L2>())
+    , _counter_offset(counter_offset)
     , _acceptance_offset(acceptance_offset) {}
 
-    virtual ~LabelProdImpl() {}
+    ~TSLabelProdImpl() {}
 
-    const CounterLabel<A> lhs(const CounterLabel<std::pair<A, B>> &cl) const override {
+    const CounterLabel<L1> lhs(const CounterLabel<P> &cl) const override {
         // keep the `_counter_offset` first counters
         std::vector<CounterOperationList> left_ops(cl.get_operations().begin(),
                                                    cl.get_operations().begin() + _counter_offset);
@@ -68,10 +121,10 @@ class LabelProdImpl<CounterLabel<A>, CounterLabel<B>, CounterLabel<std::pair<A, 
                                         cl.get_acceptance().lower_bound(_acceptance_offset));
 
         // rebuild a CounterLabel
-        return CounterLabel<A>(cl.letter().first, left_ops, left_accs);
+        return CounterLabel<L1>(_lhandler.lhs(cl.letter()), left_ops, left_accs);
     }
 
-    const CounterLabel<B> rhs(const CounterLabel<std::pair<A, B>> &cl) const override {
+    const CounterLabel<L2> rhs(const CounterLabel<P> &cl) const override {
         // remove the `_counter_offset` first counters
         std::vector<CounterOperationList> right_ops(cl.get_operations().begin() + _counter_offset,
                                                     cl.get_operations().end());
@@ -87,11 +140,11 @@ class LabelProdImpl<CounterLabel<A>, CounterLabel<B>, CounterLabel<std::pair<A, 
                            return x - _acceptance_offset; });
 
         // rebuild a CounterLabel
-        return CounterLabel<B>(cl.letter().second, right_ops, right_accs);
+        return CounterLabel<L2>(_lhandler.rhs(cl.letter()), right_ops, right_accs);
     }
 
-    const CounterLabel<std::pair<A, B>>
-    build(const CounterLabel<A> &l, const CounterLabel<B> &r) const override {
+    const CounterLabel<P>
+        build(const CounterLabel<L1> &l, const CounterLabel<L2> &r) const override {
         assert(l.get_operations().size() == _counter_offset);
 
         // regroup the counter operations
@@ -103,56 +156,75 @@ class LabelProdImpl<CounterLabel<A>, CounterLabel<B>, CounterLabel<std::pair<A, 
         std::set<std::size_t> accs(l.get_acceptance().begin(), l.get_acceptance().end());
         std::transform(r.get_acceptance().begin(), r.get_acceptance().end(),
                        std::inserter(accs, accs.end()),
-                                     [this](std::size_t x) { return x + _acceptance_offset; });
+                       [this](std::size_t x) { return x + _acceptance_offset; });
 
-        // @todo std::make_pair moves its arguments, is it invalid resource stealing?
-        return CounterLabel<std::pair<A, B>>(std::make_pair(l.letter(), r.letter()),
-                                             counters, accs);
+        // rebuild a CounterLabel
+        return CounterLabel<P>(_lhandler.build(l.letter(), r.letter()), counters, accs);
     }
 
  private:
-    const std::size_t _counter_offset;
-    const std::size_t _acceptance_offset;
+    LabelProduct<L1, L2> _lhandler;
+    std::size_t _counter_offset;
+    std::size_t _acceptance_offset;
 };
 
-/// Workaround the impossibility to specialize templated typedef
-template<typename A, typename B>
-struct _LabelProd {};
+/// The class CLWrapper.
+/// based on the above TSLabelProdImpl, we have to "curry" the template arguments.
+template<template<typename, typename> class LabelProd>
+struct CLWrapper {
+ private:
+    /// helper structs to work around the impossibility to specialize template type aliases.
+    template<typename L1, typename L2> struct _type {};
+    template<typename L1, typename L2> struct _type<CounterLabel<L1>, CounterLabel<L2>> {
+        using type = TSLabelProdImpl<CounterLabel<L1>, CounterLabel<L2>, typename ALabel<L1, L2, LabelProd>::tsprod_label, LabelProd>;
+    };
 
-template<typename A, typename B>
-struct _LabelProd<CounterLabel<A>, CounterLabel<B>> {
-    typedef LabelProdImpl<CounterLabel<A>, CounterLabel<B>, CounterLabel<std::pair<A, B>>> type;
+ public:
+    /// see requirement (3) at the beginning of the file
+    template<typename L1, typename L2> using type = typename _type<L1, L2>::type;
 };
 
-/// Type wrapper: takes two template arguments (as in the interface of TransitionSystemProduct)
-/// and returns the correct specialized implementation of ILabelProd
-template<typename A, typename B> using LabelProd = typename _LabelProd<A, B>::type;
-
+/// Helper struct to enforce (6)
 /// Once again, workaround the impossibility to specialize templated typedef
-template <typename Q, typename S>
-struct _TSProd {};
+template <typename Q, typename S1, typename S2, typename S, template<typename A, typename B> class LP>
+struct _TSP {};
 
-template<typename Q1, typename L1, typename Q2, typename L2>
-struct _TSProd<StateProd<Q1, Q2>, CounterLabel<std::pair<L1, L2>>> {
-    typedef TransitionSystemProduct<Q1, CounterLabel<L1>,
-                                    Q2, CounterLabel<L2>,
-                                    LabelProd> type;
+template<   typename Q1, typename L1, typename Q2, typename L2,
+            template<typename, typename> class AutLP>
+struct _TSP<StateProd<Q1, Q2>, CounterLabel<L1>, CounterLabel<L2>, typename ALabel<L1, L2, AutLP>::tsprod_label, AutLP> {
+    using type = TransitionSystemProduct<   Q1, CounterLabel<L1>,
+                                            Q2, CounterLabel<L2>,
+                                            CLWrapper<AutLP>::template type>;
 };
 
-/// Type wrapper: takes two template arguments (as in the interface of CounterAutomaton)
-/// and returns the correct instantiation of TransitionSystemProduct
-template<typename Q, typename S> using TSProd = typename _TSProd<Q, S>::type;
+/// Final helper to enforce (6), by currying template arguments of _TSP
+template<typename L1, typename L2, template<typename, typename> class LP>
+struct TSP {
+    template<typename Q, typename S> using type = typename _TSP<Q, L1, L2, S, LP>::type;
+};
+
+/// Useful alias for the base class of CounterAutomatonProduct
+/// @todo intermediate aliases would make this one more readable
+template<   typename Q1, typename S1, template<typename Q1_, typename S1_> class TS1,
+            typename Q2, typename S2, template<typename Q2_, typename S2_> class TS2,
+            template<typename, typename> class LabelProduct>
+using CAPBase = CounterAutomaton<StateProd<Q1, Q2>,
+            typename ALabel<S1, S2, LabelProduct>::autprod_label,
+            TSP<CounterLabel<S1>, CounterLabel<S2>, LabelProduct>::template type>;
 
 /// The class CounterAutomatonProduct
 /// Has a lot of arguments in the general case
 template<   typename Q1, typename S1, template<typename Q1_, typename S1_> class TS1,
-            typename Q2, typename S2, template<typename Q2_, typename S2_> class TS2>
-class CounterAutomatonProduct:
-    public CounterAutomaton<StateProd<Q1, Q2>, std::pair<S1, S2>, TSProd> {
- public:
+            typename Q2, typename S2, template<typename Q2_, typename S2_> class TS2,
+            template<typename S1_, typename S2_> class LabelProduct>
+class CounterAutomatonProduct: public CAPBase<Q1, S1, TS1, Q2, S2, TS2, LabelProduct> {
     /// A useful typedef for the base type.
-    typedef CounterAutomaton<StateProd<Q1, Q2>, std::pair<S1, S2>, TSProd> super_type;
+    using super_type = CAPBase<Q1, S1, TS1, Q2, S2, TS2, LabelProduct>;
 
+    /// typedef for the TS label types
+    using TSLabelType = typename CLWrapper<LabelProduct>::template type<CounterLabel<S1>, CounterLabel<S2>>;
+
+ public:
     /// Constructor from two other CounterAutomata
     explicit CounterAutomatonProduct(CounterAutomaton<Q1, S1, TS1> &lhs,
                                      CounterAutomaton<Q2, S2, TS2> &rhs)
@@ -162,20 +234,99 @@ class CounterAutomatonProduct:
             new typename super_type::transition_system_t(
                 lhs.transition_system(),
                 rhs.transition_system(),
-                LabelProd<CounterLabel<S1>, CounterLabel<S2>>(lhs.num_counters(),
-                                                              lhs.num_acceptance_sets()));
+                TSLabelType(lhs.num_counters(), lhs.num_acceptance_sets()));
         this->set_initial_state(StateProd<Q1, Q2>(*lhs.initial_state(), *rhs.initial_state()));
     }
 
     /// @todo no other methods to overload?
 };
 
-/// A factory function (maybe not very useful)
+}  // namespace automata
+}  // namespace spaction
+
+/// We now define our LabelProduct for the labels FormulaList
+/// Work around the impossibility to specialize templated typedef
+
+#include "ConstantExpression.h"
+
+namespace spaction {
+namespace automata {
+
+template<typename A, typename B>
+class _AutLabelProduct {};
+
+/// A specialization for the CounterAutomata produced by CltlTranslator.
+template<>
+class _AutLabelProduct<CltlTranslator::FormulaList, CltlTranslator::FormulaList>:
+        public IAutLabelProd<   CltlTranslator::FormulaList,
+                                CltlTranslator::FormulaList,
+                                CltlTranslator::FormulaList> {
+ public:
+    /// typdef for the base class
+    using Base = IAutLabelProd< CltlTranslator::FormulaList,
+                                CltlTranslator::FormulaList,
+                                CltlTranslator::FormulaList>;
+
+    virtual product_type build(const lhs_type &l, const rhs_type &r) const override {
+        if (l.empty() and r.empty())
+            return {};
+                                    
+        product_type res;
+        /// Check that l and r are sets
+        auto compare = CltlTranslator::get_formula_order();
+        assert(std::is_sorted(l.begin(), l.end(), compare));
+        assert(std::adjacent_find(l.begin(), l.end()) == l.end());
+        assert(std::is_sorted(r.begin(), r.end(), compare));
+        assert(std::adjacent_find(r.begin(), r.end()) == r.end());
+
+        std::set_union(l.begin(), l.end(), r.begin(), r.end(), std::back_inserter(res), compare);
+        /// Check that the merge yields a union
+        assert(std::is_sorted(res.begin(), res.end(), compare));
+        assert(std::adjacent_find(res.begin(), res.end()) == res.end());
+
+
+        for (auto &f : res) {
+            if (f->formula_type() == CltlFormula::kConstantExpression) {
+                spaction::ConstantExpression *ce = static_cast<spaction::ConstantExpression *>(f.get());
+                if (!ce->value()) {
+                    res = { f };
+                    return res;
+                }
+            }
+        }
+
+        product_type negres;
+        std::transform(res.begin(), res.end(), std::back_inserter(negres), [](const CltlFormulaPtr &f){ return f->creator()->make_not(f); });
+        std::sort(negres.begin(), negres.end(), compare);
+        product_type tmp;
+        std::set_intersection(res.begin(), res.end(), negres.begin(), negres.end(), std::back_inserter(tmp), compare);
+        if (! tmp.empty()) {
+            CltlFormulaFactory *factory = l.empty() ? (*r.begin())->creator() : (*l.begin())->creator();
+            res = { factory->make_constant(false) };
+        }
+        return res;
+    }
+
+    /// @todo   these definitions of lhs and rhs may not yield the expected results, but it's rather
+    ///         a problem with the current implementation of UndeterministicTransitionSystem.
+    ///         When asking the succs with label L, we actually want to iterate over all the
+    ///         transition with label compatible with L, rather than L exactly.
+    virtual lhs_type lhs(const product_type &p) const override {
+        return p;
+    }
+    virtual rhs_type rhs(const product_type &p) const override {
+        return p;
+    }
+};
+
+template<typename A, typename B> using AutLabelProduct = _AutLabelProduct<A, B>;
+
+/// A factory function
 template<   typename Q1, typename S1, template<typename Q1_, typename S1_> class TS1,
             typename Q2, typename S2, template<typename Q2_, typename S2_> class TS2>
-CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2>
+CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>
 make_aut_product(CounterAutomaton<Q1, S1, TS1> &l, CounterAutomaton<Q2, S2, TS2> &r) {
-    return CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2>(l, r);
+    return CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>(l, r);
 }
 
 }  // namespace automata
