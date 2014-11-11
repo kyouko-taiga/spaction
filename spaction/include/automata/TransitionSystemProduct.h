@@ -69,14 +69,14 @@ class ILabelProd {
  public:
     virtual ~ILabelProd() {}
 
-    /// @todo   this typedef is not very explicit, give it a better name (such as prod_type)
-    ///         also, why is C alone exposed, what about A and B?
-    typedef C type;
+    typedef A lhs_type;
+    typedef B rhs_type;
+    typedef C product_type;
 
-    virtual const A lhs(const type &) const = 0;
-    virtual const B rhs(const type &) const = 0;
+    virtual const lhs_type lhs(const product_type &) const = 0;
+    virtual const rhs_type rhs(const product_type &) const = 0;
 
-    virtual const C build(const A &, const B &) const = 0;
+    virtual const product_type build(const lhs_type &, const rhs_type &) const = 0;
 };
 
 /// The class for a product of transition systems.
@@ -87,16 +87,16 @@ class ILabelProd {
 template<   typename Q1, typename S1,
             typename Q2, typename S2,
             template<typename S1_, typename S2_> class LabelProd>
-class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typename LabelProd<S1, S2>::type> {
+class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typename LabelProd<S1, S2>::product_type> {
     /// Enforce the label product type to implement ILabelProd
-    static_assert(std::is_base_of<ILabelProd<S1, S2, typename LabelProd<S1, S2>::type>, LabelProd<S1, S2>>(),
+    static_assert(std::is_base_of<ILabelProd<S1, S2, typename LabelProd<S1, S2>::product_type>, LabelProd<S1, S2>>(),
                   "Template argument LabelProd does not derive from ILabelProd");
 
     /// useful typedefs for state and label product types
     typedef StateProd<Q1, Q2> Q;
-    typedef typename LabelProd<S1, S2>::type S;
+    typedef typename LabelProd<S1, S2>::product_type S;
     /// a typedef for the base class
-    typedef TransitionSystem<StateProd<Q1, Q2>, typename LabelProd<S1, S2>::type> super_type;
+    typedef TransitionSystem<StateProd<Q1, Q2>, S> super_type;
 
  public:
     /// default constructor
