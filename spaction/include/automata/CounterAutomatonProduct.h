@@ -178,26 +178,6 @@ make_aut_product(CounterAutomaton<Q1, S1, TS1> &l, CounterAutomaton<Q2, S2, TS2>
     return CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2>(l, r);
 }
 
-/// Speialize output operator for CounterLabel of pair.
-template<typename A, typename B>
-std::ostream &operator<<(std::ostream &os, const CounterLabel<std::pair<A, B>>& label) {
-    os << "{" << label.letter().first << "," << label.letter().second << "}" <<  ":[";
-    for (std::size_t i = 0; i < label.num_counters(); ++i) {
-        const CounterOperationList &counter = label.counter_operations(i);
-        os << "(";
-        for (auto c : counter) {
-            os << print_counter_operation(c) << ",";
-        }
-        os << "),";
-    }
-    os << "]" << std::endl;
-    // print acceptance conditions
-    for (auto a : label.get_acceptance()) {
-        os << "Acc(" << a << ")" << std::endl;
-    }
-    return os;
-}
-
 }  // namespace automata
 }  // namespace spaction
 
