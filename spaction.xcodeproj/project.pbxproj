@@ -66,6 +66,7 @@
 		4A2541A919F6657C00E52660 /* CLTLScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CLTLScanner.h; path = cltlparse/CLTLScanner.h; sourceTree = "<group>"; };
 		4A2541AA19F6657C00E52660 /* public.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = public.h; path = cltlparse/public.h; sourceTree = "<group>"; };
 		4A2541B719F91FA500E52660 /* TransitionSystemPrinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransitionSystemPrinter.h; sourceTree = "<group>"; };
+		4A2C734A1A14E71C00A3D594 /* ControlBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ControlBlock.h; sourceTree = "<group>"; };
 		4A5ACA351A037C1700246E63 /* CounterAutomaton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CounterAutomaton.cpp; sourceTree = "<group>"; };
 		4A7995D71A077F4900EB98A9 /* hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hash.h; path = hash/hash.h; sourceTree = "<group>"; };
 		4A7995D81A08C40F00EB98A9 /* CounterAutomatonProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CounterAutomatonProduct.h; sourceTree = "<group>"; };
@@ -227,6 +228,7 @@
 		759343D21970051200DD5475 /* automata */ = {
 			isa = PBXGroup;
 			children = (
+				4A2C734A1A14E71C00A3D594 /* ControlBlock.h */,
 				75EF898619B8518E00441B56 /* CltlTranslator.h */,
 				75910D1419F94C90008AEF98 /* CounterAutomaton.h */,
 				4A7995D81A08C40F00EB98A9 /* CounterAutomatonProduct.h */,

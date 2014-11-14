@@ -20,11 +20,12 @@
 
 #include <typeinfo>
 
+#include "automata/ControlBlock.h"
+
 namespace spaction {
 namespace automata {
 
 template<typename Q, typename S> class Transition;
-template<typename T> class ControlBlock;
 template<typename Q, typename S> class TransitionPtr;
 
 template<typename Q, typename S> class TransitionSystem {
@@ -308,41 +309,6 @@ bool operator==(const spaction::automata::Transition<Q, S> &lhs,
                 const spaction::automata::Transition<Q, S> &rhs) {
     return lhs.source() == rhs.source() and lhs.sink() == rhs.sink() and lhs.label() == rhs.label();
 }
-
-/// Control block interface.
-/// Acts as the real memory manager: pass it newly acquired pointers,
-/// and tell it to destroy the pointer when ref count reaches 0.
-template<typename T>
-class ControlBlock {
-public:
-    virtual ~ControlBlock() { }
-
-    /// Called when an object starts being managed.
-    virtual void declare(const T *t) = 0;
-    /// Called when an object is no longer managed.
-    virtual void release(const T *t) = 0;
-};
-
-/// The structure actually stored by the smart pointer (see below).
-template<typename T>
-struct SmartBlock {
-    // are all default ctors, dtor, copy and move semantics OK?
-    std::size_t _refcount;
-    const T * const _pointer;
-    ControlBlock<T> * const _control;
-
-    /// constructor
-    explicit SmartBlock(size_t r, const T *p, ControlBlock<T> *cb):
-    _refcount(r), _pointer(p), _control(cb) {
-        // declare the newly managed pointer to the controller
-        _control->declare(_pointer);
-    }
-    /// destructor
-    ~SmartBlock() {
-        _control->release(_pointer);
-    }
-};
-
 
 /// A smart pointer class to handle class Transition outside of a TransitionSystem
 /// It more or less acts as a std::shared_ptr with a privileged owner. When this privileged owner

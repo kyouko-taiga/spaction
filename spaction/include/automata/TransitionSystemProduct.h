@@ -25,39 +25,6 @@
 namespace spaction {
 namespace automata {
 
-/// A smart pointer manager with unique ownership semantics.
-template<typename T>
-class RefControlBlock : public ControlBlock<T> {
- public:
-    explicit RefControlBlock(const std::function<void(const T *)> &d): _destroy(d) {}
-    ~RefControlBlock() {
-        for (auto &r : _pool) {
-            _destroy(r);
-        }
-//        _pool.clean();
-    }
-
-    /// Ensures that the declared object is not already managed.
-    /// Throws if already managed.
-    virtual void declare(const T *t) override {
-        if (_pool.count(t))
-            throw "object is already managed";
-
-        _pool.insert(t);
-    }
-
-    /// Called when an object is no longer managed.
-    virtual void release(const T *t) override {
-        _pool.erase(t);
-        _destroy(t);
-    }
-
-private:
-    /// @todo use another structure than std::set
-    std::set<const T *> _pool;
-    std::function<void(const T *)> _destroy;
-};
-
 /// The product of two states, merely a typedef for now
 template<typename A, typename B> using StateProd = std::pair<A, B>;
 
