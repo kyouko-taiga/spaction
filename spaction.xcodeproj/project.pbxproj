@@ -55,6 +55,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4A159DB41A160DAF005A9B74 /* CA2tgba.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CA2tgba.h; sourceTree = "<group>"; };
 		4A25419A19F5301500E52660 /* cltllex.ll */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.asm.llvm; name = cltllex.ll; path = cltlparse/cltllex.ll; sourceTree = "<group>"; };
 		4A25419B19F5301500E52660 /* cltlparse.yy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = cltlparse.yy; path = cltlparse/cltlparse.yy; sourceTree = "<group>"; };
 		4A2541A119F5465B00E52660 /* cltllex.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cltllex.cc; path = cltlparse/cltllex.cc; sourceTree = "<group>"; };
@@ -229,6 +230,7 @@
 		759343D21970051200DD5475 /* automata */ = {
 			isa = PBXGroup;
 			children = (
+				4A159DB41A160DAF005A9B74 /* CA2tgba.h */,
 				4A2C734A1A14E71C00A3D594 /* ControlBlock.h */,
 				4A2C73491A14C23900A3D594 /* TGBA2CA.h */,
 				75EF898619B8518E00441B56 /* CltlTranslator.h */,
