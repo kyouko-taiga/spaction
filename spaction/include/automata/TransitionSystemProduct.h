@@ -137,6 +137,19 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
         assert(false);
     }
 
+    /// method to print state: handles pair of states
+    virtual void print_state(std::ostream &os, const Q &q) const override {
+        os << "(";
+        _lhs->print_state(os, q.first);
+        os << ",";
+        _rhs->print_state(os, q.second);
+        os << ")";
+    }
+
+    virtual void print_label(std::ostream &os, const S &s) const override {
+        os << s;
+    }
+
  protected:
     /// the left-hand side of the product
     TransitionSystem<Q1, S1> *_lhs;

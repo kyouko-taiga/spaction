@@ -53,7 +53,7 @@ template<typename Q, typename S> class TSPrinter {
             if (it.second) ++i;
 
             os << it.first->second << " [label=\"";
-            PrinterHelper<Q>::print(os, current_node);
+            _system.print_state(os, current_node);
             os << "\" ];" << std::endl;
             for (auto current_transition : _system(current_node).successors()) {
                 auto jt = node_map.insert(std::make_pair(current_transition->sink(), i));
@@ -61,7 +61,7 @@ template<typename Q, typename S> class TSPrinter {
                 if (jt.second) ++i;
 
                 os << it.first->second << "->" << jt.first->second << " [label=\"";
-                PrinterHelper<S>::print(os, current_transition->label());
+                _system.print_label(os, current_transition->label());
                 os << "\" ];" << std::endl;
             }
         }
@@ -72,30 +72,30 @@ template<typename Q, typename S> class TSPrinter {
 
  private:
     TransitionSystem<Q, S> &_system;
+};
 
-    /// a helper class to handle pointers
-    template <typename A>
-    struct PrinterHelper {
-        static void print(std::ostream &os, const A &a) { os << a; }
-    };
+/// a helper class to handle pointers
+template <typename A>
+struct PrinterHelper {
+    static void print(std::ostream &os, const A &a) { os << a; }
+};
 
-    /// partial specialization that dereferences given pointer before printing
-    template <typename A>
-    struct PrinterHelper<A*> {
-        static void print(std::ostream &os, const A * const a) { PrinterHelper<A>::print(os, *a); }
-    };
+/// partial specialization that dereferences given pointer before printing
+template <typename A>
+struct PrinterHelper<A*> {
+    static void print(std::ostream &os, const A * const a) { PrinterHelper<A>::print(os, *a); }
+};
 
-    /// a specialization to handle pairs
-    template<typename A, typename B>
-    struct PrinterHelper<std::pair<A, B>> {
-        static void print(std::ostream &os, const std::pair<A, B> &p) {
-            os << "(";
-            PrinterHelper<A>::print(os, p.first);
-            os << ",";
-            PrinterHelper<B>::print(os, p.second);
-            os << ")";
-        }
-    };
+/// a specialization to handle pairs
+template<typename A, typename B>
+struct PrinterHelper<std::pair<A, B>> {
+    static void print(std::ostream &os, const std::pair<A, B> &p) {
+        os << "(";
+        PrinterHelper<A>::print(os, p.first);
+        os << ",";
+        PrinterHelper<B>::print(os, p.second);
+        os << ")";
+    }
 };
 
 }  // namespace automata
