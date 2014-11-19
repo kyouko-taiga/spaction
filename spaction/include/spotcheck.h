@@ -19,7 +19,11 @@
 #define SPACTION_INCLUDE_SPOTCHECK_H_
 
 #include <string>
+
+#include <spot/tgba/tgba.hh>
+
 #include "CltlFormula.h"
+#include "automata/TGBA2CA.h"
 
 namespace spaction {
 
@@ -39,6 +43,9 @@ unsigned int find_bound_min(const CltlFormulaPtr &formula, const std::string &mo
 /// finds the min bound of the given formula over the given model
 /// in practice, uses CLTL[>] formulae
 unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname);
+
+/// use a tgba as a CounterAutomaton
+automata::tgba_ca *load_formula(const std::string &formula);
 
 }  // namespace spaction
 

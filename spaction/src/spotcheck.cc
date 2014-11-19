@@ -27,6 +27,7 @@
 #include <tgbaalgos/emptiness.hh>
 #include <tgbaalgos/translate.hh>
 
+#include "automata/TGBA2CA.h"
 #include "Instantiator.h"
 
 // #define trace std::cerr
@@ -204,6 +205,34 @@ unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &mo
             max = tmp;
     }
     return min;
+}
+
+automata::tgba_ca *load_formula(const std::string &formula) {
+    // spot parsing of the instantiated formula
+    spot::ltl::parse_error_list pel;
+    const spot::ltl::formula *ltl_formula = spot::ltl::parse(formula, pel);
+    if (spot::ltl::format_parse_errors(std::cerr, formula, pel)) {
+        ltl_formula->destroy();
+        exit(1);
+    }
+
+    trace << "spot parsing done" << std::endl;
+
+    // to store atomic propositions appearing in the formula
+    spot::ltl::atomic_prop_set atomic_propositions;
+    // bdd dictionnary
+    spot::bdd_dict *bdd_dictionnary = new spot::bdd_dict();
+    const spot::tgba *property_automaton;
+    // NB: embedding the translation in a block is mandatory for proper deallocation
+    {
+        // translate the formula into an automaton
+        spot::translator formula_translator(bdd_dictionnary);
+        property_automaton = formula_translator.run(&ltl_formula);
+    }
+
+    trace << "property tgba built" << std::endl;
+
+    return new automata::tgba_ca(property_automaton);
 }
 
 }  // namespace spaction
