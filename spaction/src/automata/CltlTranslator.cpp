@@ -230,7 +230,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
 
             Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
             if (s0->is_consistent()) {
-                counters[current_counter] = _r();
+                counters[current_counter] = _cr();
                 _transition_system.add_transition(node, s0, new TransitionLabel({}, counters));
                 successors.push_back(s0);
             }
@@ -244,7 +244,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
 
             Node *s2 = _build_node({bo->creator()->make_next(f)});
             if (s2->is_consistent()) {
-                counters[current_counter] = _ic();
+                counters[current_counter] = _i();
                 _transition_system.add_transition(node, s2, new TransitionLabel({}, counters));
                 successors.push_back(s2);
             }

@@ -159,8 +159,13 @@ class CltlTranslator {
     std::set<Node*> _done_remove_epsilon;
 
     /// Helper functions for counter actions
+    // for B automata (LTL[<=])
     inline static CounterOperation _r()     { return kReset; }
     inline static CounterOperation _ic()    { return kIncrement | kCheck; }
+    // for S automata (LTL[>])
+    inline static CounterOperation _i()     { return kIncrement; }
+    inline static CounterOperation _cr()    { return kReset | kCheck; }
+    // the no-op action
     inline static CounterOperation _e()     { return static_cast<CounterOperation>(0); }
 
     /// a helper function that returns from a list of terms a sorted set, to ease comparison.
