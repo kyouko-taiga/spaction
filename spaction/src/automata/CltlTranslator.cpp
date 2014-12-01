@@ -320,10 +320,7 @@ void CltlTranslator::_process_fire() {
         if (std::find(_states.begin(), _states.end(), t) == _states.end())
             _states.push_back(t);
 
-        // `t` should never be empty (ie. end of the word), but just in case, we won't
-        // add it to the reduce stack since it would cause a null pointer exception
-        if (!t->terms().empty())
-            _to_be_reduced.push(t);
+        _to_be_reduced.push(t);
     }
 }
 
