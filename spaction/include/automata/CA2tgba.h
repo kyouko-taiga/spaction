@@ -94,9 +94,9 @@ class _succ_helper<Q, CltlTranslator::FormulaList, TS> {
 public:
     explicit _succ_helper(const CA2tgba<Q,S,TS> *t): _ts(t) {}
 
-    bdd get_condition(typename TransitionSystem<Q, CounterLabel<S>>::TransitionIterator &it) const {
+    bdd get_condition(const TransitionPtr<Q, CounterLabel<S>> &trans) const {
         const spot::ltl::formula * fspot = spot::ltl::constant::true_instance();
-        for (auto f : (*it)->label().letter()) {
+        for (auto f : trans->label().letter()) {
             fspot = spot::ltl::multop::instance(spot::ltl::multop::And, formula2spot(f), fspot);
         }
         return spot::formula_to_bdd(fspot, _ts->get_dict(), (void*)_ts);
@@ -152,7 +152,7 @@ public:
     }
 
     virtual bdd current_condition() const override {
-        return _succ_helper<Q, S, TS>(_ts).get_condition(_current);
+        return _succ_helper<Q, S, TS>(_ts).get_condition(*_current);
     }
     virtual bdd current_acceptance_conditions() const override {
         bdd result = bddtrue;
