@@ -29,7 +29,7 @@
 #include <spot/tgba/formula2bdd.hh>
 #include <spot/tgba/tgba.hh>
 
-#include "AtomicProposition.h"
+#include "cltl2spot.h"
 #include "automata/CounterAutomaton.h"
 
 namespace std {
@@ -97,32 +97,12 @@ public:
     bdd get_condition(const TransitionPtr<Q, CounterLabel<S>> &trans) const {
         const spot::ltl::formula * fspot = spot::ltl::constant::true_instance();
         for (auto f : trans->label().letter()) {
-            fspot = spot::ltl::multop::instance(spot::ltl::multop::And, formula2spot(f), fspot);
+            fspot = spot::ltl::multop::instance(spot::ltl::multop::And, cltl2spot(f), fspot);
         }
         return spot::formula_to_bdd(fspot, _ts->get_dict(), (void*)_ts);
     }
 
 private:
-    const spot::ltl::formula * formula2spot(const CltlFormulaPtr &f) const {
-        assert(f->formula_type() == CltlFormula::kAtomicProposition || f->formula_type() == CltlFormula::kUnaryOperator);
-
-        if (f->formula_type() == CltlFormula::kAtomicProposition) {
-            const AtomicProposition * ap = static_cast<const AtomicProposition *>(f.get());
-            const spot::ltl::formula *fspot = spot::ltl::atomic_prop::instance(ap->value(),
-                                                                               spot::ltl::default_environment::instance());
-            return fspot;
-        }
-
-        if (f->formula_type() == CltlFormula::kUnaryOperator) {
-            const UnaryOperator * uf = static_cast<const UnaryOperator *>(f.get());
-            const spot::ltl::formula *fspot = spot::ltl::unop::instance(spot::ltl::unop::Not, formula2spot(uf->operand()));
-            return fspot;
-        }
-
-        assert(false);
-        return nullptr;
-    }
-
     const CA2tgba<Q,S,TS> *_ts;
 };
 
