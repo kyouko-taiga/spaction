@@ -205,7 +205,7 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
         PrinterHelper<Q>::print(os, q);
     }
     virtual void print_label(std::ostream &os, const S &s) const override {
-        os << s;
+        PrinterHelper<S>::print(os, s);
     }
 
  protected:
