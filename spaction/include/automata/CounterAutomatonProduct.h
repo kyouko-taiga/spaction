@@ -104,8 +104,9 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
     using P = typename ALabel<L1, L2, LabelProduct>::autprod_label;
 
     explicit TSLabelProdImpl() {}
-    explicit TSLabelProdImpl(std::size_t counter_offset, std::size_t acceptance_offset)
-    : _lhandler(LabelProduct<L1, L2>())
+    template<typename... Args>
+    explicit TSLabelProdImpl(std::size_t counter_offset, std::size_t acceptance_offset, Args... args)
+    : _lhandler(LabelProduct<L1, L2>(args...))
     , _counter_offset(counter_offset)
     , _acceptance_offset(acceptance_offset) {}
 
@@ -226,15 +227,17 @@ class CounterAutomatonProduct: public CAPBase<Q1, S1, TS1, Q2, S2, TS2, LabelPro
 
  public:
     /// Constructor from two other CounterAutomata
+    template<typename... Args>
     explicit CounterAutomatonProduct(CounterAutomaton<Q1, S1, TS1> &lhs,
-                                     CounterAutomaton<Q2, S2, TS2> &rhs)
+                                     CounterAutomaton<Q2, S2, TS2> &rhs,
+                                     Args... args)
     : super_type(lhs.num_counters() + rhs.num_counters(),
                  lhs.num_acceptance_sets() + rhs.num_acceptance_sets()) {
         super_type::_transition_system =
             new typename super_type::transition_system_t(
                 lhs.transition_system(),
                 rhs.transition_system(),
-                TSLabelType(lhs.num_counters(), lhs.num_acceptance_sets()));
+                TSLabelType(lhs.num_counters(), lhs.num_acceptance_sets(), args...));
         this->set_initial_state(StateProd<Q1, Q2>(*lhs.initial_state(), *rhs.initial_state()));
     }
 
@@ -323,10 +326,11 @@ template<typename A, typename B> using AutLabelProduct = _AutLabelProduct<A, B>;
 
 /// A factory function
 template<   typename Q1, typename S1, template<typename Q1_, typename S1_> class TS1,
-            typename Q2, typename S2, template<typename Q2_, typename S2_> class TS2>
+            typename Q2, typename S2, template<typename Q2_, typename S2_> class TS2,
+            typename... Args>
 CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>
-make_aut_product(CounterAutomaton<Q1, S1, TS1> &l, CounterAutomaton<Q2, S2, TS2> &r) {
-    return CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>(l, r);
+make_aut_product(CounterAutomaton<Q1, S1, TS1> &l, CounterAutomaton<Q2, S2, TS2> &r, Args... args) {
+    return CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>(l, r, args...);
 }
 
 }  // namespace automata
