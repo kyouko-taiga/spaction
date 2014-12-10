@@ -322,6 +322,107 @@ class _AutLabelProduct<CltlTranslator::FormulaList, CltlTranslator::FormulaList>
     }
 };
 
+}  // namespace automata
+}  // namespace spaction
+
+#include <spot/ltlast/multop.hh>
+#include <spot/tgba/formula2bdd.hh>
+#include "cltl2spot.h"
+
+namespace spaction {
+namespace automata {
+
+/// A specialization to combine the CounterAutomata produced by CltlTranslator, and the TGBA from
+/// SPOT, through the adapter tgba_ca.
+template<>
+class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
+    public IAutLabelProd<   CltlTranslator::FormulaList,
+                            bdd,
+                            CltlTranslator::FormulaList> {
+ public:
+    /// typdef for the base class
+    using Base = IAutLabelProd< CltlTranslator::FormulaList,
+                                bdd,
+                                CltlTranslator::FormulaList>;
+
+    explicit _AutLabelProduct(): _AutLabelProduct(nullptr, nullptr) {}
+    explicit _AutLabelProduct(spot::bdd_dict *d, CltlFormulaFactory *f): _dict(d), _factory(f) {}
+
+    ~_AutLabelProduct() {
+        if (_dict != nullptr)
+            _dict->unregister_all_my_variables(this);
+    }
+
+    virtual product_type build(const lhs_type &l, const rhs_type &r) const override {
+        // translate the bdd to a FormulaList
+        lhs_type rr;
+
+        // translate the bdd to a spot LTL formula
+        const spot::ltl::formula *fspot = spot::bdd_to_formula(r, _dict);
+        // convert the spot formula to a spaction formula
+        CltlFormulaPtr fspaction = spot2cltl(fspot, _factory);
+
+        // "unfold" the big and formula to a list of conjuncts
+        std::stack<CltlFormulaPtr> todo;
+        todo.push(fspaction);
+        while (!todo.empty()) {
+            CltlFormulaPtr f = todo.top();
+            todo.pop();
+
+            if (f->formula_type() == CltlFormula::kBinaryOperator) {
+                const BinaryOperator *bf = static_cast<const BinaryOperator *>(f.get());
+                assert(bf);
+                assert(bf->operator_type() == BinaryOperator::kAnd);
+                todo.push(bf->left());
+                todo.push(bf->right());
+                continue;
+            }
+            
+            if (f->formula_type() == CltlFormula::kAtomicProposition) {
+                rr.push_back(f);
+                continue;
+            }
+
+            if (f->formula_type() == CltlFormula::kUnaryOperator) {
+                const UnaryOperator *uf = static_cast<const UnaryOperator *>(f.get());
+                assert(uf);
+                assert(uf->operator_type() == UnaryOperator::kNot);
+                rr.push_back(f);
+                continue;
+            }
+            
+            assert(false);
+        }
+
+        // sort the produced list
+        auto compare = CltlTranslator::get_formula_order();
+        std::sort(rr.begin(), rr.end(), compare);
+
+        // call the version to combine two FormulaList
+        return _AutLabelProduct<lhs_type, lhs_type>().build(l, rr);
+    }
+
+    /// @todo   these definitions of lhs and rhs may not yield the expected results, but it's rather
+    ///         a problem with the current implementation of UndeterministicTransitionSystem.
+    ///         When asking the succs with label L, we actually want to iterate over all the
+    ///         transition with label compatible with L, rather than L exactly.
+    virtual lhs_type lhs(const product_type &p) const override {
+        return p;
+    }
+    virtual rhs_type rhs(const product_type &p) const override {
+        spot::ltl::multop::vec *vector = new spot::ltl::multop::vec();
+        for (auto &f : p) {
+            vector->push_back(cltl2spot(f));
+        }
+        const spot::ltl::formula *fspot = spot::ltl::multop::instance(spot::ltl::multop::And, vector);
+        return spot::formula_to_bdd(fspot, _dict, (void*)this);
+    }
+
+ private:
+    spot::bdd_dict *_dict;
+    CltlFormulaFactory *_factory;
+};
+
 template<typename A, typename B> using AutLabelProduct = _AutLabelProduct<A, B>;
 
 /// A factory function
