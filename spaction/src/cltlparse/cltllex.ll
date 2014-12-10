@@ -50,6 +50,9 @@ typedef yy::parser::token token;
 "UN"                {   return token::COSTUNTIL; }
 "RN"                {   return token::COSTRELEASE; }
 
+"FN"                {   return token::COSTFINALLY; }
+"GN"                {   return token::COSTGLOBALLY; }
+
 \"[a-zA-Z0-9_\.]+\"    {   yylval->apval = yytext;
                         // remove double quotes around the atom
                         auto it = std::remove(yylval->apval.begin(), yylval->apval.end(), '"');
