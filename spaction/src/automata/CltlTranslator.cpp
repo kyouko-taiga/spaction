@@ -177,7 +177,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
         case BinaryOperator::kRelease: {
             Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
             if (s0->is_consistent()) {
-                _transition_system.add_transition(node, s0, new TransitionLabel());
+                _transition_system.add_transition(node, s0, new TransitionLabel({}, CounterOperationList(_nb_counters)));
                 successors.push_back(s0);
             }
 
@@ -221,9 +221,9 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
             return successors;
         }
 
-        // (f = f1 RN f2) => [_,r,_]-> (f1,f2)
-        //                   [_,_,_]-> (f2, X(f))
-        //                   [_,ic,_]-> (X(f))
+        // (f = f1 RN f2) => [_,cr,_]-> (f1,f2)
+        //                   [_,_,_]-> (f2,X(f))
+        //                   [_,i,_]-> (f1,f2,X(f))
         case BinaryOperator::kCostRelease: {
             std::size_t current_counter = _counters_maps[f];
             CounterOperationList counters(_nb_counters, _e());
@@ -242,7 +242,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
                 successors.push_back(s1);
             }
 
-            Node *s2 = _build_node({bo->creator()->make_next(f)});
+            Node *s2 = _build_node(_insert(leftover, {bo->left(), bo->right(), bo->creator()->make_next(f)}));
             if (s2->is_consistent()) {
                 counters[current_counter] = _i();
                 _transition_system.add_transition(node, s2, new TransitionLabel({}, counters));
@@ -400,6 +400,14 @@ void CltlTranslator::_add_nonepsilon_transition(Node *source, Node *sink,
     FormulaList props;
     if (it != trace.end())
         props = (*it)->propositions;
+    // remove 'true'
+    if (!props.empty()) {
+        auto fc = (*props.begin())->creator();
+        FormulaList::const_iterator jt;
+        while ((jt = std::find(props.begin(), props.end(), fc->make_constant(true))) != props.end()) {
+            props.erase(jt);
+        }
+    }
 
     // build acceptance conditions
     std::set<std::size_t> accs;
