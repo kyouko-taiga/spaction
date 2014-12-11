@@ -38,6 +38,22 @@ struct hash<std::vector<S>> {
     }
 };
 
+/// hash combination and magic numbers are taken from Boost `hash_combine_impl`
+template<typename A, typename B>
+struct hash<std::pair<A,B>> {
+    typedef std::pair<A,B> argument_type;
+    typedef std::size_t result_type;
+
+    result_type operator()(const argument_type &p) const {
+        hash<A> ha;
+        hash<B> hb;
+        result_type res = 0;
+        res ^= ha(p.first) + 0x9e3779b9 + (res << 6) + (res >> 2);
+        res ^= hb(p.second) + 0x9e3779b9 + (res << 6) + (res >> 2);
+        return res;
+    }
+};
+
 }  // namespace std
 
 #endif  // SPACTION_INCLUDE_HASH_HASH_H_
