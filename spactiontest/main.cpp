@@ -128,7 +128,7 @@ void test_product() {
     t1.get_automaton().print("aut1.dot");
     t2.get_automaton().print("aut2.dot");
 
-    auto prod = spaction::automata::make_aut_product(t1.get_automaton(), t2.get_automaton());
+    auto prod = spaction::automata::make_aut_product(t1.get_automaton(), t2.get_automaton(), f1->creator());
     prod.print("prod.dot");
 
     std::cerr << "product test ended" << std::endl;
@@ -136,14 +136,15 @@ void test_product() {
 
 int main(int argc, char* argv[]) {
 //    test_counter_automata();
-    test_product();
+//    test_product();
 
     std::string cltl_string = "";
     std::string epsilon_dot_file = "";
     std::string automaton_dot_file = "";
+    std::string model_file = "";
 
     int c;
-    while ((c = getopt(argc, argv, "f:e:a:")) != -1) {
+    while ((c = getopt(argc, argv, "f:e:a:m:")) != -1) {
         switch (c) {
             case 'f':
                 cltl_string = optarg;
@@ -153,6 +154,9 @@ int main(int argc, char* argv[]) {
                 break;
             case 'a':
                 automaton_dot_file = optarg;
+                break;
+            case 'm':
+                model_file = optarg;
                 break;
             default:
                 std::cerr << "unknown option " << c << std::endl;
@@ -178,16 +182,22 @@ int main(int argc, char* argv[]) {
     std::cout << "dnf:   " << f->to_dnf()->dump() << std::endl;
     std::cout << "the input formula is " << f->dump() << std::endl;
 
-    spaction::automata::CltlTranslator translator(f);
-    translator.build_automaton();
-    if (automaton_dot_file != "") {
-        translator.automaton_dot(automaton_dot_file);
-        std::cerr << "automaton was printed to file " << automaton_dot_file << std::endl;
+    if (automaton_dot_file != "" or epsilon_dot_file != "") {
+        spaction::automata::CltlTranslator translator(f);
+        translator.build_automaton();
+        if (automaton_dot_file != "") {
+            translator.automaton_dot(automaton_dot_file);
+            std::cerr << "automaton was printed to file " << automaton_dot_file << std::endl;
+        }
+        if (epsilon_dot_file != "") {
+            translator.epsilon_dot(epsilon_dot_file);
+            std::cerr << "epsilon-automaton was printed to file " << epsilon_dot_file << std::endl;
+        }
     }
-    if (epsilon_dot_file != "") {
-        translator.epsilon_dot(epsilon_dot_file);
-        std::cerr << "epsilon-automaton was printed to file " << epsilon_dot_file << std::endl;
-    }
+
+    unsigned int result = spaction::find_bound_max(f, model_file);
+
+    std::cout << "the max bound is " << result << std::endl;
 
     return 0;
 }
