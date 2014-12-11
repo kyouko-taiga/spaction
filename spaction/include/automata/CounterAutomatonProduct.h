@@ -69,6 +69,7 @@ public:
     virtual ~IAutLabelProd() { }
 
     virtual product_type build(const lhs_type &, const rhs_type &) const = 0;
+    virtual bool is_false(const product_type &) const = 0;
     virtual lhs_type lhs(const product_type &) const = 0;
     virtual rhs_type rhs(const product_type &) const = 0;
 };
@@ -161,6 +162,10 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
 
         // rebuild a CounterLabel
         return CounterLabel<P>(_lhandler.build(l.letter(), r.letter()), counters, accs);
+    }
+
+    bool is_false(const CounterLabel<P> &prod) const override {
+        return _lhandler.is_false(prod.letter());
     }
 
  private:
@@ -270,6 +275,9 @@ class _AutLabelProduct<CltlTranslator::FormulaList, CltlTranslator::FormulaList>
                                 CltlTranslator::FormulaList,
                                 CltlTranslator::FormulaList>;
 
+    explicit _AutLabelProduct(): _AutLabelProduct(nullptr) {}
+    explicit _AutLabelProduct(CltlFormulaFactory *f): _factory(f) {}
+
     virtual product_type build(const lhs_type &l, const rhs_type &r) const override {
         if (l.empty() and r.empty())
             return {};
@@ -283,6 +291,11 @@ class _AutLabelProduct<CltlTranslator::FormulaList, CltlTranslator::FormulaList>
         assert(std::adjacent_find(r.begin(), r.end()) == r.end());
 
         std::set_union(l.begin(), l.end(), r.begin(), r.end(), std::back_inserter(res), compare);
+        product_type::const_iterator it;
+        // remove 'true' constants (in fact, this should have been done earlier...)
+        while ((it = std::find(res.begin(), res.end(), _factory->make_constant(true))) != res.end()) {
+            res.erase(it);
+        }
         /// Check that the merge yields a union
         assert(std::is_sorted(res.begin(), res.end(), compare));
         assert(std::adjacent_find(res.begin(), res.end()) == res.end());
@@ -320,6 +333,16 @@ class _AutLabelProduct<CltlTranslator::FormulaList, CltlTranslator::FormulaList>
     virtual rhs_type rhs(const product_type &p) const override {
         return p;
     }
+
+    virtual bool is_false(const product_type &prod) const override {
+        if (std::find(prod.begin(), prod.end(), _factory->make_constant(false)) != prod.end()) {
+            return true;
+        }
+        return false;
+    }
+
+ private:
+    CltlFormulaFactory *_factory;
 };
 
 }  // namespace automata
@@ -399,7 +422,7 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
         std::sort(rr.begin(), rr.end(), compare);
 
         // call the version to combine two FormulaList
-        return _AutLabelProduct<lhs_type, lhs_type>().build(l, rr);
+        return _AutLabelProduct<lhs_type, lhs_type>(_factory).build(l, rr);
     }
 
     /// @todo   these definitions of lhs and rhs may not yield the expected results, but it's rather
@@ -416,6 +439,13 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
         }
         const spot::ltl::formula *fspot = spot::ltl::multop::instance(spot::ltl::multop::And, vector);
         return spot::formula_to_bdd(fspot, _dict, (void*)this);
+    }
+
+    virtual bool is_false(const product_type &prod) const override {
+        if (std::find(prod.begin(), prod.end(), _factory->make_constant(false)) != prod.end()) {
+            return true;
+        }
+        return false;
     }
 
  private:
