@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_COUNTERAUTOMATON_H_
-#define SPACTION_INCLUDE_COUNTERAUTOMATON_H_
+#ifndef SPACTION_INCLUDE_AUTOMATA_COUNTERAUTOMATON_H_
+#define SPACTION_INCLUDE_AUTOMATA_COUNTERAUTOMATON_H_
 
 #include <algorithm>
 #include <cassert>
@@ -72,13 +72,12 @@ namespace automata {
 
 template<typename Q, typename S, template<typename Q_, typename S_> class TransitionSystemType>
 class CounterAutomaton {
-public:
+ public:
     typedef TransitionSystemType<Q, CounterLabel<S>> transition_system_t;
     typedef Transition<Q, CounterLabel<S>>           transition_t;
 
     explicit CounterAutomaton(std::size_t counters, std::size_t nb_acceptance) :
         _counters(counters, 0), _nb_acceptance(nb_acceptance), _initial_state(nullptr) {
-
         // static_cast prevents the template from being incompatible
         _transition_system =
             static_cast<TransitionSystem<Q, CounterLabel<S>>*>(new transition_system_t());
@@ -86,9 +85,9 @@ public:
 
     // a convenient default constructor
     // @todo restrict its usage?
-    explicit CounterAutomaton(): CounterAutomaton(0, 0) {};
+    explicit CounterAutomaton(): CounterAutomaton(0, 0) {}
 
-    ~CounterAutomaton() {
+    virtual ~CounterAutomaton() {
         // delete the pointer to the initial state, if ever created
         if (_initial_state)
             delete _initial_state;
@@ -102,17 +101,24 @@ public:
     CounterAutomaton &operator=(const CounterAutomaton &) = delete;
     CounterAutomaton &operator=(const CounterAutomaton &&) = delete;
 
+    /// move constructor
+    explicit CounterAutomaton(CounterAutomaton &&other) {
+        // compiler wants me to use std::move here, but I am not sure why...
+        *this = std::move(other);
+    }
+
+    /// move assignment operator
     CounterAutomaton &operator=(CounterAutomaton &&other) {
         if (_initial_state)
             delete _initial_state;
         delete _transition_system;
 
+        std::swap(_transition_system, other._transition_system);
         std::swap(_counters, other._counters);
         std::swap(_nb_acceptance, other._nb_acceptance);
         std::swap(_initial_state, other._initial_state);
-        std::swap(_transition_system, other._transition_system);
-        other._initial_state = nullptr;
         other._transition_system = nullptr;
+        other._initial_state = nullptr;
 
         return *this;
     }
@@ -151,7 +157,7 @@ public:
         p.dump(dotfile);
     }
 
-private:
+ protected:
     TransitionSystem<Q, CounterLabel<S>> *_transition_system;
 
     std::vector<std::size_t> _counters;
@@ -161,7 +167,7 @@ private:
 };
 
 template<typename S> class CounterLabel {
-public:
+ public:
     explicit CounterLabel(const S &letter, std::size_t counters) : _letter(letter),
         _operations(counters), _hash_dirty(true) {
     }
@@ -180,9 +186,9 @@ public:
     std::size_t hash() const {
         if (_hash_dirty) {
             _hash_value = std::hash<S>()(_letter);
-            for(auto counter : _operations) {
+            for (auto counter : _operations) {
                 std::size_t i = 0;
-                for(auto operation : counter)
+                for (auto operation : counter)
                     i ^= operation;
                 _hash_value ^= i;
             }
@@ -196,6 +202,7 @@ public:
     inline std::size_t num_counters() const { return _operations.size(); }
 
     /// Sets a CounterOperation on a counter.
+    /// @todo deprecated by `get_operations`?
     inline const CounterOperationList counter_operations(std::size_t counter) const {
         return _operations[counter];
     }
@@ -221,10 +228,12 @@ public:
         }
     }
 
-    /// Get the set of acceptance conditions
-    const std::set<std::size_t> & get_acceptance() const { return _acceptance_conditions; }
+    /// Gets the vector of counter operations.
+    const std::vector<CounterOperationList> &get_operations() const { return _operations; }
+    /// Gets the set of acceptance conditions.
+    const std::set<std::size_t> &get_acceptance() const { return _acceptance_conditions; }
 
-private:
+ private:
     const S _letter;
     std::vector<CounterOperationList> _operations;
     std::set<std::size_t> _acceptance_conditions;
@@ -251,7 +260,7 @@ std::ostream &operator<<(std::ostream &os, const CounterLabel<S>& label) {
     }
     os << "]" << std::endl;
     // print acceptance conditions
-    for (auto a: label.get_acceptance()) {
+    for (auto a : label.get_acceptance()) {
         os << "Acc(" << a << ")" << std::endl;
     }
     return os;
@@ -260,4 +269,4 @@ std::ostream &operator<<(std::ostream &os, const CounterLabel<S>& label) {
 }  // namespace automata
 }  // namespace spaction
 
-#endif
+#endif  // SPACTION_INCLUDE_AUTOMATA_COUNTERAUTOMATON_H_

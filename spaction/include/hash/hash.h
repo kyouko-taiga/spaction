@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_HASH_H_
-#define SPACTION_INCLUDE_HASH_H_
+#ifndef SPACTION_INCLUDE_HASH_HASH_H_
+#define SPACTION_INCLUDE_HASH_HASH_H_
 
 #include <vector>
 
@@ -32,12 +32,12 @@ struct hash<std::vector<S>> {
         hash<S> h;
         result_type res = 0;
         for (auto s : v) {
-            res ^= h(s) + 0x9e3779b9 + (res<<6) + (res>>2);
+            res ^= h(s) + 0x9e3779b9 + (res << 6) + (res >> 2);
         }
         return res;
     }
 };
 
-}
+}  // namespace std
 
-#endif  // defined SPACTION_INCLUDE_HASH_H_
+#endif  // SPACTION_INCLUDE_HASH_HASH_H_

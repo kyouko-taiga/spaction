@@ -29,7 +29,7 @@ UnaryOperator::UnaryOperator(UnaryOperatorType type, const CltlFormulaPtr &opera
 }
 
 bool UnaryOperator::syntactic_eq(const CltlFormula &rhs) const {
-    if(rhs.formula_type() != CltlFormula::kUnaryOperator)
+    if (rhs.formula_type() != CltlFormula::kUnaryOperator)
         return false;
 
     const UnaryOperator &uo = static_cast<const UnaryOperator &>(rhs);

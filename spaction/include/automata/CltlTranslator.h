@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_CLTLTRANSLATOR_H_
-#define SPACTION_INCLUDE_CLTLTRANSLATOR_H_
+#ifndef SPACTION_INCLUDE_AUTOMATA_CLTLTRANSLATOR_H_
+#define SPACTION_INCLUDE_AUTOMATA_CLTLTRANSLATOR_H_
 
 #include <map>
 #include <set>
@@ -37,7 +37,7 @@ struct Node;
 struct TransitionLabel;
 
 class CltlTranslator {
-public:
+ public:
     /// Type definition for a set of CLTL formulae.
     typedef std::vector<CltlFormulaPtr> FormulaList;
 
@@ -58,14 +58,14 @@ public:
         TSPrinter<Node*, TransitionLabel*> p(_transition_system);
         p.dump(dotfile);
     }
-    
+
     /// Helper class representing the states of the temporary transition system.
     ///
     /// This struct is used to represent states and pseudo-states of the the temporary transition
     /// system, in the process of translating a CLTL formula into a counter automaton. So called
     /// pseudo-states are those obtained by building the epsilon-transitions from actual states.
     class Node {
-    public:
+     public:
         /// `terms` is assumed to be sorted according to `_unique_sort` (see below)
         /// this constructor is therefore not supposed to be called outside of `_build_node`
         explicit inline Node(const CltlTranslator::FormulaList &terms) :
@@ -74,7 +74,7 @@ public:
 
         const inline CltlTranslator::FormulaList &terms() const { return _terms; }
 
-        void inline set_processed(bool processed=true) { _is_processed = processed; }
+        void inline set_processed(bool processed = true) { _is_processed = processed; }
         bool inline is_processed() const { return _is_processed; }
 
         /// returns true only if the node contains atomic props or X props
@@ -85,11 +85,11 @@ public:
 
         const std::string dump(const std::string &sep=",") const;
 
-    private:
+     private:
         /// List of subformulae corresponding to this pseudo-state.
         /// @remarks
-        ///     This list remains always ordered by the height of the formulae it contains, such that
-        ///     the latest element of the list is the biggest formula.
+        ///     This list remains always ordered by the height of the formulae it contains, such
+        ///     that the latest element of the list is the biggest formula.
         const CltlTranslator::FormulaList _terms;
 
         bool _is_processed;
@@ -111,16 +111,23 @@ public:
 
         explicit inline TransitionLabel(const CltlTranslator::FormulaList &propositions={},
                                         const CounterOperationList &counter_actions={},
-                                        const CltlFormulaPtr &postoned=0) :
+                                        const CltlFormulaPtr &postoned = CltlFormulaPtr()) :
             propositions(propositions), counter_actions(counter_actions), postponed(postoned) {
         }
 
         const std::string dump() const;
     };
-private:
+
+    /// the type of the automaton built
+    typedef CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem> automaton_type;
+    inline automaton_type & get_automaton() { return _automaton; }
+
+    static std::function<bool (const CltlFormulaPtr &, const CltlFormulaPtr &)> get_formula_order();
+
+ private:
     /// map occurrences of cost operator to counters
     void map_costop_to_counters(const CltlFormulaPtr &f);
-    
+
     typedef std::vector<Node*> NodeList;
 
     /// Stores the formula being translated by this translator.
@@ -133,7 +140,7 @@ private:
     /// Stores the temporar transition system that is used to build the automata.
     UndeterministicTransitionSystem<Node*, TransitionLabel*> _transition_system;
     /// Stores the actual automaton
-    CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem> _automaton;
+    automaton_type _automaton;
 
     std::size_t _nb_acceptances;
     /// Associates each Until sub-formula to an acceptance condition
@@ -152,8 +159,13 @@ private:
     std::set<Node*> _done_remove_epsilon;
 
     /// Helper functions for counter actions
+    // for B automata (LTL[<=])
     inline static CounterOperation _r()     { return kReset; }
     inline static CounterOperation _ic()    { return kIncrement | kCheck; }
+    // for S automata (LTL[>])
+    inline static CounterOperation _i()     { return kIncrement; }
+    inline static CounterOperation _cr()    { return kReset | kCheck; }
+    // the no-op action
     inline static CounterOperation _e()     { return static_cast<CounterOperation>(0); }
 
     /// a helper function that returns from a list of terms a sorted set, to ease comparison.
@@ -179,10 +191,12 @@ private:
     void _build_automaton();
     void _process_remove_epsilon();
     void _process_remove_epsilon(Node *source, Node *s, const std::vector<TransitionLabel*> &trace);
-    void _add_nonepsilon_transition(Node *source, Node *sink, const std::vector<TransitionLabel*> &trace);
+    void _add_nonepsilon_transition(Node *source, Node *sink,
+                                    const std::vector<TransitionLabel*> &trace);
 
     /// Helper method that inserts a formula into a FormulaList and keeps the result sorted.
-    FormulaList _insert(const FormulaList &list, const std::initializer_list<CltlFormulaPtr> &add_list) const;
+    FormulaList _insert(const FormulaList &list,
+                        const std::initializer_list<CltlFormulaPtr> &add_list) const;
 };
 
 }  // namespace automata
@@ -193,6 +207,7 @@ namespace std {
 ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::FormulaList &fl);
 ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::Node &n);
 ostream &operator<<(ostream &os, const spaction::automata::CltlTranslator::TransitionLabel &l);
+
 }  // namespace std
 
-#endif  // defined SPACTION_INCLUDE_CLTLTRANSLATOR_H_
+#endif  // SPACTION_INCLUDE_AUTOMATA_CLTLTRANSLATOR_H_

@@ -68,6 +68,8 @@
 		4A2541B719F91FA500E52660 /* TransitionSystemPrinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransitionSystemPrinter.h; sourceTree = "<group>"; };
 		4A5ACA351A037C1700246E63 /* CounterAutomaton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CounterAutomaton.cpp; sourceTree = "<group>"; };
 		4A7995D71A077F4900EB98A9 /* hash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = hash.h; path = hash/hash.h; sourceTree = "<group>"; };
+		4A7995D81A08C40F00EB98A9 /* CounterAutomatonProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CounterAutomatonProduct.h; sourceTree = "<group>"; };
+		4A7995D91A08C40F00EB98A9 /* TransitionSystemProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransitionSystemProduct.h; sourceTree = "<group>"; };
 		4AB890DC196EE51200F7BB44 /* cpplint.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = cpplint.py; sourceTree = "<group>"; };
 		753EF59719DDA16200106D3C /* CltlTranslator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CltlTranslator.cpp; sourceTree = "<group>"; };
 		753EF59919DEEA6900106D3C /* TransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TransitionSystem.h; sourceTree = "<group>"; };
@@ -225,13 +227,15 @@
 		759343D21970051200DD5475 /* automata */ = {
 			isa = PBXGroup;
 			children = (
+				75EF898619B8518E00441B56 /* CltlTranslator.h */,
+				75910D1419F94C90008AEF98 /* CounterAutomaton.h */,
+				4A7995D81A08C40F00EB98A9 /* CounterAutomatonProduct.h */,
 				753EF59919DEEA6900106D3C /* TransitionSystem.h */,
-				4A2541B719F91FA500E52660 /* TransitionSystemPrinter.h */,
+				4A7995D91A08C40F00EB98A9 /* TransitionSystemProduct.h */,
 				7582518219F55299008D042D /* DeterministicTransitionSystem.h */,
 				7582518319F55299008D042D /* UndeterministicTransitionSystem.h */,
-				75910D1419F94C90008AEF98 /* CounterAutomaton.h */,
+				4A2541B719F91FA500E52660 /* TransitionSystemPrinter.h */,
 				759343D31970051200DD5475 /* RegisterAutomaton.h */,
-				75EF898619B8518E00441B56 /* CltlTranslator.h */,
 			);
 			path = automata;
 			sourceTree = "<group>";
@@ -271,7 +275,7 @@
 /* Begin PBXLegacyTarget section */
 		4AB890DE196F047900F7BB44 /* checkstyle */ = {
 			isa = PBXLegacyTarget;
-			buildArgumentsString = "-c \"$(PROJECT_DIR)/cpplint.custom spaction/include/*.h spaction/src/*.cc spactiontest/*.cpp 2>&1 > /dev/null | sed 's/: /: warning: /' \"";
+			buildArgumentsString = "-c \"$(PROJECT_DIR)/cpplint.custom \\`find spaction/include -type f -name \\*.h\\` \\`find spaction/src -type f -name \\*.cpp\\` spactiontest/*.cpp 2>&1 > /dev/null | sed 's/: /: warning: /' \"";
 			buildConfigurationList = 4AB890DF196F047900F7BB44 /* Build configuration list for PBXLegacyTarget "checkstyle" */;
 			buildPhases = (
 			);

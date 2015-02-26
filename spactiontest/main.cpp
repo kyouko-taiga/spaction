@@ -25,6 +25,7 @@
 
 #include "automata/CltlTranslator.h"
 #include "automata/CounterAutomaton.h"
+#include "automata/CounterAutomatonProduct.h"
 #include "automata/TransitionSystemPrinter.h"
 #include "automata/UndeterministicTransitionSystem.h"
 
@@ -115,8 +116,27 @@ void usage() {
     // @TODO print usage help message
 }
 
+void test_product() {
+    spaction::CltlFormulaPtr f1 = spaction::cltlparse::parse_formula("\"a\" UN \"b\"");
+    spaction::CltlFormulaPtr f2 = spaction::cltlparse::parse_formula("\"c\" UN \"d\"");
+
+    spaction::automata::CltlTranslator t1(f1);
+    t1.build_automaton();
+    spaction::automata::CltlTranslator t2(f2);
+    t2.build_automaton();
+
+    t1.get_automaton().print("aut1.dot");
+    t2.get_automaton().print("aut2.dot");
+
+    auto prod = spaction::automata::make_aut_product(t1.get_automaton(), t2.get_automaton());
+    prod.print("prod.dot");
+
+    std::cerr << "product test ended" << std::endl;
+}
+
 int main(int argc, char* argv[]) {
 //    test_counter_automata();
+    test_product();
 
     std::string cltl_string = "";
     std::string epsilon_dot_file = "";
