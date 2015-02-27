@@ -55,6 +55,9 @@ template<typename Q, typename S> class TransitionSystem {
 
     virtual ControlBlock<Transition<Q, S>> *get_control_block() const { return _control_block; }
 
+    virtual void print_state(std::ostream &os, const Q &q) const = 0;
+    virtual void print_label(std::ostream &os, const S &s) const = 0;
+
  protected:
     ControlBlock<Transition<Q, S>> *_control_block;
 

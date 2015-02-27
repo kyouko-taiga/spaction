@@ -22,6 +22,7 @@
 #include <unordered_map>
 
 #include "TransitionSystem.h"
+#include "TransitionSystemPrinter.h"
 
 namespace spaction {
 namespace automata {
@@ -198,6 +199,13 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
     ///     this method should ensure that a label with no successors does not appear in the maps
     virtual void remove_transition(const Q &source, const Q &sink, const S &label) {
         // @todo
+    }
+
+    virtual void print_state(std::ostream &os, const Q &q) const override {
+        PrinterHelper<Q>::print(os, q);
+    }
+    virtual void print_label(std::ostream &os, const S &s) const override {
+        PrinterHelper<S>::print(os, s);
     }
 
  protected:
