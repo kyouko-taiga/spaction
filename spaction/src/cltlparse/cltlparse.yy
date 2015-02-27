@@ -78,10 +78,8 @@ typedef std::list<parse_error> parse_error_list;
 %token                              GLOBALLY
 %token                              COSTUNTIL
 %token                              COSTRELEASE
-/*
 %token                              COSTFINALLY
 %token                              COSTGLOBALLY
-*/
 %token  <apval>                     ATOM
 
 /* Priorities */
@@ -91,7 +89,7 @@ typedef std::list<parse_error> parse_error_list;
 %left AND
 
 %right UNTIL RELEASE COSTUNTIL COSTRELEASE
-%nonassoc FINALLY GLOBALLY
+%nonassoc FINALLY GLOBALLY COSTFINALLY COSTGLOBALLY
 %nonassoc NEXT
 
 %nonassoc NOT
@@ -109,6 +107,8 @@ formula
 | LPAR formula RPAR         { $$ = $2; }
 | FINALLY formula           { $$ = _factory().make_finally($2); }
 | GLOBALLY formula          { $$ = _factory().make_globally($2); }
+| COSTFINALLY formula       { $$ = _factory().make_costfinally($2); }
+| COSTGLOBALLY formula      { $$ = _factory().make_costglobally($2); }
 ;
 
 atomic: ATOM                { $$ = _factory().make_atomic($1); };

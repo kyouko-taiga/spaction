@@ -54,6 +54,8 @@ class CltlFormulaFactory {
     CltlFormulaPtr make_finally(const CltlFormulaPtr &formula);
     /// Builds a formula semantically equivalent to "Finally^N `formula`".
     CltlFormulaPtr make_costfinally(const CltlFormulaPtr &formula);
+    /// Builds a formula semantically equivalent to "Globally^N `formula`".
+    CltlFormulaPtr make_costglobally(const CltlFormulaPtr &formula);
 
  private:
     /// Stores the unique index.
