@@ -77,6 +77,7 @@
 		4A7995D81A08C40F00EB98A9 /* CounterAutomatonProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CounterAutomatonProduct.h; sourceTree = "<group>"; };
 		4A7995D91A08C40F00EB98A9 /* TransitionSystemProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransitionSystemProduct.h; sourceTree = "<group>"; };
 		4AB890DC196EE51200F7BB44 /* cpplint.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = cpplint.py; sourceTree = "<group>"; };
+		4AE621131AA052C3004724E6 /* ConfigurationAutomaton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfigurationAutomaton.h; sourceTree = "<group>"; };
 		753EF59719DDA16200106D3C /* CltlTranslator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CltlTranslator.cpp; sourceTree = "<group>"; };
 		753EF59919DEEA6900106D3C /* TransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TransitionSystem.h; sourceTree = "<group>"; };
 		755CEA32196EB78C00DD3677 /* libbdd.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbdd.dylib; path = "$(PROJECT_DIR)/dependencies/spot/lib/libbdd.dylib"; sourceTree = "<group>"; };
@@ -240,6 +241,7 @@
 				4A2C73491A14C23900A3D594 /* TGBA2CA.h */,
 				75EF898619B8518E00441B56 /* CltlTranslator.h */,
 				75910D1419F94C90008AEF98 /* CounterAutomaton.h */,
+				4AE621131AA052C3004724E6 /* ConfigurationAutomaton.h */,
 				4A7995D81A08C40F00EB98A9 /* CounterAutomatonProduct.h */,
 				753EF59919DEEA6900106D3C /* TransitionSystem.h */,
 				4A7995D91A08C40F00EB98A9 /* TransitionSystemProduct.h */,
