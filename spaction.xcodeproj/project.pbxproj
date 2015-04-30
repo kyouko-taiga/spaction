@@ -70,6 +70,7 @@
 		4A2541B719F91FA500E52660 /* TransitionSystemPrinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransitionSystemPrinter.h; sourceTree = "<group>"; };
 		4A2C73491A14C23900A3D594 /* TGBA2CA.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGBA2CA.h; sourceTree = "<group>"; };
 		4A2C734A1A14E71C00A3D594 /* ControlBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ControlBlock.h; sourceTree = "<group>"; };
+		4A37FC8F1AF24CD900E59EC8 /* SupremumFinder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SupremumFinder.h; sourceTree = "<group>"; };
 		4A3CECE61A2CF3270048E1F2 /* cltl2spot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = cltl2spot.h; sourceTree = "<group>"; };
 		4A3CECE71A2CF5F70048E1F2 /* cltl2spot.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cltl2spot.cpp; sourceTree = "<group>"; };
 		4A5ACA351A037C1700246E63 /* CounterAutomaton.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CounterAutomaton.cpp; sourceTree = "<group>"; };
@@ -236,6 +237,7 @@
 		759343D21970051200DD5475 /* automata */ = {
 			isa = PBXGroup;
 			children = (
+				4A37FC8F1AF24CD900E59EC8 /* SupremumFinder.h */,
 				4A159DB41A160DAF005A9B74 /* CA2tgba.h */,
 				4A2C734A1A14E71C00A3D594 /* ControlBlock.h */,
 				4A2C73491A14C23900A3D594 /* TGBA2CA.h */,
