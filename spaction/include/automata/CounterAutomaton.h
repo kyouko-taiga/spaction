@@ -126,7 +126,7 @@ class CounterAutomaton {
     inline std::size_t num_counters()        const { return _counters.size(); }
     inline std::size_t num_acceptance_sets() const { return _nb_acceptance; }
 
-    inline transition_system_t *transition_system() {
+    inline transition_system_t *transition_system() const {
         return static_cast<transition_system_t*>(this->_transition_system);
     }
 
