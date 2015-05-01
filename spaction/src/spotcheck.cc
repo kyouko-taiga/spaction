@@ -36,9 +36,15 @@
 #include "automata/TGBA2CA.h"
 
 #include "Instantiator.h"
+#include "automata/CA2tgba.h"
 
-// #define trace std::cerr
+// @todo convert this to a logging mechanism
+// #define TRACE
+#ifdef TRACE
+#define trace std::cerr
+#else
 #define trace while (0) std::cerr
+#endif
 
 namespace spaction {
 
@@ -214,6 +220,149 @@ unsigned int find_bound_max_dichoto(const CltlFormulaPtr &formula, const std::st
     return min;
 }
 
+automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
+                            spot::kripke *model,
+                            spot::bdd_dict *dict) {
+    // sup \emptyset = 0
+    automata::value_t res = {false, 0};
+    CltlFormulaPtr phi = formula;
+
+    // the emptiness check instantiator
+    spot::emptiness_check_instantiator* echeck_inst = nullptr;
+
+    {  // build the instantiator
+        // @todo add an option to select what EC to use
+        const char* echeck_algo = "Cou99";
+        const char* err;
+        echeck_inst = spot::emptiness_check_instantiator::construct(echeck_algo, &err);
+        // @todo properly catch incorrect instantiation of emptiness checker
+        assert(echeck_inst);
+    }
+
+    trace << "EC instantiator built" << std::endl;
+
+    // see the model as a counter automaton
+    assert(model);
+    automata::tgba_ca *model_ca = new automata::tgba_ca(model);
+
+    trace << "model loaded as a CA" << std::endl;
+
+    // determine the bound
+    //@{
+    // compute model size (number of nodes)
+    unsigned int model_size = spot::stats_reachable(model).states;
+    // compute formula automaton size (number of nodes)
+    unsigned int formula_aut_size = 0;
+    {
+        // turn the formula into a counter automaton
+        automata::CltlTranslator translator(formula);
+        translator.build_automaton();
+
+        trace << "formula translated to CA" << std::endl;
+
+        for (auto state : translator.get_automaton().transition_system()->states()) {
+            ++formula_aut_size;
+        }
+    }
+    unsigned int upper_bound = model_size * formula_aut_size;
+
+    // the CLTL2LTL instantiator
+    Instantiator *instantiator = new InstantiateSup();
+
+    bool is_nonempty = false;
+    int i = 0; // counts the number of runs of the loop
+    bool first_pass = true;
+    do {
+        i++;
+        // build the automaton of phi
+        automata::CltlTranslator translator(phi);
+        translator.build_automaton();
+
+        trace << "formula translated to automaton" << std::endl;
+
+#ifdef TRACE
+        std::stringstream ca_file;
+        ca_file << "ca_" << i << ".dot";
+        translator.get_automaton().print(ca_file.str());
+#endif
+
+        auto prod = automata::make_aut_product(translator.get_automaton(), *model_ca, dict, formula->creator());
+
+#ifdef TRACE
+        std::stringstream prod_file;
+        prod_file << "prod_" << i << ".dot";
+        prod.print(prod_file.str());
+#endif
+
+        trace << "product done" << std::endl;
+
+        auto prod_tgba = automata::make_tgba(&prod);
+
+        trace << "product as tgba" << std::endl;
+
+        // the real emptiness check
+        spot::emptiness_check* emptiness_checker = echeck_inst->instantiate(prod_tgba);
+        // @todo properly catch incorrect instantation
+        assert(emptiness_checker);
+
+        trace << "emptichecker built" << std::endl;
+
+        spot::emptiness_check_result *result = nullptr;
+        try {
+            result = emptiness_checker->check();
+        } catch (std::bad_alloc) {
+            std::cerr << "out of memory during emptiness check" << std::endl;
+            assert(false);
+        }
+
+        trace << i << "th iteration, EC done" << std::endl;
+
+        if ((is_nonempty = result)) {
+            trace << i << "th iteration, CE exists" << std::endl;
+
+            // @note run is a run of prod_tgba
+            spot::tgba_run *run = result->accepting_run();
+            assert(run);
+
+            trace << i << "th iteration, CE found" << std::endl;
+
+            auto value = prod_tgba->value_word(run, upper_bound, formula->creator());
+            if (value.unbounded_max) {  // infty
+                res.value = 0;
+                res.infinite = true;
+                is_nonempty = false;
+            } else {
+                trace << "n is " << res.value << " whereas value.max is " << value.max << std::endl;
+                assert(first_pass or res.value < value.max);
+                res.value = value.max;
+                CltlFormulaPtr phin = (*instantiator)(formula, res.value+1);
+                phi = formula->creator()->make_and(formula, phin);
+
+
+//                CltlFormulaPtr notphi = formula->creator()->make_not(formula);
+//                CltlFormulaPtr notphin = (*instantiator)(notphi, res.value);
+//                CltlFormulaPtr phin = notphi->creator()->make_not(notphin);
+//                phi = formula->creator()->make_and(formula, phin);
+            }
+            delete run;
+
+            trace << i << "th iteration, n is now " << res.value << std::endl;
+            trace << "and phi is now " << phi->dump() << std::endl;
+        }
+
+        first_pass = false;
+
+        delete result;
+        delete emptiness_checker;
+        delete prod_tgba;
+    } while (is_nonempty);
+
+    delete instantiator;
+    delete model_ca;
+
+    return res;
+}
+
 automata::value_t find_max_direct(const CltlFormulaPtr &formula,
                                   spot::kripke *model,
                                   spot::bdd_dict *dict) {
@@ -266,6 +415,7 @@ class APCollector : public CltlFormulaVisitor {
 };
 
 unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname) {
+    assert(formula->is_supltl());
     // get atomic propositions from formula
     spot::bdd_dict bdd_dictionnary;
     auto visitor = APCollector();
@@ -280,7 +430,9 @@ unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &mo
 
     trace << "model loaded" << std::endl;
 
-    automata::value_t result = find_max_direct(formula, model, &bdd_dictionnary);
+    // @todo add a flag to select the algo to use from the command-line
+    automata::value_t result = find_max_cegar(formula, model, &bdd_dictionnary);
+//    automata::value_t result = find_max_direct(formula, model, &bdd_dictionnary);
     // delete model
     delete model;
     if (result.infinite)
