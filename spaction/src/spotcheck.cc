@@ -25,9 +25,16 @@
 #include <tgba/tgbaproduct.hh>
 #include <tgbaalgos/dotty.hh>
 #include <tgbaalgos/emptiness.hh>
+#include <tgbaalgos/stats.hh>
 #include <tgbaalgos/translate.hh>
 
+#include "AtomicProposition.h"
+#include "CltlFormulaFactory.h"
+#include "automata/CltlTranslator.h"
+#include "automata/CounterAutomatonProduct.h"
+#include "automata/SupremumFinder.h"
 #include "automata/TGBA2CA.h"
+
 #include "Instantiator.h"
 
 // #define trace std::cerr
@@ -137,7 +144,7 @@ static bool spot_check_inf(const CltlFormulaPtr &formula, int n, const std::stri
 
 // @param   formula is assumed to be CLTL[<=]
 // @todo    do not use 'blind' dichotomy, use bound |aut| \times |system|
-unsigned int find_bound_min(const CltlFormulaPtr &formula, const std::string &modelname) {
+unsigned int find_bound_min_dichoto(const CltlFormulaPtr &formula, const std::string &modelname) {
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
     unsigned int max = 0;
@@ -179,7 +186,7 @@ static bool spot_check_sup(const CltlFormulaPtr &formula, int n, const std::stri
 // @param   formula is assumed to be CLTL[>]
 // @todo    a +1 is probably missing around here
 // @todo    do not use 'blind' dichotomy, use bound |aut| \times |system|
-unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname) {
+unsigned int find_bound_max_dichoto(const CltlFormulaPtr &formula, const std::string &modelname) {
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
     unsigned int max = 0;
@@ -205,6 +212,81 @@ unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &mo
             max = tmp;
     }
     return min;
+}
+
+automata::value_t find_max_direct(const CltlFormulaPtr &formula,
+                                  spot::kripke *model,
+                                  spot::bdd_dict *dict) {
+    assert(model);
+    automata::tgba_ca *model_ca = new automata::tgba_ca(model);
+
+    trace << "model loaded as a CA" << std::endl;
+
+    automata::CltlTranslator translator(formula);
+    translator.build_automaton();
+
+    auto prod = automata::make_aut_product(translator.get_automaton(), *model_ca, dict, formula->creator());
+
+    auto config_aut = automata::make_minmax_configuration_automaton(prod);
+    auto sup_comput = automata::make_sup_comput(config_aut);
+
+    // compute model size (number of nodes)
+    std::size_t model_size = spot::stats_reachable(model).states;
+    // compute formula automaton size (number of nodes)
+    std::size_t formula_aut_size = 0;
+    for (auto state : translator.get_automaton().transition_system()->states()) {
+        ++formula_aut_size;
+    }
+
+    return sup_comput.find_supremum(model_size * formula_aut_size);
+}
+
+class APCollector : public CltlFormulaVisitor {
+ public:
+    virtual ~APCollector() { }
+
+    void visit(const std::shared_ptr<AtomicProposition> &formula) final {
+        trace << "visiting AP " << formula->value() << std::endl;
+        _res.insert(spot::ltl::atomic_prop::instance(formula->value(), spot::ltl::default_environment::instance()));
+    }
+
+    void visit(const std::shared_ptr<ConstantExpression> &formula) final {}
+    void visit(const std::shared_ptr<UnaryOperator> &formula) final {
+        formula->operand()->accept(*this);
+    }
+    void visit(const std::shared_ptr<BinaryOperator> &formula) final {
+        formula->left()->accept(*this);
+        formula->right()->accept(*this);
+    }
+
+    spot::ltl::atomic_prop_set get() const { return _res; }
+
+ private:
+    spot::ltl::atomic_prop_set _res;
+};
+
+unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname) {
+    // get atomic propositions from formula
+    spot::bdd_dict bdd_dictionnary;
+    auto visitor = APCollector();
+    formula->accept(visitor);
+
+    trace << "ap collected" << std::endl;
+
+    spot::ltl::atomic_prop_set atomic_propositions = visitor.get();
+
+    // load divine model
+    spot::kripke *model = spot::load_dve2(modelname, &bdd_dictionnary, &atomic_propositions);
+
+    trace << "model loaded" << std::endl;
+
+    automata::value_t result = find_max_direct(formula, model, &bdd_dictionnary);
+    // delete model
+    delete model;
+    if (result.infinite)
+        return -1;
+    else
+        return result.value;
 }
 
 automata::tgba_ca *load_formula(const std::string &formula) {
