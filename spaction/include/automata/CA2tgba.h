@@ -240,6 +240,37 @@ class CA2tgba : public spot::tgba {
         return it->second;
     }
 
+    struct run_value {
+        unsigned int min;
+        unsigned int max;
+        bool unbounded_min;
+        bool unbounded_max;
+    };
+
+    // @note computes the value of a word in a sup-automaton
+    // @todo implement it also for inf-automata
+    run_value value_word(spot::tgba_run *run, unsigned int upper_bound, CltlFormulaFactory *factory) const {
+        spot::tgba *lasso = spot::tgba_run_to_tgba(this, run);
+        tgba_ca lasso_ca(lasso);
+        auto prod = make_aut_product(*_automaton, lasso_ca, _dict, factory);
+
+        // @todo debug information, push it to a logging mechanism
+//        _automaton->print("automaton.dot");
+//        lasso_ca.print("lasso.dot");
+//        prod.print("product_lasso.dot");
+
+        auto config_prod = make_minmax_configuration_automaton(prod);
+        auto sup_finder = make_sup_comput(config_prod);
+        auto value = sup_finder.find_supremum(upper_bound);
+        delete lasso;
+
+        // @todo add to logger
+//        std::cerr << "value for lasso is " << (value.infinite?(-1):value.value) << std::endl;
+
+        // @todo the min value is not computed, and arbitrary values are returned...
+        return { 0, value.value, false, value.infinite };
+    }
+
  private:
     /// the underlying counter automaton
     CounterAutomaton<Q, S, TS> *_automaton;
