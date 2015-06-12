@@ -61,6 +61,9 @@ class SupremumFinder {
         }
 
         while (!todo.empty()) {
+            //@debug
+            //print_debug(std::cerr);
+
             // @todo merge _root and _arc, since they are always pushed and popped together
             assert(_root.size() == _arc.size());
 
@@ -109,6 +112,17 @@ class SupremumFinder {
             // of the arc) we are interested in...
             MinMaxConfiguration<Q> dest = (*succ)->sink();
             std::set<std::size_t> acc = (*succ)->label().get_acceptance();
+
+            //{@logging
+//            std::cerr << " ------- " << std::endl;
+//            std::cerr << "current is ";
+//            _automaton.transition_system()->print_state(std::cerr, (*succ)->source());
+//            std::cerr << std::endl;
+//            std::cerr << "success is ";
+//            _automaton.transition_system()->print_state(std::cerr, dest);
+//            std::cerr << std::endl << std::endl;
+            //}
+
             // ... and point the iterator to the next successor, for
             // the next iteration.
             ++succ;
@@ -132,6 +146,16 @@ class SupremumFinder {
 
                 continue;
             }
+
+            //{@logging
+//            std::cerr << "already encountered state, index = " << spit->second << std::endl;
+//            std::cerr << "state = ";
+//            _automaton.transition_system()->print_state(std::cerr, dest);
+//            std::cerr << std::endl;
+//            std::cerr << "found = ";
+//            _automaton.transition_system()->print_state(std::cerr, spit->first);
+//            std::cerr << std::endl << std::endl;
+            //}
 
             // If we have reached a dead component, ignore it.
             if (spit->second == -1)
@@ -176,6 +200,9 @@ class SupremumFinder {
 
 
             // Have we found an accepting SCC?
+            //{@logging
+//            std::cerr << "SCC found, is it accepting?" << std::endl;
+            //}
             if (_root.top().conditions.size() == _automaton.num_acceptance_sets())
             {
 
@@ -184,6 +211,11 @@ class SupremumFinder {
                 if (dest.is_bounded()) {
                     max_val = dest.current_value() > max_val ? dest.current_value() : max_val;
                 }
+                //{@logging
+//                std::cerr << "accepting SCC encountered, its value is " << (dest.is_bounded()?dest.current_value():-1) << std::endl;
+//                std::cerr << "new candidate value is " << max_val << std::endl;
+//                std::cerr << "the given bound is " << bound << std::endl;
+                //}
                 // if unbounded, or if beyond the given bound, we have reached \infty
                 if (!dest.is_bounded() or max_val > bound) {
                     // we are done, return
@@ -245,7 +277,8 @@ class SupremumFinder {
     // a hash of states
     std::unordered_map<MinMaxConfiguration<Q>, int> _h;
 
-    // @debug
+    // A logging function that prints the current stacks
+    // @todo incorporate it properly into a logging mechanism
     void print_debug(std::ostream &os) {
         os << std::endl;
         std::stack<scc_t> root2;
