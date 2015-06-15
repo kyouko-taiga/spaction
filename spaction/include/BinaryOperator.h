@@ -61,6 +61,11 @@ class BinaryOperator : public CltlFormula {
 
     inline std::size_t height() const { return 1 + std::max(_left->height(), _right->height()); }
 
+    bool is_infltl() const;
+    bool is_supltl() const;
+    bool is_propositional() const;
+    bool is_nnf() const;
+
     std::string dump() const override;
 
  protected:

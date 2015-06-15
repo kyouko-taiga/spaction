@@ -71,6 +71,17 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     /// subformulae + `1`.
     virtual std::size_t height() const = 0;
 
+    /// Indicates whether the formula is LTL[<=]
+    virtual bool is_infltl() const = 0;
+    /// Indicates whether the formula is LTL[>]
+    virtual bool is_supltl() const = 0;
+    /// Indicates whether the formula is LTL (i.e. both LTL[<=] and LTL[>])
+    bool is_ltl() const { return is_infltl() and is_supltl(); }
+    /// Indicates whether the formula is propositional (i.e. has no temporal operator)
+    virtual bool is_propositional() const = 0;
+    /// Indicates whether the formula is in NNF
+    virtual bool is_nnf() const = 0;
+
     /// Returns a string representation of the formula.
     virtual std::string dump() const = 0;
 
