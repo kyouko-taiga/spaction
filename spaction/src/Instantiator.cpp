@@ -29,6 +29,7 @@
 namespace spaction {
 
 CltlFormulaPtr Instantiator::operator()(const CltlFormulaPtr &formula, unsigned int n) {
+    _preprocess(formula, n);
     _n = n;
     formula->accept(*this);
     return _result;
@@ -116,14 +117,19 @@ CltlFormulaPtr InstantiateInf::_rewrite_cost_release(const CltlFormulaPtr &formu
                                                      const CltlFormulaPtr &left,
                                                      const CltlFormulaPtr &right,
                                                      Instantiator *instantiator) const {
-    throw std::domain_error("Cost Release encountered: inf instantiation should be applied to CTLT[<=] formulae only");
+    throw std::domain_error("Cost Release encountered: inf instantiation should be applied to CLTL[<=] formulae only");
+}
+
+void InstantiateInf::_preprocess(const CltlFormulaPtr &formula, unsigned int n) const {
+    if (! formula->is_infltl())
+        throw std::domain_error("ERROR: inf instantiation should be applied to CLTL[<=] formulae only");
 }
 
 CltlFormulaPtr InstantiateSup::_rewrite_cost_until(const CltlFormulaPtr &formula,
                                                    const CltlFormulaPtr &left,
                                                    const CltlFormulaPtr &right,
                                                    Instantiator *instantiator) const {
-    throw std::domain_error("Cost Until encountered: sup instantiation should be applied to CTLT[>] formulae only");
+    throw std::domain_error("Cost Until encountered: sup instantiation should be applied to CLTL[>] formulae only");
 }
 
 CltlFormulaPtr InstantiateSup::_rewrite_cost_release(const CltlFormulaPtr &formula,
@@ -150,6 +156,11 @@ CltlFormulaPtr InstantiateSup::_rewrite_cost_release(const CltlFormulaPtr &formu
     const CltlFormulaPtr &and_formula = factory->make_and(left, next_rec_formula);
     // (left && X(formula[n-1])) R right
     return factory->make_release(and_formula, right);
+}
+
+void InstantiateSup::_preprocess(const CltlFormulaPtr &formula, unsigned int n) const {
+    if (! formula->is_supltl())
+        throw std::domain_error("ERROR: sup instantiation should be applied to CLTL[>] formulae only");
 }
 
 }  // namespace spaction
