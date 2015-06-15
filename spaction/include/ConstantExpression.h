@@ -44,6 +44,11 @@ class ConstantExpression : public CltlFormula {
 
     inline std::size_t height() const { return 1; }
 
+    inline bool is_infltl() const { return true; }
+    inline bool is_supltl() const { return true; }
+    inline bool is_propositional() const { return true; }
+    inline bool is_nnf() const { return true; }
+
     std::string dump() const override;
 
  protected:

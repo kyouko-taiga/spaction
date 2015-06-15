@@ -134,6 +134,39 @@ std::unordered_multiset<const CltlFormula*> BinaryOperator::_leaves() const {
     return leaves;
 }
 
+bool BinaryOperator::is_infltl() const {
+    if (_type == kCostRelease) {
+        return false;
+    } else {
+        return _left->is_infltl() and _right->is_infltl();
+    }
+}
+
+bool BinaryOperator::is_supltl() const {
+    if (_type == kCostUntil) {
+        return false;
+    } else {
+        return _left->is_supltl() and _right->is_supltl();
+    }
+}
+
+bool BinaryOperator::is_propositional() const {
+    switch (_type) {
+        case BinaryOperator::kUntil:
+        case BinaryOperator::kRelease:
+        case BinaryOperator::kCostUntil:
+        case BinaryOperator::kCostRelease:
+            return false;
+        case BinaryOperator::kOr:
+        case BinaryOperator::kAnd:
+            return _left->is_propositional() and _right->is_propositional();
+    }
+}
+
+bool BinaryOperator::is_nnf() const {
+    return _left->is_nnf() and _right->is_nnf();
+}
+
 void BinaryOperator::accept(CltlFormulaVisitor &visitor) {
     // explicitly cast shared_from_this to the a derived class shared_ptr
     visitor.visit(std::dynamic_pointer_cast<BinaryOperator>(shared_from_this()));

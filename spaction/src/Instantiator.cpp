@@ -29,6 +29,7 @@
 namespace spaction {
 
 CltlFormulaPtr Instantiator::operator()(const CltlFormulaPtr &formula, unsigned int n) {
+    _preprocess(formula, n);
     _n = n;
     formula->accept(*this);
     return _result;
@@ -75,8 +76,6 @@ void Instantiator::visit(const std::shared_ptr<BinaryOperator> &formula) {
         case BinaryOperator::kCostRelease:
             // (f RN g)[n] = (f[n] RN g[n])[n]
             _result = _rewrite_cost_release(formula, left, right, instantiator);
-            // \todo but should not happen here
-//            throw std::domain_error("shouldn't encounter cost release during inf instantiation");
             break;
     }
 
@@ -98,34 +97,39 @@ CltlFormulaPtr InstantiateInf::_rewrite_cost_until(const CltlFormulaPtr &formula
     }
 
     // if f and g are LTL and n > 0 then
-    // (f UN g)[n] = f U (g || (!f && X((f UN g)[n-1])))
+    // (f UN g)[n] = (f || X(f UN g)[n-1]) U g
 
-    // !left
-    const CltlFormulaPtr &not_left = factory->make_not(left);
-    // f[n-1]
+    // @todo    consider using the following semantically equivalent:
+    //              f U (f || (!f && X(f U g)[n-1]))
+    //          more complicated, but it might produce more deterministic automata
+
+    // recursive call formula[n-1]
     const CltlFormulaPtr &rec_formula = (*instantiator)(formula, _n-1);
-    // X(f[n-1])
+    // X(formula[n-1])
     const CltlFormulaPtr &next_rec_formula = factory->make_next(rec_formula);
-    // !left && X(f[n-1])
-    const CltlFormulaPtr &big_and = factory->make_and(not_left, next_rec_formula);
-    // right || (!left && X([n-1]))
-    const CltlFormulaPtr &big_or = factory->make_or(right, big_and);
-    // left U (right || (!left && X(f[n-1])))
-    return factory->make_until(left, big_or);
+    // left || X(formula[n-1])
+    const CltlFormulaPtr &or_formula = factory->make_or(left, next_rec_formula);
+    // (left || X(formula[n-1])) U right
+    return factory->make_until(or_formula, right);
 }
 
 CltlFormulaPtr InstantiateInf::_rewrite_cost_release(const CltlFormulaPtr &formula,
                                                      const CltlFormulaPtr &left,
                                                      const CltlFormulaPtr &right,
                                                      Instantiator *instantiator) const {
-    throw std::domain_error("Cost Release encountered: inf instantiation should be applied to CTLT[<=] formulae only");
+    throw std::domain_error("Cost Release encountered: inf instantiation should be applied to CLTL[<=] formulae only");
+}
+
+void InstantiateInf::_preprocess(const CltlFormulaPtr &formula, unsigned int n) const {
+    if (! formula->is_infltl())
+        throw std::domain_error("ERROR: inf instantiation should be applied to CLTL[<=] formulae only");
 }
 
 CltlFormulaPtr InstantiateSup::_rewrite_cost_until(const CltlFormulaPtr &formula,
                                                    const CltlFormulaPtr &left,
                                                    const CltlFormulaPtr &right,
                                                    Instantiator *instantiator) const {
-    throw std::domain_error("Cost Until encountered: sup instantiation should be applied to CTLT[>] formulae only");
+    throw std::domain_error("Cost Until encountered: sup instantiation should be applied to CLTL[>] formulae only");
 }
 
 CltlFormulaPtr InstantiateSup::_rewrite_cost_release(const CltlFormulaPtr &formula,
@@ -142,20 +146,21 @@ CltlFormulaPtr InstantiateSup::_rewrite_cost_release(const CltlFormulaPtr &formu
     }
 
     // if f and g are LTL and n > 0 then
-    // (f RN g)[n] = (f R (g && (!f || X((f RN g)[n-1])))
+    // (f RN g)[n] = (f && X(f RN g)[n-1]) R g
 
-    // !left
-    const CltlFormulaPtr &not_left = factory->make_not(left);
-    // f[n-1]
+    // recursive call formula[n-1]
     const CltlFormulaPtr &rec_formula = (*instantiator)(formula, _n-1);
-    // X(f[n-1])
+    // X(formula[n-1])
     const CltlFormulaPtr &next_rec_formula = factory->make_next(rec_formula);
-    // !left || X(f[n-1])
-    const CltlFormulaPtr &big_or = factory->make_or(not_left, next_rec_formula);
-    // right && (!left || X(f[n-1]))
-    const CltlFormulaPtr &big_and = factory->make_and(right, big_or);
-    // left R (right && (!left || X(f[n-1])))
-    return factory->make_release(left, big_and);
+    // left && X(formula[n-1])
+    const CltlFormulaPtr &and_formula = factory->make_and(left, next_rec_formula);
+    // (left && X(formula[n-1])) R right
+    return factory->make_release(and_formula, right);
+}
+
+void InstantiateSup::_preprocess(const CltlFormulaPtr &formula, unsigned int n) const {
+    if (! formula->is_supltl())
+        throw std::domain_error("ERROR: sup instantiation should be applied to CLTL[>] formulae only");
 }
 
 }  // namespace spaction

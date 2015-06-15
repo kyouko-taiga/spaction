@@ -29,6 +29,7 @@ namespace automata {
 
 CltlTranslator::CltlTranslator(const CltlFormulaPtr &formula) :
     _formula(formula->to_nnf()), _nb_acceptances(0), _nb_counters(0) {
+        assert(_formula->is_nnf());
         this->map_costop_to_counters(_formula);
         _automaton = CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem>(_nb_counters, _nb_acceptances);
 }

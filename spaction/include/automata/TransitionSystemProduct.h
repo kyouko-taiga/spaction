@@ -25,39 +25,6 @@
 namespace spaction {
 namespace automata {
 
-/// A smart pointer manager with unique ownership semantics.
-template<typename T>
-class RefControlBlock : public ControlBlock<T> {
- public:
-    explicit RefControlBlock(const std::function<void(const T *)> &d): _destroy(d) {}
-    ~RefControlBlock() {
-        for (auto &r : _pool) {
-            _destroy(r);
-        }
-//        _pool.clean();
-    }
-
-    /// Ensures that the declared object is not already managed.
-    /// Throws if already managed.
-    virtual void declare(const T *t) override {
-        if (_pool.count(t))
-            throw "object is already managed";
-
-        _pool.insert(t);
-    }
-
-    /// Called when an object is no longer managed.
-    virtual void release(const T *t) override {
-        _pool.erase(t);
-        _destroy(t);
-    }
-
-private:
-    /// @todo use another structure than std::set
-    std::set<const T *> _pool;
-    std::function<void(const T *)> _destroy;
-};
-
 /// The product of two states, merely a typedef for now
 template<typename A, typename B> using StateProd = std::pair<A, B>;
 
@@ -77,6 +44,7 @@ class ILabelProd {
     virtual const rhs_type rhs(const product_type &) const = 0;
 
     virtual const product_type build(const lhs_type &, const rhs_type &) const = 0;
+    virtual bool is_false(const product_type &) const = 0;
 };
 
 /// The class for a product of transition systems.
@@ -181,6 +149,10 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
                 _rhs = _rend;
             }
             assert((_lhs != _lend) or (!(_rhs != _rend)));
+
+            while (!done() && conditions_invalid()) {
+                incr();
+            }
         }
 
         virtual ~TransitionBaseIterator() { }
@@ -211,17 +183,33 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
         }
 
         virtual const typename super_type::TransitionBaseIterator& operator++() override {
+            incr();
+            while (!done() && conditions_invalid()) {
+                incr();
+            }
+            return *this;
+        }
+
+    protected:
+        bool done() const { return !(_lhs != _lend or _rhs != _rend); }
+        bool conditions_invalid() {
+            TransitionPtr<Q1, S1> l = *_lhs;
+            TransitionPtr<Q2, S2> r = *_rhs;
+            auto cond = _ts->_helper.build(l->label(), r->label());
+            return _ts->_helper.is_false(cond);
+        }
+
+        void incr() {
             assert(_lhs != _lend);
             if (++_rhs != _rend)
-                return *this;
+                return;
 
             if (++_lhs != _lend) {
                 _rhs = _rbegin;
                 assert(_rhs != _rend);
-                return *this;
+                return;
             }
             assert((_lhs != _lend) or (!(_rhs != _rend)));
-            return *this;
         }
 
      protected:

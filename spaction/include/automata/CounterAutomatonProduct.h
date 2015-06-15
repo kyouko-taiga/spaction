@@ -69,6 +69,7 @@ public:
     virtual ~IAutLabelProd() { }
 
     virtual product_type build(const lhs_type &, const rhs_type &) const = 0;
+    virtual bool is_false(const product_type &) const = 0;
     virtual lhs_type lhs(const product_type &) const = 0;
     virtual rhs_type rhs(const product_type &) const = 0;
 };
@@ -104,8 +105,9 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
     using P = typename ALabel<L1, L2, LabelProduct>::autprod_label;
 
     explicit TSLabelProdImpl() {}
-    explicit TSLabelProdImpl(std::size_t counter_offset, std::size_t acceptance_offset)
-    : _lhandler(LabelProduct<L1, L2>())
+    template<typename... Args>
+    explicit TSLabelProdImpl(std::size_t counter_offset, std::size_t acceptance_offset, Args... args)
+    : _lhandler(LabelProduct<L1, L2>(args...))
     , _counter_offset(counter_offset)
     , _acceptance_offset(acceptance_offset) {}
 
@@ -160,6 +162,10 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
 
         // rebuild a CounterLabel
         return CounterLabel<P>(_lhandler.build(l.letter(), r.letter()), counters, accs);
+    }
+
+    bool is_false(const CounterLabel<P> &prod) const override {
+        return _lhandler.is_false(prod.letter());
     }
 
  private:
@@ -226,15 +232,17 @@ class CounterAutomatonProduct: public CAPBase<Q1, S1, TS1, Q2, S2, TS2, LabelPro
 
  public:
     /// Constructor from two other CounterAutomata
+    template<typename... Args>
     explicit CounterAutomatonProduct(CounterAutomaton<Q1, S1, TS1> &lhs,
-                                     CounterAutomaton<Q2, S2, TS2> &rhs)
+                                     CounterAutomaton<Q2, S2, TS2> &rhs,
+                                     Args... args)
     : super_type(lhs.num_counters() + rhs.num_counters(),
                  lhs.num_acceptance_sets() + rhs.num_acceptance_sets()) {
         super_type::_transition_system =
             new typename super_type::transition_system_t(
                 lhs.transition_system(),
                 rhs.transition_system(),
-                TSLabelType(lhs.num_counters(), lhs.num_acceptance_sets()));
+                TSLabelType(lhs.num_counters(), lhs.num_acceptance_sets(), args...));
         this->set_initial_state(StateProd<Q1, Q2>(*lhs.initial_state(), *rhs.initial_state()));
     }
 
@@ -267,6 +275,9 @@ class _AutLabelProduct<CltlTranslator::FormulaList, CltlTranslator::FormulaList>
                                 CltlTranslator::FormulaList,
                                 CltlTranslator::FormulaList>;
 
+    explicit _AutLabelProduct(): _AutLabelProduct(nullptr) {}
+    explicit _AutLabelProduct(CltlFormulaFactory *f): _factory(f) {}
+
     virtual product_type build(const lhs_type &l, const rhs_type &r) const override {
         if (l.empty() and r.empty())
             return {};
@@ -280,6 +291,11 @@ class _AutLabelProduct<CltlTranslator::FormulaList, CltlTranslator::FormulaList>
         assert(std::adjacent_find(r.begin(), r.end()) == r.end());
 
         std::set_union(l.begin(), l.end(), r.begin(), r.end(), std::back_inserter(res), compare);
+        product_type::const_iterator it;
+        // remove 'true' constants (in fact, this should have been done earlier...)
+        while ((it = std::find(res.begin(), res.end(), _factory->make_constant(true))) != res.end()) {
+            res.erase(it);
+        }
         /// Check that the merge yields a union
         assert(std::is_sorted(res.begin(), res.end(), compare));
         assert(std::adjacent_find(res.begin(), res.end()) == res.end());
@@ -317,16 +333,135 @@ class _AutLabelProduct<CltlTranslator::FormulaList, CltlTranslator::FormulaList>
     virtual rhs_type rhs(const product_type &p) const override {
         return p;
     }
+
+    virtual bool is_false(const product_type &prod) const override {
+        if (std::find(prod.begin(), prod.end(), _factory->make_constant(false)) != prod.end()) {
+            return true;
+        }
+        return false;
+    }
+
+ private:
+    CltlFormulaFactory *_factory;
+};
+
+}  // namespace automata
+}  // namespace spaction
+
+#include <spot/ltlast/multop.hh>
+#include <spot/tgba/formula2bdd.hh>
+#include "cltl2spot.h"
+
+namespace spaction {
+namespace automata {
+
+/// A specialization to combine the CounterAutomata produced by CltlTranslator, and the TGBA from
+/// SPOT, through the adapter tgba_ca.
+template<>
+class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
+    public IAutLabelProd<   CltlTranslator::FormulaList,
+                            bdd,
+                            CltlTranslator::FormulaList> {
+ public:
+    /// typdef for the base class
+    using Base = IAutLabelProd< CltlTranslator::FormulaList,
+                                bdd,
+                                CltlTranslator::FormulaList>;
+
+    explicit _AutLabelProduct(): _AutLabelProduct(nullptr, nullptr) {}
+    explicit _AutLabelProduct(spot::bdd_dict *d, CltlFormulaFactory *f): _dict(d), _factory(f) {}
+
+    ~_AutLabelProduct() {
+        if (_dict != nullptr)
+            _dict->unregister_all_my_variables(this);
+    }
+
+    virtual product_type build(const lhs_type &l, const rhs_type &r) const override {
+        // translate the bdd to a FormulaList
+        lhs_type rr;
+
+        // translate the bdd to a spot LTL formula
+        const spot::ltl::formula *fspot = spot::bdd_to_formula(r, _dict);
+        // convert the spot formula to a spaction formula
+        CltlFormulaPtr fspaction = spot2cltl(fspot, _factory);
+
+        // "unfold" the big and formula to a list of conjuncts
+        std::stack<CltlFormulaPtr> todo;
+        todo.push(fspaction);
+        while (!todo.empty()) {
+            CltlFormulaPtr f = todo.top();
+            todo.pop();
+
+            if (f->formula_type() == CltlFormula::kBinaryOperator) {
+                const BinaryOperator *bf = static_cast<const BinaryOperator *>(f.get());
+                assert(bf);
+                assert(bf->operator_type() == BinaryOperator::kAnd);
+                todo.push(bf->left());
+                todo.push(bf->right());
+                continue;
+            }
+            
+            if (f->formula_type() == CltlFormula::kAtomicProposition) {
+                rr.push_back(f);
+                continue;
+            }
+
+            if (f->formula_type() == CltlFormula::kUnaryOperator) {
+                const UnaryOperator *uf = static_cast<const UnaryOperator *>(f.get());
+                assert(uf);
+                assert(uf->operator_type() == UnaryOperator::kNot);
+                rr.push_back(f);
+                continue;
+            }
+            
+            assert(false);
+        }
+
+        // sort the produced list
+        auto compare = CltlTranslator::get_formula_order();
+        std::sort(rr.begin(), rr.end(), compare);
+
+        // call the version to combine two FormulaList
+        return _AutLabelProduct<lhs_type, lhs_type>(_factory).build(l, rr);
+    }
+
+    /// @todo   these definitions of lhs and rhs may not yield the expected results, but it's rather
+    ///         a problem with the current implementation of UndeterministicTransitionSystem.
+    ///         When asking the succs with label L, we actually want to iterate over all the
+    ///         transition with label compatible with L, rather than L exactly.
+    virtual lhs_type lhs(const product_type &p) const override {
+        return p;
+    }
+    virtual rhs_type rhs(const product_type &p) const override {
+        spot::ltl::multop::vec *vector = new spot::ltl::multop::vec();
+        for (auto &f : p) {
+            vector->push_back(cltl2spot(f));
+        }
+        const spot::ltl::formula *fspot = spot::ltl::multop::instance(spot::ltl::multop::And, vector);
+        return spot::formula_to_bdd(fspot, _dict, (void*)this);
+    }
+
+    virtual bool is_false(const product_type &prod) const override {
+        if (std::find(prod.begin(), prod.end(), _factory->make_constant(false)) != prod.end()) {
+            return true;
+        }
+        return false;
+    }
+
+ private:
+    spot::bdd_dict *_dict;
+    CltlFormulaFactory *_factory;
 };
 
 template<typename A, typename B> using AutLabelProduct = _AutLabelProduct<A, B>;
 
 /// A factory function
 template<   typename Q1, typename S1, template<typename Q1_, typename S1_> class TS1,
-            typename Q2, typename S2, template<typename Q2_, typename S2_> class TS2>
+            typename Q2, typename S2, template<typename Q2_, typename S2_> class TS2,
+            typename... Args>
 CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>
-make_aut_product(CounterAutomaton<Q1, S1, TS1> &l, CounterAutomaton<Q2, S2, TS2> &r) {
-    return CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>(l, r);
+make_aut_product(CounterAutomaton<Q1, S1, TS1> &l, CounterAutomaton<Q2, S2, TS2> &r, Args... args) {
+    return CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>(l, r, args...);
 }
 
 }  // namespace automata

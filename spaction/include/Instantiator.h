@@ -64,6 +64,9 @@ class Instantiator : public CltlFormulaVisitor {
                                                  const CltlFormulaPtr &left,
                                                  const CltlFormulaPtr &right,
                                                  Instantiator *instantiator) const = 0;
+
+    /// A hook for preprocessing.
+    virtual void _preprocess(const CltlFormulaPtr &formula, unsigned int n) const { }
 };
 
 /// Instantiate a CLTL[<=] formula (raise an exception if a Cost Release is encountered)
@@ -81,9 +84,11 @@ class InstantiateInf : public Instantiator {
                                                  const CltlFormulaPtr &left,
                                                  const CltlFormulaPtr &right,
                                                  Instantiator *instantiator) const;
+
+    virtual void _preprocess(const CltlFormulaPtr &formula, unsigned int n) const override;
 };
 
-/// Instantiate a CLTL[>] formula (raise an exception if a Cost Release is encountered)
+/// Instantiate a CLTL[>] formula (raise an exception if a Cost Until is encountered)
 class InstantiateSup : public Instantiator {
  public:
     virtual inline Instantiator *copy() const { return new InstantiateSup(); }
@@ -98,6 +103,8 @@ class InstantiateSup : public Instantiator {
                                                  const CltlFormulaPtr &left,
                                                  const CltlFormulaPtr &right,
                                                  Instantiator *instantiator) const;
+
+    virtual void _preprocess(const CltlFormulaPtr &formula, unsigned int n) const override;
 };
 
 }  // namespace spaction
