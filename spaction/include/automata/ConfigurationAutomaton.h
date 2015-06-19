@@ -76,6 +76,13 @@ struct mycompare<std::pair<A,B>> {
     }
 };
 
+/// a simple struct to handle a potentially infinite value
+/// @todo make it a union
+typedef struct {
+    bool infinite;
+    unsigned int value;
+} value_t;
+
 /// a class to represent a configuration of a CA
 /// i.e. a tuple <s,v,c> where
 ///     * s is a state of the automaton
@@ -98,8 +105,7 @@ class MinMaxConfiguration {
 
     explicit MinMaxConfiguration(const Q &q, bool is_bounded, unsigned int value, const std::vector<unsigned int> &values)
     : _state(q)
-    , _unbounded(!is_bounded)
-    , _value(value)
+    , _value({!is_bounded, value})
     , _counter_values(values)
     {
         assert(_counter_values.size() > 0);
@@ -109,29 +115,29 @@ class MinMaxConfiguration {
 
     /// getters
     const Q &state() const { return _state; }
-    bool is_bounded() const { return !_unbounded; }
-    unsigned int current_value() const { return _value; }
+    bool is_bounded() const { return !_value.infinite; }
+    unsigned int current_value() const { return _value.value; }
     const std::vector<unsigned int> &values() const { return _counter_values; }
 
     /// usual comparison operators
     //@todo make them external operators?
     bool operator==(const MinMaxConfiguration &other) const {
         return  Comp()(_state, other._state) == 0
-            and _unbounded == other._unbounded
-            and _value == other._value
+            and _value.infinite == other._value.infinite
+            and _value.value == other._value.value
             and _counter_values == other._counter_values;
     }
 
     bool operator<(const MinMaxConfiguration &other) const {
         if (Comp()(_state, other._state) == 0) {
-            if (_unbounded == other._unbounded) {
-                if (_value == other._value) {
+            if (_value.infinite == other._value.infinite) {
+                if (_value.value == other._value.value) {
                     return _counter_values < other._counter_values;
                 } else {
-                    return _value < other._value;
+                    return _value.value < other._value.value;
                 }
             } else {
-                return _unbounded < other._unbounded;
+                return _value.infinite < other._value.infinite;
             }
         } else {
             return Comp()(_state, other._state) < 0;
@@ -142,8 +148,7 @@ class MinMaxConfiguration {
     // the state of the automaton
     const Q _state;
     // the current value (must keep track of infinity)
-    bool _unbounded;
-    unsigned int _value;
+    value_t _value;
     // the current values of the counters
     std::vector<unsigned int> _counter_values;
 };
@@ -401,14 +406,6 @@ template<typename Q, typename S, template<typename, typename> class TS>
 struct _MinMaxConfigTS<MinMaxConfiguration<Q>, S, TS> {
     using type = MinMaxConfigTS<Q,S,TS>;
 };
-
-/// a simple struct to handle a potentially infinite value
-/// @todo make it a union?
-/// @todo use it in the class MinMaxConfiguration
-typedef struct {
-    bool infinite;
-    unsigned int value;
-} value_t;
 
 /// A template typedef to reorder the template arguments
 template<template<typename, typename> class TS>
