@@ -24,8 +24,15 @@
 
 namespace spaction {
 
+/// a function that converts a LTL formula in spaction representation to spot representation
+/// @param      a LTL formula
+/// @return     the same \a formula in spot format
 const spot::ltl::formula *cltl2spot(const CltlFormulaPtr &formula);
 
+/// a function that converts a LTL formula in spot representation to spaction representation
+/// @param      a LTL formula
+/// @param      a factory for the spaction formula
+/// @return     the same \a formula in spaction format
 CltlFormulaPtr spot2cltl(const spot::ltl::formula *formula, CltlFormulaFactory *factory);
 
 }  // namespace spaction

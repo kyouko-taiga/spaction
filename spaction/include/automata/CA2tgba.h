@@ -52,6 +52,7 @@ namespace automata {
 /// forward declaration
 template<typename, typename, template<typename, typename> class> class CA2tgba;
 
+/// a class to embed Counter Automata states as spot TGBA states
 template<typename Q>
 class state_adapter : public spot::state {
 public:
@@ -85,15 +86,20 @@ protected:
     ~state_adapter() {}
 };
 
+/// A helper class for the conversion of Counter Automata letters to spot bdd letters.
 template<typename Q, typename S, template<typename, typename> class TS>
 struct _succ_helper {};
-
+/// A specialization for Counter Automata produced from CLTL formulae.
 template<typename Q, template<typename, typename> class TS>
 class _succ_helper<Q, CltlTranslator::FormulaList, TS> {
     using S = CltlTranslator::FormulaList;
 public:
     explicit _succ_helper(const CA2tgba<Q,S,TS> *t): _ts(t) {}
 
+    /// Transforms the letter (conditions) of a CA transition to a spot condition in bdd.
+    /// @note       in practice, a condition is a conjunction of atomic propositions
+    /// @param      the transition whose condition is to be converted
+    /// @return     a bdd equivalent to the condition of \a trans
     bdd get_condition(const TransitionPtr<Q, CounterLabel<S>> &trans) const {
         const spot::ltl::formula * fspot = spot::ltl::constant::true_instance();
         for (auto f : trans->label().letter()) {
@@ -106,6 +112,7 @@ private:
     const CA2tgba<Q,S,TS> *_ts;
 };
 
+/// A class to embed CA transition iterator as spot TGBA transition iterators
 template<typename Q, typename S, template<typename, typename> class TS>
 class succiter_adapter : public spot::tgba_succ_iterator {
 public:

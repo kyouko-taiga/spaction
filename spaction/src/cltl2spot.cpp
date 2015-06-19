@@ -104,6 +104,7 @@ class spot_transformer : public CltlFormulaVisitor {
 };
 
 const spot::ltl::formula *cltl2spot(const CltlFormulaPtr &formula) {
+    assert(formula->is_ltl());
     spot_transformer visitor;
     formula->accept(visitor);
     return visitor.get();
@@ -223,6 +224,7 @@ class cltl_transformer : public spot::ltl::visitor {
 };
 
 CltlFormulaPtr spot2cltl(const spot::ltl::formula *f, CltlFormulaFactory *factory) {
+    assert(f->is_ltl_formula());
     cltl_transformer v(factory);
     f->accept(v);
     return v.get();

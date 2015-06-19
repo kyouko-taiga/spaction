@@ -137,6 +137,7 @@ bool spot_dve_check(const std::string &formula, const std::string &modelfile) {
 
 // @param formula is assumed to be CLTL[<=]
 static bool spot_check_inf(const CltlFormulaPtr &formula, int n, const std::string &modelname) {
+    assert(formula->is_infltl());
     // instantiate the cost formula
     std::string ltl_string;
     InstantiateInf instanciator;
@@ -151,6 +152,7 @@ static bool spot_check_inf(const CltlFormulaPtr &formula, int n, const std::stri
 // @param   formula is assumed to be CLTL[<=]
 // @todo    do not use 'blind' dichotomy, use bound |aut| \times |system|
 unsigned int find_bound_min_dichoto(const CltlFormulaPtr &formula, const std::string &modelname) {
+    assert(formula->is_infltl());
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
     unsigned int max = 0;
@@ -180,6 +182,7 @@ unsigned int find_bound_min_dichoto(const CltlFormulaPtr &formula, const std::st
 
 // @param formula is assumed to be CLTL[>]
 static bool spot_check_sup(const CltlFormulaPtr &formula, int n, const std::string &modelname) {
+    assert(formula->is_supltl());
     // instantiate the cost formula
     std::string ltl_string;
     InstantiateSup instanciator;
@@ -193,6 +196,7 @@ static bool spot_check_sup(const CltlFormulaPtr &formula, int n, const std::stri
 // @todo    a +1 is probably missing around here
 // @todo    do not use 'blind' dichotomy, use bound |aut| \times |system|
 unsigned int find_bound_max_dichoto(const CltlFormulaPtr &formula, const std::string &modelname) {
+    assert(formula->is_supltl());
     // min holds the greatest tested number for which spot_check returns true
     // max holds the smallest tested number for which spot_check returns false
     unsigned int max = 0;
@@ -220,9 +224,11 @@ unsigned int find_bound_max_dichoto(const CltlFormulaPtr &formula, const std::st
     return min;
 }
 
+// @param   formula is assumed to be CLTL[>]
 automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
-                            spot::kripke *model,
-                            spot::bdd_dict *dict) {
+                                 spot::kripke *model,
+                                 spot::bdd_dict *dict) {
+    assert(formula->is_supltl());
     // sup \emptyset = 0
     automata::value_t res = {false, 0};
     CltlFormulaPtr phi = formula;
@@ -247,7 +253,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
 
     trace << "model loaded as a CA" << std::endl;
 
-    // determine the bound
+    // determine the bound to use (|model| \times |automaton of the formula|)
     //@{
     // compute model size (number of nodes)
     unsigned int model_size = spot::stats_reachable(model).states;
@@ -265,12 +271,13 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
         }
     }
     unsigned int upper_bound = model_size * formula_aut_size;
+    //@}
 
     // the CLTL2LTL instantiator
     Instantiator *instantiator = new InstantiateSup();
 
     bool is_nonempty = false;
-    int i = 0; // counts the number of runs of the loop
+    int i = 0;  // counts the number of runs of the loop
     bool first_pass = true;
     do {
         i++;
@@ -280,6 +287,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
 
         trace << "formula translated to automaton" << std::endl;
 
+// @todo merge to logging mechanism
 #ifdef TRACE
         std::stringstream ca_file;
         ca_file << "ca_" << i << ".dot";
@@ -288,6 +296,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
 
         auto prod = automata::make_aut_product(translator.get_automaton(), *model_ca, dict, formula->creator());
 
+// @todo merge to logging mechanism
 #ifdef TRACE
         std::stringstream prod_file;
         prod_file << "prod_" << i << ".dot";
@@ -337,12 +346,6 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
                 res.value = value.max;
                 CltlFormulaPtr phin = (*instantiator)(formula, res.value+1);
                 phi = formula->creator()->make_and(formula, phin);
-
-
-//                CltlFormulaPtr notphi = formula->creator()->make_not(formula);
-//                CltlFormulaPtr notphin = (*instantiator)(notphi, res.value);
-//                CltlFormulaPtr phin = notphi->creator()->make_not(notphin);
-//                phi = formula->creator()->make_and(formula, phin);
             }
             delete run;
 
@@ -363,9 +366,11 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
     return res;
 }
 
+// @param   formula is assumed to be CLTL[>]
 automata::value_t find_max_direct(const CltlFormulaPtr &formula,
                                   spot::kripke *model,
                                   spot::bdd_dict *dict) {
+    assert(formula->is_supltl());
     assert(model);
     automata::tgba_ca *model_ca = new automata::tgba_ca(model);
 
@@ -380,9 +385,9 @@ automata::value_t find_max_direct(const CltlFormulaPtr &formula,
     auto sup_comput = automata::make_sup_comput(config_aut);
 
     // compute model size (number of nodes)
-    std::size_t model_size = spot::stats_reachable(model).states;
+    unsigned int model_size = spot::stats_reachable(model).states;
     // compute formula automaton size (number of nodes)
-    std::size_t formula_aut_size = 0;
+    unsigned int formula_aut_size = 0;
     for (auto state : translator.get_automaton().transition_system()->states()) {
         ++formula_aut_size;
     }
@@ -390,6 +395,7 @@ automata::value_t find_max_direct(const CltlFormulaPtr &formula,
     return sup_comput.find_supremum(model_size * formula_aut_size);
 }
 
+/// A CLTL formula visitor to collect the AP used by a formula.
 class APCollector : public CltlFormulaVisitor {
  public:
     virtual ~APCollector() { }
@@ -414,6 +420,8 @@ class APCollector : public CltlFormulaVisitor {
     spot::ltl::atomic_prop_set _res;
 };
 
+// @param   formula is assumed to be CLTL[>]
+// @param   modelname is the path to a .dve model
 unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname) {
     assert(formula->is_supltl());
     // get atomic propositions from formula
@@ -433,7 +441,7 @@ unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &mo
     // @todo add a flag to select the algo to use from the command-line
     automata::value_t result = find_max_cegar(formula, model, &bdd_dictionnary);
 //    automata::value_t result = find_max_direct(formula, model, &bdd_dictionnary);
-    // delete model
+    // delete the model
     delete model;
     if (result.infinite)
         return -1;
@@ -441,6 +449,7 @@ unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &mo
         return result.value;
 }
 
+/// a helper function that loads a LTL formula as a counterless CA (TGBA seen as a CA)
 automata::tgba_ca *load_formula(const std::string &formula) {
     // spot parsing of the instantiated formula
     spot::ltl::parse_error_list pel;

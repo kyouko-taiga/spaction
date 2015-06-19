@@ -39,12 +39,22 @@ bool spot_dve_check(const std::string &formula, const std::string &modelfile);
 
 /// finds the min bound of the given formula over the given model
 /// in practice, uses CLTL[<=] formulae
+/// @param      a CLTL[<=] formula
+/// @param      the path to the DVE model which \a formula is tested against
+/// @return     \inf \a formula (u)  for u accepted by the DVE model
 unsigned int find_bound_min(const CltlFormulaPtr &formula, const std::string &modelname);
 /// finds the min bound of the given formula over the given model
 /// in practice, uses CLTL[>] formulae
+/// @param      a CLTL[>] formula
+/// @param      the path to the DVE model which \a formula is tested against
+/// @return     \sup \a formula (u)  for u accepted by the DVE model
 unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname);
 
-/// use a tgba as a CounterAutomaton
+/// loads a LTL formula as a CA, through spot
+/// @todo currently unused, should we keep it?
+/// @param      a LTL formula given as a string
+/// @return     a pointer to a newly allocated CA encapsulating the TGBA of \a formula
+///             the caller is responsible for the deletion of this CA
 automata::tgba_ca *load_formula(const std::string &formula);
 
 }  // namespace spaction
