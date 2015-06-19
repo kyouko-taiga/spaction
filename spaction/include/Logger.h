@@ -26,7 +26,48 @@
 
 namespace spaction {
 
-/// A class that represents a Cost LTL formula.
+/// A ostream that outputs nothing.
+//@{
+/// @remarks
+///             the code below is taken from
+///             http://stackoverflow.com/questions/760301/implementing-a-no-op-stdostream
+///             I just beautified it to match our style, and turned it to a singleton.
+template<class cT, class traits = std::char_traits<cT>>
+class basic_nullbuf: public std::basic_streambuf<cT, traits> {
+    typename traits::int_type overflow(typename traits::int_type c) {
+        return traits::not_eof(c);  // indicate success
+    }
+};
+
+template<class cT, class traits = std::char_traits<cT>>
+class basic_nullstream: public std::basic_ostream<cT, traits> {
+ public:
+    basic_nullstream()
+    : std::basic_ios<cT, traits>(&_m_sbuf)
+    , std::basic_ostream<cT, traits>(&_m_sbuf) {
+        this->init(&_m_sbuf);
+    }
+
+    static basic_nullstream &instance() {
+        std::call_once(_once_flag, [] {_instance.reset(new basic_nullstream);});
+        return *_instance.get();
+    }
+
+ private:
+    basic_nullbuf<cT, traits> _m_sbuf;
+
+    static std::unique_ptr<basic_nullstream> _instance;
+    static std::once_flag _once_flag;
+};
+
+typedef basic_nullstream<char>      nullstream;
+typedef basic_nullstream<wchar_t>   wnullstream;
+
+template<class cT, class traits> std::unique_ptr<basic_nullstream<cT, traits>> basic_nullstream<cT, traits>::_instance;
+template<class cT, class traits> std::once_flag basic_nullstream<cT, traits>::_once_flag;
+//@}
+
+/// A class for logging.
 /// @remarks
 ///     This class is a singleton, but is templated with the output stream it
 ///     should wright to. As a result, it will initialize once per output
@@ -36,76 +77,109 @@ namespace spaction {
 template<std::ostream &os> class Logger {
 public:
     /// Enumeration of the log levels.
-    enum class LogLevel {DEBUG, INFO, WARNING, ERROR, FATAL};
-    
+    enum class LogLevel: char {
+        kDEBUG      = 4,
+        kINFO       = 3,
+        kWARNING    = 2,
+        kERROR      = 1,
+        kFATAL      = 0
+    };
+
     virtual ~Logger() {}
-    
+
     /// Returns an instance of the logger.
     static Logger &instance() {
         std::call_once(_once_flag, [] {_instance.reset(new Logger);});
         return *_instance.get();
     }
-    
+
     /// Logs a message with the given level.
-    void log(const std::string &message, LogLevel level) {
+    std::ostream & log(LogLevel level) {
         switch (level) {
-            case LogLevel::DEBUG:
-                this->debug(message);
+            case LogLevel::kDEBUG:
+                return this->debug();
                 break;
-            case LogLevel::INFO:
-                this->info(message);
+            case LogLevel::kINFO:
+                return this->info();
                 break;
-            case LogLevel::WARNING:
-                this->warning(message);
+            case LogLevel::kWARNING:
+                return this->warning();
                 break;
-            case LogLevel::ERROR:
-                this->error(message);
+            case LogLevel::kERROR:
+                return this->error();
                 break;
-            case LogLevel::FATAL:
-                this->fatal(message);
+            case LogLevel::kFATAL:
+                return this->fatal();
                 break;
         }
     }
-    
+
     /// Logs a debug information.
-    void debug(const std::string &message) {
-        os << this->datetime() << " [debug] " << message << std::endl;
+    std::ostream & debug() {
+        if (_loglevel < LogLevel::kDEBUG)
+            return nullstream::instance();
+        os << this->datetime() << " [debug] ";
+        return os;
     }
-    
+
     /// Logs a notice.
-    void info(const std::string &message) {
-        os << this->datetime() << " [info] " << message << std::endl;
+    std::ostream & info() {
+        if (_loglevel < LogLevel::kINFO)
+            return nullstream::instance();
+        os << this->datetime() << " [info] ";
+        return os;
     }
-    
+
     /// Logs a warning.
-    void warning(const std::string &message) {
-        os << this->datetime() << " [warning] " << message << std::endl;
+    std::ostream & warning() {
+        if (_loglevel < LogLevel::kWARNING)
+            return nullstream::instance();
+        os << this->datetime() << " [warning] ";
+        return os;
     }
-    
+
     /// Logs an error.
-    void error(const std::string &message) {
-        os << this->datetime() << " [error] " << message << std::endl;
+    std::ostream & error() {
+        if (_loglevel < LogLevel::kERROR)
+            return nullstream::instance();
+        os << this->datetime() << " [error] ";
+        return os;
     }
-    
+
     /// Logs a fatal (non-recoverable) error.
-    void fatal(const std::string &message) {
-        os << this->datetime() << " [fatal] " << message << std::endl;
+    std::ostream & fatal() {
+        if (_loglevel < LogLevel::kFATAL)
+            return nullstream::instance();
+        os << this->datetime() << " [fatal] ";
+        return os;
     }
-    
+
+    /// Sets the verbosity level.
+    /// @remarks
+    ///             level 0 catches only fatal (non-recoverable) errors.
+    ///             default is 3, and recommended for most usage.
+    ///             debug is 4.
+    void set_verbose(LogLevel l) {
+        _loglevel = l;
+    }
+
 private:
+    /// the current verbosity level (default is INFO)
+    LogLevel _loglevel;
+
     static std::unique_ptr<Logger> _instance;
     static std::once_flag _once_flag;
-    
-    Logger() {}
-    
+
+    Logger(): _loglevel(LogLevel::kINFO) {}
+
     const std::string datetime() {
         std::time_t raw_time;
         std::tm *time_info;
         char buffer[80];
-        
+
         std::time(&raw_time);
         time_info = std::localtime(&raw_time);
-        
+
         std::strftime(buffer, 80, "[%Y-%m-%d %H:%M:%S]", time_info);
         return std::string(buffer);
     }

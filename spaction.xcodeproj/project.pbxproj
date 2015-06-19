@@ -68,6 +68,7 @@
 		4A2541A919F6657C00E52660 /* CLTLScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = CLTLScanner.h; path = cltlparse/CLTLScanner.h; sourceTree = "<group>"; };
 		4A2541AA19F6657C00E52660 /* public.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = public.h; path = cltlparse/public.h; sourceTree = "<group>"; };
 		4A2541B719F91FA500E52660 /* TransitionSystemPrinter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransitionSystemPrinter.h; sourceTree = "<group>"; };
+		4A28058E1B2F1982008BCEFF /* Logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
 		4A2C73491A14C23900A3D594 /* TGBA2CA.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TGBA2CA.h; sourceTree = "<group>"; };
 		4A2C734A1A14E71C00A3D594 /* ControlBlock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ControlBlock.h; sourceTree = "<group>"; };
 		4A37FC8F1AF24CD900E59EC8 /* SupremumFinder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SupremumFinder.h; sourceTree = "<group>"; };
@@ -200,6 +201,7 @@
 		755CEA48196EBB6C00DD3677 /* include */ = {
 			isa = PBXGroup;
 			children = (
+				4A28058E1B2F1982008BCEFF /* Logger.h */,
 				4A7995D61A077F1E00EB98A9 /* hash */,
 				4A25419119F14D1A00E52660 /* cltlparse */,
 				759343D21970051200DD5475 /* automata */,
