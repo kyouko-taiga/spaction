@@ -157,6 +157,11 @@ class CounterAutomaton {
         p.dump(dotfile);
     }
 
+    void print(std::ostream &os) const {
+        TSPrinter<Q, CounterLabel<S>> p(*_transition_system);
+        p.dump(os);
+    }
+
  protected:
     TransitionSystem<Q, CounterLabel<S>> *_transition_system;
 
