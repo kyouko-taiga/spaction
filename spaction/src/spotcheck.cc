@@ -38,13 +38,7 @@
 #include "Instantiator.h"
 #include "automata/CA2tgba.h"
 
-// @todo convert this to a logging mechanism
-// #define TRACE
-#ifdef TRACE
-#define trace std::cerr
-#else
-#define trace while (0) std::cerr
-#endif
+#include "Logger.h"
 
 namespace spaction {
 
@@ -57,7 +51,7 @@ bool spot_dve_check(const std::string &formula, const std::string &modelfile) {
         exit(1);
     }
 
-    trace << "spot parsing done" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "spot parsing done" << std::endl;
 
     // to store atomic propositions appearing in the formula
     spot::ltl::atomic_prop_set atomic_propositions;
@@ -71,22 +65,22 @@ bool spot_dve_check(const std::string &formula, const std::string &modelfile) {
         property_automaton = formula_translator.run(&ltl_formula);
     }
 
-    trace << "property tgba built" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "property tgba built" << std::endl;
 
     // collect atomic propositions from formula
     atomic_prop_collect(ltl_formula, &atomic_propositions);
 
-    trace << "ap collected" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "ap collected" << std::endl;
 
     // load divine model
     spot::kripke *model = spot::load_dve2(modelfile, bdd_dictionnary, &atomic_propositions);
 
-    trace << "dve loaded" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "dve loaded" << std::endl;
 
     // synchronized product of both automata
     spot::tgba *product = new spot::tgba_product(model, property_automaton);
 
-    trace << "product built" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "product automaton built" << std::endl;
 
     // emptiness check of the product automaton
     const char* echeck_algo = "Cou99";
@@ -101,35 +95,25 @@ bool spot_dve_check(const std::string &formula, const std::string &modelfile) {
     // \todo properly catch incorrect instantation
     assert(emptiness_checker);
 
-    trace << "emptichecker built" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "emptichecker built" << std::endl;
 
     spot::emptiness_check_result *result = nullptr;
     try {
         result = emptiness_checker->check();
     } catch (std::bad_alloc) {
-        std::cerr << "out of memory during emptiness check" << std::endl;
-        assert(false);
+        spaction::Logger<std::cerr>::instance().fatal() << "out of memory during emptiness check" << std::endl;
+        throw std::bad_alloc();
     }
     bool to_return = !result;
-    trace << "result is " << to_return << std::endl;
-
-    trace << "all done, prepare for delete" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "result of emptiness check is " << to_return << std::endl;
 
     // free all the stuff
     delete result;
-    trace << "result deleted" << std::endl;
     delete product;
-    trace << "product deleted" << std::endl;
     delete model;
-    trace << "model deleted" << std::endl;
     delete property_automaton;
-    trace << "tgba deleted" << std::endl;
     delete bdd_dictionnary;
-    trace << "bdd dict deleted" << std::endl;
     ltl_formula->destroy();
-    trace << "formula deleted" << std::endl;
-
-    trace << "all freed, return" << std::endl;
 
     // return the result
     return to_return;
@@ -241,17 +225,21 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
         const char* echeck_algo = "Cou99";
         const char* err;
         echeck_inst = spot::emptiness_check_instantiator::construct(echeck_algo, &err);
-        // @todo properly catch incorrect instantiation of emptiness checker
-        assert(echeck_inst);
+        // check correct instantiation.
+        // according to spot documentation, `construct` returns 0 on failure, and an error log in err.
+        if (!echeck_inst) {
+            spaction::Logger<std::cerr>::instance().fatal() << "Emptiness Check Instantiator could not be built: " << err << " is not recognized" << std::endl;
+            throw std::runtime_error("Fail to build Emptiness Check Instantiator");
+        }
     }
 
-    trace << "EC instantiator built" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "Emptiness Check Instantiator built" << std::endl;
 
     // see the model as a counter automaton
     assert(model);
     automata::tgba_ca *model_ca = new automata::tgba_ca(model);
 
-    trace << "model loaded as a CA" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "model loaded as a CA" << std::endl;
 
     // determine the bound to use (|model| \times |automaton of the formula|)
     //@{
@@ -264,7 +252,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
         automata::CltlTranslator translator(formula);
         translator.build_automaton();
 
-        trace << "formula translated to CA" << std::endl;
+        spaction::Logger<std::cerr>::instance().info() << "formula translated to CA" << std::endl;
 
         for (auto state : translator.get_automaton().transition_system()->states()) {
             ++formula_aut_size;
@@ -285,7 +273,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
         automata::CltlTranslator translator(phi);
         translator.build_automaton();
 
-        trace << "formula translated to automaton" << std::endl;
+        spaction::Logger<std::cerr>::instance().info() << "formula translated to automaton" << std::endl;
 
 // @todo merge to logging mechanism
 #ifdef TRACE
@@ -303,37 +291,42 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
         prod.print(prod_file.str());
 #endif
 
-        trace << "product done" << std::endl;
+        spaction::Logger<std::cerr>::instance().info() << "product done" << std::endl;
 
         auto prod_tgba = automata::make_tgba(&prod);
 
-        trace << "product as tgba" << std::endl;
+        spaction::Logger<std::cerr>::instance().info() << "product as tgba" << std::endl;
 
         // the real emptiness check
         spot::emptiness_check* emptiness_checker = echeck_inst->instantiate(prod_tgba);
-        // @todo properly catch incorrect instantation
-        assert(emptiness_checker);
+        if (!emptiness_checker) {
+            spaction::Logger<std::cerr>::instance().fatal() << "Emptiness checker could not be built" << std::endl;
+            throw std::runtime_error("Fail to build Emptiness checker");
+        }
 
-        trace << "emptichecker built" << std::endl;
+        spaction::Logger<std::cerr>::instance().info() << "emptichecker built" << std::endl;
 
         spot::emptiness_check_result *result = nullptr;
         try {
             result = emptiness_checker->check();
         } catch (std::bad_alloc) {
-            std::cerr << "out of memory during emptiness check" << std::endl;
-            assert(false);
+            spaction::Logger<std::cerr>::instance().fatal() << "out of memory during emptiness check" << std::endl;
+            throw std::bad_alloc();
         }
 
-        trace << i << "th iteration, EC done" << std::endl;
+        spaction::Logger<std::cerr>::instance().info() << i << "th iteration, EC done" << std::endl;
 
         if ((is_nonempty = result)) {
-            trace << i << "th iteration, CE exists" << std::endl;
+            spaction::Logger<std::cerr>::instance().info() << i << "th iteration, CE exists" << std::endl;
 
             // @note run is a run of prod_tgba
             spot::tgba_run *run = result->accepting_run();
-            assert(run);
+            if (!run) {
+                spaction::Logger<std::cerr>::instance().fatal() << "The emptiness check algo used cannot compute a counterexample" << std::endl;
+                throw std::runtime_error("Fail to compute a counterexample");
+            }
 
-            trace << i << "th iteration, CE found" << std::endl;
+            spaction::Logger<std::cerr>::instance().info() << i << "th iteration, CE found" << std::endl;
 
             auto value = prod_tgba->value_word(run, upper_bound, formula->creator());
             if (value.unbounded_max) {  // infty
@@ -341,7 +334,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
                 res.infinite = true;
                 is_nonempty = false;
             } else {
-                trace << "n is " << res.value << " whereas value.max is " << value.max << std::endl;
+                spaction::Logger<std::cerr>::instance().debug() << "n is " << res.value << " whereas value.max is " << value.max << std::endl;
                 assert(first_pass or res.value < value.max);
                 res.value = value.max;
                 CltlFormulaPtr phin = (*instantiator)(formula, res.value+1);
@@ -349,8 +342,8 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
             }
             delete run;
 
-            trace << i << "th iteration, n is now " << res.value << std::endl;
-            trace << "and phi is now " << phi->dump() << std::endl;
+            spaction::Logger<std::cerr>::instance().debug() << i << "th iteration, n is now " << res.value << std::endl;
+            spaction::Logger<std::cerr>::instance().debug() << "and phi is now " << phi->dump() << std::endl;
         }
 
         first_pass = false;
@@ -374,7 +367,7 @@ automata::value_t find_max_direct(const CltlFormulaPtr &formula,
     assert(model);
     automata::tgba_ca *model_ca = new automata::tgba_ca(model);
 
-    trace << "model loaded as a CA" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "model loaded as a CA" << std::endl;
 
     automata::CltlTranslator translator(formula);
     translator.build_automaton();
@@ -401,7 +394,7 @@ class APCollector : public CltlFormulaVisitor {
     virtual ~APCollector() { }
 
     void visit(const std::shared_ptr<AtomicProposition> &formula) final {
-        trace << "visiting AP " << formula->value() << std::endl;
+        spaction::Logger<std::cerr>::instance().info() << "visiting AP " << formula->value() << std::endl;
         _res.insert(spot::ltl::atomic_prop::instance(formula->value(), spot::ltl::default_environment::instance()));
     }
 
@@ -430,14 +423,14 @@ unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &mo
     auto visitor = APCollector();
     formula->accept(visitor);
 
-    trace << "ap collected" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "atomic propositions collected" << std::endl;
 
     spot::ltl::atomic_prop_set atomic_propositions = visitor.get();
 
     // load divine model
     spot::kripke *model = spot::load_dve2(modelname, &bdd_dictionnary, &atomic_propositions);
 
-    trace << "model loaded" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "Kripke model loaded" << std::endl;
 
     automata::value_t result;
     switch (strat) {
@@ -467,7 +460,7 @@ automata::tgba_ca *load_formula(const std::string &formula) {
         exit(1);
     }
 
-    trace << "spot parsing done" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "spot parsing done" << std::endl;
 
     // to store atomic propositions appearing in the formula
     spot::ltl::atomic_prop_set atomic_propositions;
@@ -481,7 +474,7 @@ automata::tgba_ca *load_formula(const std::string &formula) {
         property_automaton = formula_translator.run(&ltl_formula);
     }
 
-    trace << "property tgba built" << std::endl;
+    spaction::Logger<std::cerr>::instance().info() << "property tgba built" << std::endl;
 
     return new automata::tgba_ca(property_automaton);
 }

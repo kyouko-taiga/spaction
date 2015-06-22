@@ -35,6 +35,8 @@
 #include "UnaryOperator.h"
 #include "CltlFormulaFactory.h"
 
+#include "Logger.h"
+
 
 namespace spaction {
 
@@ -90,9 +92,9 @@ class spot_transformer : public CltlFormulaVisitor {
                 break;
 
             default:
-                std::cerr << "cost operators are not convertible to spot" << std::endl;
+                spaction::Logger<std::cerr>::instance().fatal() << "cost operators are not convertible to spot" << std::endl;
                 result = nullptr;
-                assert(false);
+                throw std::runtime_error("cost operators are not convertible to spot");
                 break;
         }
     }
