@@ -422,7 +422,8 @@ class APCollector : public CltlFormulaVisitor {
 
 // @param   formula is assumed to be CLTL[>]
 // @param   modelname is the path to a .dve model
-unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname) {
+unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &modelname,
+                            BoundSearchStrategy strat) {
     assert(formula->is_supltl());
     // get atomic propositions from formula
     spot::bdd_dict bdd_dictionnary;
@@ -438,9 +439,16 @@ unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &mo
 
     trace << "model loaded" << std::endl;
 
-    // @todo add a flag to select the algo to use from the command-line
-    automata::value_t result = find_max_cegar(formula, model, &bdd_dictionnary);
-//    automata::value_t result = find_max_direct(formula, model, &bdd_dictionnary);
+    automata::value_t result;
+    switch (strat) {
+        case BoundSearchStrategy::CEGAR:
+            result = find_max_cegar(formula, model, &bdd_dictionnary);
+            break;
+        case BoundSearchStrategy::DIRECT:
+            result = find_max_direct(formula, model, &bdd_dictionnary);
+            break;
+    }
+
     // delete the model
     delete model;
     if (result.infinite)
