@@ -25,9 +25,9 @@ ConstantExpression::ConstantExpression(bool value, CltlFormulaFactory *creator) 
 }
 
 bool ConstantExpression::syntactic_eq(const CltlFormula &rhs) const {
-    if(rhs.formula_type() != CltlFormula::kConstantExpression)
+    if (rhs.formula_type() != CltlFormula::kConstantExpression)
         return false;
-    
+
     const ConstantExpression &ce = static_cast<const ConstantExpression &>(rhs);
     return ce._value == _value;
 }
@@ -40,5 +40,5 @@ void ConstantExpression::accept(CltlFormulaVisitor &visitor) {
 std::string ConstantExpression::dump() const {
     return _value ? "true" : "false";
 }
-    
+
 }  // namespace spaction

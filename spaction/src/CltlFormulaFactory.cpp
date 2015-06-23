@@ -26,7 +26,7 @@
 #include "BinaryOperator.h"
 
 namespace spaction {
-    
+
 CltlFormulaPtr CltlFormulaFactory::_make_shared_formula(CltlFormula *formula) {
     // try to find the formula within the unique index and return its shared pointer
     for (auto f : _formulae) {
@@ -111,6 +111,12 @@ CltlFormulaPtr CltlFormulaFactory::make_globally(const CltlFormulaPtr &f) {
 CltlFormulaPtr CltlFormulaFactory::make_costfinally(const CltlFormulaPtr &f) {
     const CltlFormulaPtr &ffalse = make_constant(false);
     return make_costuntil(ffalse, f);
+}
+
+// GN f = true RN f
+CltlFormulaPtr CltlFormulaFactory::make_costglobally(const CltlFormulaPtr &f) {
+    const CltlFormulaPtr &ftrue = make_constant(true);
+    return make_costrelease(ftrue, f);
 }
 
 }  // namespace spaction

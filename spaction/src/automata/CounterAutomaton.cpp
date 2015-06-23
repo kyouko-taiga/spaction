@@ -15,18 +15,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_CLTLPARSE_PUBLIC_H_
-#define SPACTION_INCLUDE_CLTLPARSE_PUBLIC_H_
-
-#include <string>
-#include "CltlFormula.h"
+#include "automata/CounterAutomaton.h"
 
 namespace spaction {
-namespace cltlparse {
+namespace automata {
 
-CltlFormulaPtr parse_formula(const std::string &ltl_string);
+std::string print_counter_operation(CounterOperation c) {
+    std::string result = "";
+    if (c & kIncrement)
+        result += "i";
+    if (c & kCheck)
+        result += "c";
+    if (c & kReset)
+        result += "r";
+    if (!c)
+        result += "e";
+    return result;
+}
 
-}  // namespace cltlparse
+}  // namespace automata
 }  // namespace spaction
-
-#endif  // SPACTION_INCLUDE_CLTLPARSE_PUBLIC_H_

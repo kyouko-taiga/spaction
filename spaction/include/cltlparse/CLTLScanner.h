@@ -15,8 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_CLTLSCANNER_HH_
-#define SPACTION_INCLUDE_CLTLSCANNER_HH_
+#ifndef SPACTION_INCLUDE_CLTLPARSE_CLTLSCANNER_H_
+#define SPACTION_INCLUDE_CLTLPARSE_CLTLSCANNER_H_
 
 #if ! defined(yyFlexLexerOnce)
 #include <FlexLexer.h>
@@ -34,13 +34,13 @@ namespace cltlparse {
 
 class CLTLScanner : public yyFlexLexer {
  public:
-    CLTLScanner(std::istream *in): yyFlexLexer(in) {}
+    explicit CLTLScanner(std::istream *in): yyFlexLexer(in) {}
 
     int yylex(struct union_tag *lval) {
         yylval = lval;
         return yylex();
     }
-    
+
  private:
     struct union_tag *yylval;
     int yylex();
@@ -49,4 +49,4 @@ class CLTLScanner : public yyFlexLexer {
 }  // namespace cltlparse
 }  // namespace spaction
 
-#endif  // defined SPACTION_INCLUDE_CLTLSCANNER_HH_
+#endif  // SPACTION_INCLUDE_CLTLPARSE_CLTLSCANNER_H_

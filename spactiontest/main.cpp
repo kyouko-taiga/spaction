@@ -16,8 +16,8 @@
 // limitations under the License.
 
 #include <iostream>
+#include <getopt.h>
 #include <string>
-#include <unistd.h>
 
 #include "CltlFormula.h"
 #include "CltlFormulaFactory.h"
@@ -25,12 +25,16 @@
 
 #include "automata/CltlTranslator.h"
 #include "automata/CounterAutomaton.h"
+#include "automata/CounterAutomatonProduct.h"
 #include "automata/TransitionSystemPrinter.h"
 #include "automata/UndeterministicTransitionSystem.h"
 
 #include "automata/RegisterAutomaton.h"
 
 #include "cltlparse/public.h"
+
+#include "Logger.h"
+
 
 // this file is strongly inspired from spot/iface/dve2/dve2check.cc
 
@@ -56,14 +60,11 @@ void test_counter_automata() {
 
     automaton.transition_system()->add_transition("q", "q",
         automaton.make_label('a', {{CounterOperation::kIncrement,
-                                    CounterOperation::kCheck}}));
+                                    CounterOperation::kCheck}}, std::set<std::size_t>()));
 
-    Automaton::transition_t *t =
     automaton.transition_system()->add_transition("q", "q",
         automaton.make_label('b', {{CounterOperation::kIncrement,
-                                    CounterOperation::kReset}}));
-
-    automaton.add_acceptance_transition(0, t);
+                                    CounterOperation::kReset}}, {0}));
 
     spaction::automata::TSPrinter<qt, spaction::automata::CounterLabel<st>> printer(*automaton.transition_system());
     // printer.dump("/tmp/counter.dot");
@@ -114,36 +115,117 @@ void test_cost_register_automata(const std::string &str = "aabaaacba") {
     std::cout << "μ(q0) = " << automaton.register_value(0) << std::endl;
 }
 
+void test_product() {
+    spaction::CltlFormulaPtr f1 = spaction::cltlparse::parse_formula("\"a\" UN \"b\"");
+    spaction::CltlFormulaPtr f2 = spaction::cltlparse::parse_formula("\"c\" UN \"d\"");
+
+    spaction::automata::CltlTranslator t1(f1);
+    t1.build_automaton();
+    spaction::automata::CltlTranslator t2(f2);
+    t2.build_automaton();
+
+    t1.get_automaton().print("aut1.dot");
+    t2.get_automaton().print("aut2.dot");
+
+    auto prod = spaction::automata::make_aut_product(t1.get_automaton(), t2.get_automaton(), f1->creator());
+    prod.print("prod.dot");
+
+    std::cerr << "product test ended" << std::endl;
+}
+
+void usage() {
+    std::cerr << "spaction" << std::endl;
+    std::cerr << "Mandatory Arguments:" << std::endl;
+    std::cerr << "\t-f <formula>, --formula <formula>" << std::endl
+        << "\t\tthe CLTL input formula <formula>" << std::endl;
+    std::cerr << "\t-m <model>, --model <model>" << std::endl
+        << "\t\tthe input model. <model> is the path to the DVE file." << std::endl;
+    std::cerr << "Optional Arguments:" << std::endl;
+    std::cerr << "\t-s <strat>, --strategy <strat>" << std::endl
+        << "\t\tthe strategy to use. Possible values for <strat> are \'direct\' and \'cegar\'." << std::endl
+        << "\t\tDefault value is \'direct\'" << std::endl;
+    std::cerr << "\t-v <verb>, --verbosity <verb>" << std::endl
+        << "\t\tthe verbosity level. <verb> should an integer between 0 and 4." << std::endl
+        << "\t\t\t0 logs only fatal errors" << std::endl
+        << "\t\t\t1 further logs non-fatal errors" << std::endl
+        << "\t\t\t2 further logs warnings" << std::endl
+        << "\t\t\t3 further logs general informations [default]" << std::endl
+        << "\t\t\t4 further logs debug informations" << std::endl
+        << "\t\tIf used without argument, sets to debug (level 4)." << std::endl;
+}
+
 int main(int argc, char* argv[]) {
-    test_counter_automata();
 
     std::string cltl_string = "";
-    std::string dot_file = "";
+    std::string model_file = "";
+    spaction::BoundSearchStrategy strategy = spaction::BoundSearchStrategy::DIRECT;
+    spaction::Logger<std::cerr>::LogLevel log_level = spaction::Logger<std::cerr>::LogLevel::kINFO;
 
-    int c;
-    while ((c = getopt(argc, argv, "f:o:")) != -1) {
+    static struct option long_options[] = {
+        /// sets the verbosity level, from 0 (only fatal errors are logged) to 4 (debug info are logged)
+        /// the default verbosity level is 3
+        /// using the option --verbose without argument sets it to 4 (debug)
+        {"verbose",     optional_argument,  0, 'v'},
+        /// the CLTL formula to check
+        {"formula",     required_argument,  0, 'f'},
+        /// the path to a dve file containing the model to check
+        {"model",       required_argument,  0, 'm'},
+        /// the strategy to use
+        ///     valid arguments are 'cegar' and 'direct'
+        {"strategy",    required_argument,  0, 's'},
+        /// end of array
+        {0, 0, 0, 0}
+    };
+
+    while (1) {
+        int c = getopt_long(argc, argv, "f:m:s:v", long_options, nullptr);
+        // no more options to parse
+        if (c == -1)
+            break;
+
         switch (c) {
             case 'f':
                 cltl_string = optarg;
                 break;
-            case 'o':
-                dot_file = optarg;
+            case 'm':
+                model_file = optarg;
+                break;
+            case 's':
+                if (std::string("DIRECT") == optarg) {
+                    strategy = spaction::BoundSearchStrategy::DIRECT;
+                } else if (std::string("CEGAR") == optarg) {
+                    strategy = spaction::BoundSearchStrategy::CEGAR;
+                } else {
+                    spaction::Logger<std::cerr>::instance().error() << "unknown strategy "
+                        << optarg << std::endl << "use default strategy instead" << std::endl;
+                }
+                break;
+            case 'v':
+                if (optarg)
+                    log_level = static_cast<spaction::Logger<std::cerr>::LogLevel>(optarg[0] - 'a');
+                else
+                    log_level = spaction::Logger<std::cerr>::LogLevel::kDEBUG;
+                std::cerr << "loglevel set to " << (static_cast<char>(log_level) + 'a') << std::endl;
+                std::cerr << "a set to " << (int)'a' << std::endl;
                 break;
             default:
-                std::cerr << "unknown option " << c << std::endl;
-                std::cerr << "abort" << std::endl;
+                spaction::Logger<std::cerr>::instance().fatal() << "unknown option " << c << std::endl;
+                usage();
                 return 1;
         }
     }
 
+    // set the verbosity level
+    spaction::Logger<std::cerr>::instance().set_verbose(log_level);
+
     if (cltl_string == "") {
-        std::cerr << "no input formula, abort" << std::endl;
+        spaction::Logger<std::cerr>::instance().fatal() << "no input formula, abort" << std::endl;
         return 1;
     }
 
     spaction::CltlFormulaPtr f = spaction::cltlparse::parse_formula(cltl_string);
     if (f == nullptr) {
-        std::cerr << "parsing went wrong, abort" << std::endl;
+        spaction::Logger<std::cerr>::instance().fatal() << "formula parsing went wrong, abort" << std::endl;
         return 1;
     }
 
@@ -152,12 +234,25 @@ int main(int argc, char* argv[]) {
     std::cout << "dnf:   " << f->to_dnf()->dump() << std::endl;
     std::cout << "the input formula is " << f->dump() << std::endl;
 
-    spaction::automata::CltlTranslator translator(f);
-    translator.build_automaton();
-    if (dot_file != "") {
-        translator.automaton_dot(dot_file);
-        std::cerr << "automaton was printed to file " << dot_file << std::endl;
-    }
+    ///@todo This belongs to the logging mechanism, and not to this file...
+    //@{
+//    if (automaton_dot_file != "" or epsilon_dot_file != "") {
+//        spaction::automata::CltlTranslator translator(f);
+//        translator.build_automaton();
+//        if (automaton_dot_file != "") {
+//            translator.automaton_dot(automaton_dot_file);
+//            std::cerr << "automaton was printed to file " << automaton_dot_file << std::endl;
+//        }
+//        if (epsilon_dot_file != "") {
+//            translator.epsilon_dot(epsilon_dot_file);
+//            std::cerr << "epsilon-automaton was printed to file " << epsilon_dot_file << std::endl;
+//        }
+//    }
+    //@}
+
+    unsigned int result = spaction::find_bound_max(f, model_file, strategy);
+
+    std::cout << "the max bound is " << result << std::endl;
 
     return 0;
 }

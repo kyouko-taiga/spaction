@@ -15,18 +15,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_CLTLPARSE_PUBLIC_H_
-#define SPACTION_INCLUDE_CLTLPARSE_PUBLIC_H_
+#ifndef SPACTION_INCLUDE_CLTL2SPOT_H_
+#define SPACTION_INCLUDE_CLTL2SPOT_H_
 
-#include <string>
+#include <spot/ltlast/formula.hh>
+
 #include "CltlFormula.h"
 
 namespace spaction {
-namespace cltlparse {
 
-CltlFormulaPtr parse_formula(const std::string &ltl_string);
+/// a function that converts a LTL formula in spaction representation to spot representation
+/// @param      a LTL formula
+/// @return     the same \a formula in spot format
+const spot::ltl::formula *cltl2spot(const CltlFormulaPtr &formula);
 
-}  // namespace cltlparse
+/// a function that converts a LTL formula in spot representation to spaction representation
+/// @param      a LTL formula
+/// @param      a factory for the spaction formula
+/// @return     the same \a formula in spaction format
+CltlFormulaPtr spot2cltl(const spot::ltl::formula *formula, CltlFormulaFactory *factory);
+
 }  // namespace spaction
 
-#endif  // SPACTION_INCLUDE_CLTLPARSE_PUBLIC_H_
+#endif  // SPACTION_INCLUDE_CLTL2SPOT_H_

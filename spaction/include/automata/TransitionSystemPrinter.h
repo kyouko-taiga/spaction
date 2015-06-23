@@ -15,10 +15,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
-#define SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
+#ifndef SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRINTER_H_
+#define SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRINTER_H_
 
 #include <fstream>
+#include <map>
 
 #include "TransitionSystem.h"
 
@@ -27,7 +28,7 @@ namespace automata {
 
 template<typename Q, typename S> class TSPrinter {
  public:
-    explicit TSPrinter(TransitionSystem<Q,S> &s): _system(s) { }
+    explicit TSPrinter(TransitionSystem<Q, S> &s): _system(s) { }
     ~TSPrinter() { }
 
     void dump(const std::string &filename) {
@@ -51,15 +52,17 @@ template<typename Q, typename S> class TSPrinter {
             // increment i if current_node was not already in node_map
             if (it.second) ++i;
 
-            os << it.first->second << " [label=\"" << current_node << "\" ];" << std::endl;
+            os << it.first->second << " [label=\"";
+            _system.print_state(os, current_node);
+            os << "\" ];" << std::endl;
             for (auto current_transition : _system(current_node).successors()) {
                 auto jt = node_map.insert(std::make_pair(current_transition->sink(), i));
                 // increment i if current_transition->sink was not already in node_map
                 if (jt.second) ++i;
 
-                os << it.first->second << "->" << jt.first->second
-                   << " [label=\"" << current_transition->label() << "\" ];"
-                   << std::endl;
+                os << it.first->second << "->" << jt.first->second << " [label=\"";
+                _system.print_label(os, current_transition->label());
+                os << "\" ];" << std::endl;
             }
         }
 
@@ -68,10 +71,34 @@ template<typename Q, typename S> class TSPrinter {
     }
 
  private:
-    TransitionSystem<Q,S> &_system;
+    TransitionSystem<Q, S> &_system;
+};
+
+/// a helper class to handle pointers
+template <typename A>
+struct PrinterHelper {
+    static void print(std::ostream &os, const A &a) { os << a; }
+};
+
+/// partial specialization that dereferences given pointer before printing
+template <typename A>
+struct PrinterHelper<A*> {
+    static void print(std::ostream &os, const A * const a) { PrinterHelper<A>::print(os, *a); }
+};
+
+/// a specialization to handle pairs
+template<typename A, typename B>
+struct PrinterHelper<std::pair<A, B>> {
+    static void print(std::ostream &os, const std::pair<A, B> &p) {
+        os << "(";
+        PrinterHelper<A>::print(os, p.first);
+        os << ",";
+        PrinterHelper<B>::print(os, p.second);
+        os << ")";
+    }
 };
 
 }  // namespace automata
 }  // namespace spaction
 
-#endif  // defined SPACTION_INCLUDE_TRANSITIONSYSTEMPRINTER_H_
+#endif  // SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRINTER_H_

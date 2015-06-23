@@ -29,7 +29,7 @@ UnaryOperator::UnaryOperator(UnaryOperatorType type, const CltlFormulaPtr &opera
 }
 
 bool UnaryOperator::syntactic_eq(const CltlFormula &rhs) const {
-    if(rhs.formula_type() != CltlFormula::kUnaryOperator)
+    if (rhs.formula_type() != CltlFormula::kUnaryOperator)
         return false;
 
     const UnaryOperator &uo = static_cast<const UnaryOperator &>(rhs);
@@ -37,47 +37,76 @@ bool UnaryOperator::syntactic_eq(const CltlFormula &rhs) const {
 }
 
 CltlFormulaPtr UnaryOperator::to_nnf() {
-    // get the nnf of the operand
-    CltlFormulaPtr &&nnf_operand = _operand->to_nnf();
-
-    // if our operator is !, push it to the leaves
+    // if the top-level operator is NOT, push it to the leaves
     if (_type == UnaryOperator::kNot) {
-        // if the operand is an unary operator
-        if (nnf_operand->formula_type() == CltlFormula::kUnaryOperator) {
-            UnaryOperator *uo = static_cast<UnaryOperator*>(nnf_operand.get());
-            switch (uo->operator_type()) {
-                case UnaryOperator::kNot:
-                    return nnf_operand;
-                case UnaryOperator::kNext:
-                    return _creator->make_next(_creator->make_not(uo->operand()));
+        // if the operand is itself a unary operation
+        if (_operand->formula_type() == CltlFormula::kUnaryOperator) {
+            UnaryOperator *uo = static_cast<UnaryOperator*>(_operand.get());
+            // two NOTs cancel out
+            if (uo->operator_type() == UnaryOperator::kNot) {
+                return uo->operand()->to_nnf();
+            } else {
+                return _creator->make_next(_creator->make_not(uo->operand())->to_nnf());
             }
         }
 
-        // if the operand is a binary operator
-        if (nnf_operand->formula_type() == CltlFormula::kBinaryOperator) {
-            BinaryOperator *bo = static_cast<BinaryOperator*>(nnf_operand.get());
-            const CltlFormulaPtr &left = bo->left()->to_nnf();
-            const CltlFormulaPtr &right = bo->right()->to_nnf();
-
+        // if the operand is a binary operation
+        if (_operand->formula_type() == CltlFormula::kBinaryOperator) {
+            BinaryOperator *bo = static_cast<BinaryOperator*>(_operand.get());
             switch (bo->operator_type()) {
                 case BinaryOperator::kOr:
-                    return _creator->make_and(left, right);
+                    return _creator->make_and(bo->left(), bo->right())->to_nnf();
                 case BinaryOperator::kAnd:
-                    return _creator->make_or(left, right);
+                    return _creator->make_or(bo->left(), bo->right())->to_nnf();
                 case BinaryOperator::kUntil:
-                    return _creator->make_release(left, right);
+                    return _creator->make_release(bo->left(), bo->right())->to_nnf();
                 case BinaryOperator::kRelease:
-                    return _creator->make_until(left, right);
+                    return _creator->make_until(bo->left(), bo->right())->to_nnf();
                 case BinaryOperator::kCostUntil:
-                    return _creator->make_costrelease(left, right);
+                    return _creator->make_costrelease(bo->left(), bo->right())->to_nnf();
                 case BinaryOperator::kCostRelease:
-                    return _creator->make_costuntil(left, right);
+                    return _creator->make_costuntil(bo->left(), bo->right())->to_nnf();
             }
         }
+
+        // in any other cases (i.e. Constant and Atomic Proposition)
+        return _creator->make_not(_operand);
     }
 
-    // simply return negation of the operand in nnf
-    return _creator->make_not(_operand);
+    // if the top-level operator is NEXT, just recursive call
+    return _creator->make_next(_operand->to_nnf());
+}
+
+bool UnaryOperator::is_infltl() const {
+    if (_type == kNot) {
+        return _operand->is_supltl();
+    } else {
+        return _operand->is_infltl();
+    }
+}
+
+bool UnaryOperator::is_supltl() const {
+    if (_type == kNot) {
+        return _operand->is_infltl();
+    } else {
+        return _operand->is_supltl();
+    }
+}
+
+bool UnaryOperator::is_propositional() const {
+    if (_type == kNext)
+        return false;
+    else
+        return _operand->is_propositional();
+}
+
+bool UnaryOperator::is_nnf() const {
+    if (_type == kNot) {
+        return _operand->formula_type() == CltlFormula::kAtomicProposition
+            or _operand->formula_type() == CltlFormula::kConstantExpression;
+    } else {
+        return _operand->is_nnf();
+    }
 }
 
 void UnaryOperator::accept(CltlFormulaVisitor &visitor) {

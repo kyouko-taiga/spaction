@@ -24,7 +24,7 @@
 #include "CltlFormulaVisitor.h"
 
 namespace spaction {
-    
+
 BinaryOperator::BinaryOperator(BinaryOperatorType type, const CltlFormulaPtr &left,
                                const CltlFormulaPtr &right, CltlFormulaFactory *creator) :
     CltlFormula(creator), _type(type), _left(left), _right(right) {
@@ -132,6 +132,39 @@ std::unordered_multiset<const CltlFormula*> BinaryOperator::_leaves() const {
     }
 
     return leaves;
+}
+
+bool BinaryOperator::is_infltl() const {
+    if (_type == kCostRelease) {
+        return false;
+    } else {
+        return _left->is_infltl() and _right->is_infltl();
+    }
+}
+
+bool BinaryOperator::is_supltl() const {
+    if (_type == kCostUntil) {
+        return false;
+    } else {
+        return _left->is_supltl() and _right->is_supltl();
+    }
+}
+
+bool BinaryOperator::is_propositional() const {
+    switch (_type) {
+        case BinaryOperator::kUntil:
+        case BinaryOperator::kRelease:
+        case BinaryOperator::kCostUntil:
+        case BinaryOperator::kCostRelease:
+            return false;
+        case BinaryOperator::kOr:
+        case BinaryOperator::kAnd:
+            return _left->is_propositional() and _right->is_propositional();
+    }
+}
+
+bool BinaryOperator::is_nnf() const {
+    return _left->is_nnf() and _right->is_nnf();
 }
 
 void BinaryOperator::accept(CltlFormulaVisitor &visitor) {
