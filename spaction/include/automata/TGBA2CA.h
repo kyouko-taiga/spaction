@@ -18,16 +18,11 @@
 #ifndef SPACTION_INCLUDE_AUTOMATA_TGBA2CA_H_
 #define SPACTION_INCLUDE_AUTOMATA_TGBA2CA_H_
 
-#include <regex>
-#include <stack>
-
-#include <spot/tgba/bddprint.hh>
-#include <spot/tgba/tgba.hh>
-#include <spot/tgbaalgos/reachiter.hh>
+#include <spot/twa/twa.hh>
+#include <spot/twa/bddprint.hh>
+#include <spot/twaalgos/reachiter.hh>
 
 #include "automata/CounterAutomaton.h"
-#include "cltlparse/public.h"
-#include "BinaryOperator.h"
 
 namespace std {
 
@@ -64,13 +59,13 @@ class TGBATransitionSystem<spot::state*, CounterLabel<bdd>> : public TransitionS
 public:
     /// constructor
     explicit TGBATransitionSystem(): TGBATransitionSystem(nullptr) {}
-    explicit TGBATransitionSystem(const spot::tgba *t)
+    explicit TGBATransitionSystem(spot::const_twa_ptr t)
     : super_type(new RefControlBlock<Transition<Q, S>>(std::bind(&TGBATransitionSystem::_delete_transition, this, std::placeholders::_1)))
     , _tgba(t)
     {
         if (_tgba) {
             // create the acceptance conditions
-            auto accs = _and_operands(_tgba->all_acceptance_conditions(), _tgba->get_dict());
+            auto accs = _and_operands(_tgba->acc());
             std::size_t i = 0;
             for (auto a : accs) {
                 if (_accs_map.find(a) == _accs_map.end()) {
@@ -83,8 +78,8 @@ public:
     /// destructor
     ~TGBATransitionSystem() {}
 
-    const spot::bdd_dict *tgba_dict() const { return _tgba->get_dict(); }
-    std::size_t get_acceptance(const CltlFormulaPtr &f) const {
+    const spot::bdd_dict_ptr tgba_dict() const { return _tgba->get_dict(); }
+    std::size_t get_acceptance(unsigned f) const {
         auto it = _accs_map.find(f);
         assert(it != _accs_map.end());
         return it->second;
@@ -127,45 +122,22 @@ public:
 
 private:
     /// the underlying tgba
-    const spot::tgba *_tgba;
+    spot::const_twa_ptr _tgba;
     /// helper map for acceptance conditions
-    std::map<CltlFormulaPtr, std::size_t> _accs_map;
+    std::map<unsigned, std::size_t> _accs_map;
 
-    static std::set<CltlFormulaPtr> _and_operands(const bdd &b, const spot::bdd_dict *dict) {
-        std::set<CltlFormulaPtr> result;
-        std::string fspot = spot::bdd_format_accset(dict, b);
-        fspot = std::regex_replace(fspot, std::regex("\\{"), "");
-        fspot = std::regex_replace(fspot, std::regex("\\}"), "");
-        fspot = std::regex_replace(fspot, std::regex(","), "&&");
-        fspot = std::regex_replace(fspot, std::regex("Acc\\[(.*?)\\]"), "\"$1\"");
-
-        if (fspot == "") {
-            return result;
-        }
-
-        std::stack<CltlFormulaPtr> todo;
-        todo.push(cltlparse::parse_formula(fspot));
-        while (!todo.empty()) {
-            CltlFormulaPtr f = todo.top();
-            todo.pop();
-
-            if (f->formula_type() == CltlFormula::kBinaryOperator) {
-                const BinaryOperator *bf = static_cast<const BinaryOperator *>(f.get());
-                assert(bf);
-                assert(bf->operator_type() == BinaryOperator::kAnd);
-                todo.push(bf->left());
-                todo.push(bf->right());
-                continue;
-            }
-
-            if (f->formula_type() == CltlFormula::kAtomicProposition) {
-                result.insert(f);
-                continue;
-            }
-
-            assert(false);
-        }
+    static std::set<unsigned> _and_operands(const spot::acc_cond::mark_t &conds) {
+        std::set<unsigned> result;
+        std::vector<unsigned> tmp = conds.sets();
+        result.insert(tmp.begin(), tmp.end());
         return result;
+    }
+
+    static std::set<unsigned> _and_operands(const spot::acc_cond &conds) {
+        if (! conds.is_generalized_buchi())
+            throw std::runtime_error("acceptance other than generalized buchi are not supported");
+
+        return _and_operands(conds.all_sets());
     }
 
     /// The transition iterator
@@ -173,7 +145,7 @@ private:
      public:
         explicit TransitionBaseIterator(): TransitionBaseIterator(nullptr, nullptr, nullptr) {}
         /// the iterator does not acquire the source state, but does acquire the iterator
-        explicit TransitionBaseIterator(spot::state *s, spot::tgba_succ_iterator *t, TGBATransitionSystem *ts)
+        explicit TransitionBaseIterator(spot::state *s, spot::twa_succ_iterator *t, TGBATransitionSystem *ts)
         : _source(s)
         , _it(t)
         , _ts(ts)
@@ -219,10 +191,10 @@ private:
 
         TransitionPtr<Q, S> operator*() override {
             std::vector<CounterOperationList> op_list;
-            auto tmp = _ts->_and_operands(_it->current_acceptance_conditions(), _ts->tgba_dict());
+            auto tmp = _ts->_and_operands(_it->current_acceptance_conditions());
             std::set<std::size_t> accs;
             std::transform(tmp.begin(), tmp.end(), std::inserter(accs, accs.end()),
-                           [this](const CltlFormulaPtr &f) { return this->_ts->get_acceptance(f); });
+                           [this](unsigned f) { return this->_ts->get_acceptance(f); });
             CounterLabel<bdd> cl(_it->current_condition(), op_list, accs);
             return TransitionPtr<Q, S>(_ts->_make_transition(_source, _it->current_state(), cl), _ts->get_control_block());
         }
@@ -237,7 +209,7 @@ private:
 
      private:
         spot::state *_source;
-        spot::tgba_succ_iterator *_it;
+        spot::twa_succ_iterator *_it;
         TGBATransitionSystem *_ts;
         unsigned _n;
     };
@@ -245,7 +217,7 @@ private:
     /// this implementation relies on spot DFS and is quite inefficient for our purpose, but it works
     class StateBaseIterator : public super_type::StateBaseIterator, public spot::tgba_reachable_iterator_depth_first {
      public:
-        explicit StateBaseIterator(const spot::tgba *t, bool is_end=false): spot::tgba_reachable_iterator_depth_first(t) {
+        explicit StateBaseIterator(spot::const_twa_ptr t, bool is_end=false): spot::tgba_reachable_iterator_depth_first(t) {
             start(); run(); end();
             if (is_end)
                 _n = seen.size()+1;
@@ -319,7 +291,7 @@ class tgba_ca : public CounterAutomaton<spot::state*, bdd, TGBATransitionSystem>
     using S = bdd;
 public:
     /// constructor
-    explicit tgba_ca(const spot::tgba *t): CounterAutomaton(0, t->number_of_acceptance_conditions()) {
+    explicit tgba_ca(spot::const_twa_ptr t): CounterAutomaton(0, t->acc().num_sets()) {
         _transition_system = new transition_system_t(t);
         this->set_initial_state(t->get_init_state());
     }

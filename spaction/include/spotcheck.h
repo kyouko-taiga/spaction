@@ -20,8 +20,6 @@
 
 #include <string>
 
-#include <spot/tgba/tgba.hh>
-
 #include "CltlFormula.h"
 #include "automata/TGBA2CA.h"
 

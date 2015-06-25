@@ -11,16 +11,16 @@
 		4A2541A419F5465B00E52660 /* cltlparse.cc in Sources */ = {isa = PBXBuildFile; fileRef = 4A2541A219F5465B00E52660 /* cltlparse.cc */; };
 		4A3CECE81A2CF5F70048E1F2 /* cltl2spot.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A3CECE71A2CF5F70048E1F2 /* cltl2spot.cpp */; };
 		4A5ACA361A037C1700246E63 /* CounterAutomaton.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4A5ACA351A037C1700246E63 /* CounterAutomaton.cpp */; };
+		4AC30FDB1B3AFF7E00BEF3F1 /* libbddx.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AC30FDA1B3AFF7E00BEF3F1 /* libbddx.0.dylib */; };
+		4AC30FDD1B3AFF9100BEF3F1 /* libspot.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AC30FDC1B3AFF9100BEF3F1 /* libspot.0.dylib */; };
+		4AC30FDF1B3AFF9F00BEF3F1 /* libspotltsmin.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AC30FDE1B3AFF9F00BEF3F1 /* libspotltsmin.0.dylib */; };
+		4AC30FE01B3AFFDD00BEF3F1 /* libbddx.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AC30FDA1B3AFF7E00BEF3F1 /* libbddx.0.dylib */; };
+		4AC30FE11B3AFFDD00BEF3F1 /* libspot.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AC30FDC1B3AFF9100BEF3F1 /* libspot.0.dylib */; };
+		4AC30FE21B3AFFDD00BEF3F1 /* libspotltsmin.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AC30FDE1B3AFF9F00BEF3F1 /* libspotltsmin.0.dylib */; };
 		753EF59819DDA16200106D3C /* CltlTranslator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 753EF59719DDA16200106D3C /* CltlTranslator.cpp */; };
-		755CEA36196EB78C00DD3677 /* libbdd.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755CEA32196EB78C00DD3677 /* libbdd.dylib */; };
-		755CEA39196EB78C00DD3677 /* libspotdve2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755CEA35196EB78C00DD3677 /* libspotdve2.dylib */; };
 		755CEA42196EBA8C00DD3677 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA41196EBA8C00DD3677 /* main.cpp */; };
 		755CEA44196EBA8C00DD3677 /* spactiontest.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 755CEA43196EBA8C00DD3677 /* spactiontest.1 */; };
 		755CEA5D196EBB6C00DD3677 /* spotcheck.cc in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA56196EBB6C00DD3677 /* spotcheck.cc */; };
-		755ED7BC196EC0BF003DFDBC /* libbdd.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755CEA32196EB78C00DD3677 /* libbdd.dylib */; };
-		755ED7BD196EC0BF003DFDBC /* libspotdve2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755CEA35196EB78C00DD3677 /* libspotdve2.dylib */; };
-		755ED7BF196EC0BF003DFDBC /* libspot.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755ED7BE196EC0BF003DFDBC /* libspot.dylib */; };
-		755ED7C0196EC0FD003DFDBC /* libspot.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 755ED7BE196EC0BF003DFDBC /* libspot.dylib */; };
 		755ED7C2196EC4C7003DFDBC /* spaction.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 75AFC89A196EAE3D00BAE38C /* spaction.dylib */; };
 		756EE60619C9BDA5002261FF /* CltlFormulaFactory.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756EE60419C9BDA5002261FF /* CltlFormulaFactory.cpp */; };
 		756EE60919C9C6D0002261FF /* Instantiator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 756EE60719C9C6D0002261FF /* Instantiator.cpp */; };
@@ -79,6 +79,9 @@
 		4A7995D81A08C40F00EB98A9 /* CounterAutomatonProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CounterAutomatonProduct.h; sourceTree = "<group>"; };
 		4A7995D91A08C40F00EB98A9 /* TransitionSystemProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TransitionSystemProduct.h; sourceTree = "<group>"; };
 		4AB890DC196EE51200F7BB44 /* cpplint.py */ = {isa = PBXFileReference; lastKnownFileType = text.script.python; path = cpplint.py; sourceTree = "<group>"; };
+		4AC30FDA1B3AFF7E00BEF3F1 /* libbddx.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbddx.0.dylib; path = ../spot/newlocal/lib/libbddx.0.dylib; sourceTree = "<group>"; };
+		4AC30FDC1B3AFF9100BEF3F1 /* libspot.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspot.0.dylib; path = ../spot/newlocal/lib/libspot.0.dylib; sourceTree = "<group>"; };
+		4AC30FDE1B3AFF9F00BEF3F1 /* libspotltsmin.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspotltsmin.0.dylib; path = ../spot/newlocal/lib/libspotltsmin.0.dylib; sourceTree = "<group>"; };
 		4AE621131AA052C3004724E6 /* ConfigurationAutomaton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfigurationAutomaton.h; sourceTree = "<group>"; };
 		753EF59719DDA16200106D3C /* CltlTranslator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CltlTranslator.cpp; sourceTree = "<group>"; };
 		753EF59919DEEA6900106D3C /* TransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TransitionSystem.h; sourceTree = "<group>"; };
@@ -119,9 +122,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				755ED7C2196EC4C7003DFDBC /* spaction.dylib in Frameworks */,
-				755ED7BF196EC0BF003DFDBC /* libspot.dylib in Frameworks */,
-				755ED7BC196EC0BF003DFDBC /* libbdd.dylib in Frameworks */,
-				755ED7BD196EC0BF003DFDBC /* libspotdve2.dylib in Frameworks */,
+				4AC30FDF1B3AFF9F00BEF3F1 /* libspotltsmin.0.dylib in Frameworks */,
+				4AC30FDD1B3AFF9100BEF3F1 /* libspot.0.dylib in Frameworks */,
+				4AC30FDB1B3AFF7E00BEF3F1 /* libbddx.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -129,9 +132,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				755CEA36196EB78C00DD3677 /* libbdd.dylib in Frameworks */,
-				755ED7C0196EC0FD003DFDBC /* libspot.dylib in Frameworks */,
-				755CEA39196EB78C00DD3677 /* libspotdve2.dylib in Frameworks */,
+				4AC30FE01B3AFFDD00BEF3F1 /* libbddx.0.dylib in Frameworks */,
+				4AC30FE11B3AFFDD00BEF3F1 /* libspot.0.dylib in Frameworks */,
+				4AC30FE21B3AFFDD00BEF3F1 /* libspotltsmin.0.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -260,6 +263,9 @@
 		75AFC891196EAE3D00BAE38C = {
 			isa = PBXGroup;
 			children = (
+				4AC30FDE1B3AFF9F00BEF3F1 /* libspotltsmin.0.dylib */,
+				4AC30FDC1B3AFF9100BEF3F1 /* libspot.0.dylib */,
+				4AC30FDA1B3AFF7E00BEF3F1 /* libbddx.0.dylib */,
 				4AB890DC196EE51200F7BB44 /* cpplint.py */,
 				75AFC89C196EAE3D00BAE38C /* spaction */,
 				755CEA3A196EB79B00DD3677 /* libraries */,

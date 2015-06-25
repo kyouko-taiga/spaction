@@ -25,7 +25,7 @@ SPOT_LIB  = $(SPOT_ROOT)/lib
 SPOT_INC  = -I$(SPOT_ROOT)/include/ -I$(SPOT_ROOT)/include/spot/
 endif
 
-SPOT_LD   = -L$(SPOT_LIB) -lbdd -lspot -lspotdve2
+SPOT_LD   = -L$(SPOT_LIB) -lbddx -lspot -lspotltsmin
 
 spaction_SOURCES      = main.cpp
 spaction_DEPENDENCIES = $(top_srcdir)/spaction/libspaction.la

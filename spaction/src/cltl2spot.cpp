@@ -208,14 +208,9 @@ class cltl_transformer : public spot::ltl::visitor {
         }
     }
 
-    void visit(const spot::ltl::automatop* node) override {
-        std::cerr << "automatop is not supported by cltl, translation is not possible" << std::endl;
-        assert(false);
-    }
-
     void visit(const spot::ltl::bunop* node) override {
-        std::cerr << "bunop not supported, and should not occur in an LTL formula" << std::endl;
-        assert(false);
+        spaction::Logger<std::cerr>::instance().fatal() << "bunop not supported, and should not occur in an LTL formula." << std::endl;
+        throw std::runtime_error("spot bunop are not supported by spaction, and should not occur in an LTL formula.");
     }
 
     inline CltlFormulaPtr get() const { return result; }
