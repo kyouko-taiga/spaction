@@ -60,6 +60,10 @@ class SupremumFinder {
             // inc_depth();  // for stats
         }
 
+        // counts the number of shortcuts: when we avoid exploring a SCC with a value lower than
+        // the current candidate value.
+        std::size_t number_shortcuts = 0;
+
         while (!todo.empty()) {
             //@debug
             //print_debug(std::cerr);
@@ -128,6 +132,13 @@ class SupremumFinder {
             ++succ;
             // We do not need SUCC from now on.
 
+
+            // A component with a value lower than the current one is not worth exploring.
+            if (dest.is_bounded() and dest.current_value() <= max_val) {
+                ++number_shortcuts;
+                continue;
+            }
+
             // Are we going to a new state?
             auto spit = _h.find(dest);
 
@@ -160,11 +171,6 @@ class SupremumFinder {
             // If we have reached a dead component, ignore it.
             if (spit->second == -1)
                 continue;
-
-            // @todo A component with a value lower than the current one is not worth exploring.
-            // Consider such component as dead.
-            //            if (dest.is_bounded() and dest.current_value() <= max_val)
-            //                continue;
 
             // Now this is the most interesting case.  We have reached a
             // state S1 which is already part of a non-dead SCC.  Any such
@@ -221,7 +227,7 @@ class SupremumFinder {
                     // we are done, return
                     // release all iterators in TODO.
                     while (!todo.empty()) {
-                        // what is to release?
+                        //@todo what is to release? is this loop necessary?
                         todo.pop();
                         // dec_depth();  // for stats
                     }
