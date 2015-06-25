@@ -20,13 +20,13 @@
 #include <fstream>
 #include <sstream>
 
-#include <iface/dve2/dve2.hh>
+#include <iface/ltsmin/ltsmin.hh>
 #include <ltlparse/public.hh>
-#include <tgba/tgbaproduct.hh>
-#include <tgbaalgos/dotty.hh>
-#include <tgbaalgos/emptiness.hh>
-#include <tgbaalgos/stats.hh>
-#include <tgbaalgos/translate.hh>
+#include <twa/twaproduct.hh>
+#include <twaalgos/dot.hh>
+#include <twaalgos/emptiness.hh>
+#include <twaalgos/stats.hh>
+#include <twaalgos/translate.hh>
 
 #include "AtomicProposition.h"
 #include "CltlFormulaFactory.h"
@@ -44,20 +44,15 @@ namespace spaction {
 
 bool spot_dve_check(const std::string &formula, const std::string &modelfile) {
     // spot parsing of the instantiated formula
-    spot::ltl::parse_error_list pel;
-    const spot::ltl::formula *ltl_formula = spot::ltl::parse(formula, pel);
-    if (spot::ltl::format_parse_errors(std::cerr, formula, pel)) {
-        ltl_formula->destroy();
-        exit(1);
-    }
+    const spot::ltl::formula *ltl_formula = spot::ltl::parse_formula(formula);
 
     spaction::Logger<std::cerr>::instance().info() << "spot parsing done" << std::endl;
 
     // to store atomic propositions appearing in the formula
     spot::ltl::atomic_prop_set atomic_propositions;
     // bdd dictionnary
-    spot::bdd_dict *bdd_dictionnary = new spot::bdd_dict();
-    const spot::tgba *property_automaton;
+    spot::bdd_dict_ptr bdd_dictionnary = spot::make_bdd_dict();
+    spot::const_twa_ptr property_automaton = nullptr;
     // NB: embedding the translation in a block is mandatory for proper deallocation
     {
         // translate the formula into an automaton
@@ -73,31 +68,41 @@ bool spot_dve_check(const std::string &formula, const std::string &modelfile) {
     spaction::Logger<std::cerr>::instance().info() << "ap collected" << std::endl;
 
     // load divine model
-    spot::kripke *model = spot::load_dve2(modelfile, bdd_dictionnary, &atomic_propositions);
+    spot::kripke_ptr model = spot::load_ltsmin(modelfile, bdd_dictionnary, &atomic_propositions);
 
     spaction::Logger<std::cerr>::instance().info() << "dve loaded" << std::endl;
 
     // synchronized product of both automata
-    spot::tgba *product = new spot::tgba_product(model, property_automaton);
+    spot::twa_ptr product = spot::otf_product(model, property_automaton);
 
     spaction::Logger<std::cerr>::instance().info() << "product automaton built" << std::endl;
 
     // emptiness check of the product automaton
-    const char* echeck_algo = "Cou99";
-    const char* err;
-    spot::emptiness_check_instantiator* echeck_inst = nullptr;
-    echeck_inst = spot::emptiness_check_instantiator::construct(echeck_algo, &err);
-    // \todo properly catch incorrect instantiation of emptiness checker
-    assert(echeck_inst);
+    spot::emptiness_check_instantiator_ptr echeck_inst = nullptr;
+    {  // build the instantiator
+        // @todo add an option to select what EC to use
+        const char* echeck_algo = "Cou99";
+        const char* err;
+        echeck_inst = spot::make_emptiness_check_instantiator(echeck_algo, &err);
+        // check correct instantiation.
+        // according to spot documentation, `make_emptiness_check_instantiator` returns 0 on failure,
+        // and an error log in err.
+        if (!echeck_inst) {
+            spaction::Logger<std::cerr>::instance().fatal() << "Emptiness Check Instantiator could not be built: " << err << " is not recognized" << std::endl;
+            throw std::runtime_error("Fail to build Emptiness Check Instantiator");
+        }
+    }
 
     // the real emptiness check
-    spot::emptiness_check* emptiness_checker = echeck_inst->instantiate(product);
-    // \todo properly catch incorrect instantation
-    assert(emptiness_checker);
+    spot::emptiness_check_ptr emptiness_checker = echeck_inst->instantiate(product);
+    if (!emptiness_checker) {
+        spaction::Logger<std::cerr>::instance().fatal() << "Emptiness checker could not be built" << std::endl;
+        throw std::runtime_error("Fail to build Emptiness checker");
+    }
 
     spaction::Logger<std::cerr>::instance().info() << "emptichecker built" << std::endl;
 
-    spot::emptiness_check_result *result = nullptr;
+    spot::emptiness_check_result_ptr result = nullptr;
     try {
         result = emptiness_checker->check();
     } catch (std::bad_alloc) {
@@ -107,12 +112,7 @@ bool spot_dve_check(const std::string &formula, const std::string &modelfile) {
     bool to_return = !result;
     spaction::Logger<std::cerr>::instance().info() << "result of emptiness check is " << to_return << std::endl;
 
-    // free all the stuff
-    delete result;
-    delete product;
-    delete model;
-    delete property_automaton;
-    delete bdd_dictionnary;
+    // free all the stuff (most are smart pointers)
     ltl_formula->destroy();
 
     // return the result
@@ -210,23 +210,24 @@ unsigned int find_bound_max_dichoto(const CltlFormulaPtr &formula, const std::st
 
 // @param   formula is assumed to be CLTL[>]
 automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
-                                 spot::kripke *model,
-                                 spot::bdd_dict *dict) {
+                                 spot::kripke_ptr model,
+                                 spot::bdd_dict_ptr dict) {
     assert(formula->is_supltl());
     // sup \emptyset = 0
     automata::value_t res = {false, 0};
     CltlFormulaPtr phi = formula;
 
     // the emptiness check instantiator
-    spot::emptiness_check_instantiator* echeck_inst = nullptr;
+    spot::emptiness_check_instantiator_ptr echeck_inst = nullptr;
 
     {  // build the instantiator
         // @todo add an option to select what EC to use
         const char* echeck_algo = "Cou99";
         const char* err;
-        echeck_inst = spot::emptiness_check_instantiator::construct(echeck_algo, &err);
+        echeck_inst = spot::make_emptiness_check_instantiator(echeck_algo, &err);
         // check correct instantiation.
-        // according to spot documentation, `construct` returns 0 on failure, and an error log in err.
+        // according to spot documentation, `make_emptiness_check_instantiator` returns 0 on failure,
+        // and an error log in err.
         if (!echeck_inst) {
             spaction::Logger<std::cerr>::instance().fatal() << "Emptiness Check Instantiator could not be built: " << err << " is not recognized" << std::endl;
             throw std::runtime_error("Fail to build Emptiness Check Instantiator");
@@ -298,7 +299,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
         spaction::Logger<std::cerr>::instance().info() << "product as tgba" << std::endl;
 
         // the real emptiness check
-        spot::emptiness_check* emptiness_checker = echeck_inst->instantiate(prod_tgba);
+        spot::emptiness_check_ptr emptiness_checker = echeck_inst->instantiate(prod_tgba);
         if (!emptiness_checker) {
             spaction::Logger<std::cerr>::instance().fatal() << "Emptiness checker could not be built" << std::endl;
             throw std::runtime_error("Fail to build Emptiness checker");
@@ -306,7 +307,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
 
         spaction::Logger<std::cerr>::instance().info() << "emptichecker built" << std::endl;
 
-        spot::emptiness_check_result *result = nullptr;
+        spot::emptiness_check_result_ptr result = nullptr;
         try {
             result = emptiness_checker->check();
         } catch (std::bad_alloc) {
@@ -316,11 +317,11 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
 
         spaction::Logger<std::cerr>::instance().info() << i << "th iteration, EC done" << std::endl;
 
-        if ((is_nonempty = result)) {
+        if ((is_nonempty = (result != nullptr))) {
             spaction::Logger<std::cerr>::instance().info() << i << "th iteration, CE exists" << std::endl;
 
             // @note run is a run of prod_tgba
-            spot::tgba_run *run = result->accepting_run();
+            spot::tgba_run_ptr run = result->accepting_run();
             if (!run) {
                 spaction::Logger<std::cerr>::instance().fatal() << "The emptiness check algo used cannot compute a counterexample" << std::endl;
                 throw std::runtime_error("Fail to compute a counterexample");
@@ -340,17 +341,12 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
                 CltlFormulaPtr phin = (*instantiator)(formula, res.value+1);
                 phi = formula->creator()->make_and(formula, phin);
             }
-            delete run;
 
-            spaction::Logger<std::cerr>::instance().debug() << i << "th iteration, n is now " << res.value << std::endl;
-            spaction::Logger<std::cerr>::instance().debug() << "and phi is now " << phi->dump() << std::endl;
+            spaction::Logger<std::cerr>::instance().info() << i << "th iteration, n is now " << res.value << std::endl;
+            spaction::Logger<std::cerr>::instance().info() << "and phi is now " << phi->dump() << std::endl;
         }
 
         first_pass = false;
-
-        delete result;
-        delete emptiness_checker;
-        delete prod_tgba;
     } while (is_nonempty);
 
     delete instantiator;
@@ -361,8 +357,8 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
 
 // @param   formula is assumed to be CLTL[>]
 automata::value_t find_max_direct(const CltlFormulaPtr &formula,
-                                  spot::kripke *model,
-                                  spot::bdd_dict *dict) {
+                                  spot::kripke_ptr model,
+                                  spot::bdd_dict_ptr dict) {
     assert(formula->is_supltl());
     assert(model);
     automata::tgba_ca *model_ca = new automata::tgba_ca(model);
@@ -419,7 +415,7 @@ unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &mo
                             BoundSearchStrategy strat) {
     assert(formula->is_supltl());
     // get atomic propositions from formula
-    spot::bdd_dict bdd_dictionnary;
+    spot::bdd_dict_ptr bdd_dictionnary = spot::make_bdd_dict();
     auto visitor = APCollector();
     formula->accept(visitor);
 
@@ -428,22 +424,20 @@ unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &mo
     spot::ltl::atomic_prop_set atomic_propositions = visitor.get();
 
     // load divine model
-    spot::kripke *model = spot::load_dve2(modelname, &bdd_dictionnary, &atomic_propositions);
+    spot::kripke_ptr model = spot::load_ltsmin(modelname, bdd_dictionnary, &atomic_propositions);
 
     spaction::Logger<std::cerr>::instance().info() << "Kripke model loaded" << std::endl;
 
     automata::value_t result;
     switch (strat) {
         case BoundSearchStrategy::CEGAR:
-            result = find_max_cegar(formula, model, &bdd_dictionnary);
+            result = find_max_cegar(formula, model, bdd_dictionnary);
             break;
         case BoundSearchStrategy::DIRECT:
-            result = find_max_direct(formula, model, &bdd_dictionnary);
+            result = find_max_direct(formula, model, bdd_dictionnary);
             break;
     }
 
-    // delete the model
-    delete model;
     if (result.infinite)
         return -1;
     else
@@ -453,20 +447,15 @@ unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &mo
 /// a helper function that loads a LTL formula as a counterless CA (TGBA seen as a CA)
 automata::tgba_ca *load_formula(const std::string &formula) {
     // spot parsing of the instantiated formula
-    spot::ltl::parse_error_list pel;
-    const spot::ltl::formula *ltl_formula = spot::ltl::parse(formula, pel);
-    if (spot::ltl::format_parse_errors(std::cerr, formula, pel)) {
-        ltl_formula->destroy();
-        exit(1);
-    }
+    const spot::ltl::formula *ltl_formula = spot::ltl::parse_formula(formula);
 
     spaction::Logger<std::cerr>::instance().info() << "spot parsing done" << std::endl;
 
     // to store atomic propositions appearing in the formula
     spot::ltl::atomic_prop_set atomic_propositions;
     // bdd dictionnary
-    spot::bdd_dict *bdd_dictionnary = new spot::bdd_dict();
-    const spot::tgba *property_automaton;
+    spot::bdd_dict_ptr bdd_dictionnary = spot::make_bdd_dict();
+    spot::const_twa_ptr property_automaton = nullptr;
     // NB: embedding the translation in a block is mandatory for proper deallocation
     {
         // translate the formula into an automaton

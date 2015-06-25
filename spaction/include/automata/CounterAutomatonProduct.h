@@ -349,7 +349,7 @@ class _AutLabelProduct<CltlTranslator::FormulaList, CltlTranslator::FormulaList>
 }  // namespace spaction
 
 #include <spot/ltlast/multop.hh>
-#include <spot/tgba/formula2bdd.hh>
+#include <spot/twa/formula2bdd.hh>
 #include "cltl2spot.h"
 
 namespace spaction {
@@ -369,7 +369,7 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
                                 CltlTranslator::FormulaList>;
 
     explicit _AutLabelProduct(): _AutLabelProduct(nullptr, nullptr) {}
-    explicit _AutLabelProduct(spot::bdd_dict *d, CltlFormulaFactory *f): _dict(d), _factory(f) {}
+    explicit _AutLabelProduct(spot::bdd_dict_ptr d, CltlFormulaFactory *f): _dict(d), _factory(f) {}
 
     ~_AutLabelProduct() {
         if (_dict != nullptr)
@@ -449,7 +449,7 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
     }
 
  private:
-    spot::bdd_dict *_dict;
+    spot::bdd_dict_ptr _dict;
     CltlFormulaFactory *_factory;
 };
 
