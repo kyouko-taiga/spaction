@@ -225,10 +225,8 @@ class SupremumFinder {
                         todo.pop();
                         // dec_depth();  // for stats
                     }
-                    if (!dest.is_bounded())
-                        return { true, 0 };
-                    else
-                        return { false, max_val };
+
+                    return { true, 0 };
                 }
                 // @todo    compute a lasso that witnesses newly found value
             }
