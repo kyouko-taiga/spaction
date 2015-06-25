@@ -205,8 +205,6 @@ int main(int argc, char* argv[]) {
                     log_level = static_cast<spaction::Logger<std::cerr>::LogLevel>(optarg[0] - 'a');
                 else
                     log_level = spaction::Logger<std::cerr>::LogLevel::kDEBUG;
-                std::cerr << "loglevel set to " << (static_cast<char>(log_level) + 'a') << std::endl;
-                std::cerr << "a set to " << (int)'a' << std::endl;
                 break;
             default:
                 spaction::Logger<std::cerr>::instance().fatal() << "unknown option " << c << std::endl;
