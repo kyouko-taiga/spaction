@@ -49,9 +49,6 @@ class BinaryOperator : public CltlFormula {
     /// Returns a equivalent formula in negation normal form.
     virtual CltlFormulaPtr to_nnf();
 
-    /// Returns a equivalent formula in disjunctive normal form.
-    virtual CltlFormulaPtr to_dnf();
-
     inline const CltlFormulaPtr &left() const { return _left; }
     inline const CltlFormulaPtr &right() const { return _right; }
 

@@ -57,9 +57,6 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     /// Returns a equivalent formula in negation normal form.
     virtual inline CltlFormulaPtr to_nnf() { return shared_from_this(); }
 
-    /// Returns a equivalent formula in disjunctive normal form.
-    virtual inline CltlFormulaPtr to_dnf() { return this->to_nnf(); }
-
     /// @note
     ///     We could make this method constant, but it would require to pass a
     ///     std::shared_ptr<const CltlFormula> to the visitor and thus to every subsequent call

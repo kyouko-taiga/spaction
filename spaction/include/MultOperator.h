@@ -57,7 +57,6 @@ class MultOperator : public CltlFormula {
     bool is_nnf() const;
 
     virtual CltlFormulaPtr to_nnf() override;
-//    virtual CltlFormulaPtr to_dnf() override;
 
     std::string dump() const override;
 

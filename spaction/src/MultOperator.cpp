@@ -91,8 +91,6 @@ CltlFormulaPtr MultOperator::to_nnf() {
     return _creator->make_nary(_type, tmp);
 }
 
-//CltlFormulaPtr MultOperator::to_dnf();
-
 std::string MultOperator::dump() const {
     std::string result;
     for (auto it = _childs.begin() ; it != _childs.end() ; ++it) {
