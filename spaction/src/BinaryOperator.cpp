@@ -22,12 +22,18 @@
 
 #include "CltlFormulaFactory.h"
 #include "CltlFormulaVisitor.h"
+#include "hash/hash.h"
 
 namespace spaction {
 
 BinaryOperator::BinaryOperator(BinaryOperatorType type, const CltlFormulaPtr &left,
                                const CltlFormulaPtr &right, CltlFormulaFactory *creator) :
     CltlFormula(creator), _type(type), _left(left), _right(right) {
+}
+
+std::size_t BinaryOperator::hash() const {
+    std::vector<std::size_t> tmp = { (std::size_t)_type, _left->hash(), _right->hash() };
+    return std::hash<std::vector<std::size_t>>()(tmp);
 }
 
 bool BinaryOperator::syntactic_eq(const CltlFormula &rhs) const {

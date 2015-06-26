@@ -36,6 +36,7 @@ class AtomicProposition : public CltlFormula {
 
     /// Returns whether or not `rhs` is syntactically equivalent to this formula.
     virtual bool syntactic_eq(const CltlFormula &rhs) const;
+    std::size_t hash() const override;
 
     /// Returns the string identifying this atomic proposition.
     inline const std::string &value() const { return _value; }

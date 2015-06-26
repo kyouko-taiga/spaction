@@ -19,12 +19,18 @@
 
 #include "CltlFormulaFactory.h"
 #include "CltlFormulaVisitor.h"
+#include "hash/hash.h"
 
 namespace spaction {
 
 MultOperator::MultOperator(MultOperatorType type, const std::vector<CltlFormulaPtr> &childs,
                            CltlFormulaFactory *creator) :
     CltlFormula(creator), _type(type), _childs(childs) {
+}
+
+std::size_t MultOperator::hash() const {
+    // @todo take type into account in the hash (to avoid collisions)
+    return std::hash<std::vector<CltlFormulaPtr>>()(_childs);
 }
 
 bool MultOperator::syntactic_eq(const CltlFormula &rhs) const {

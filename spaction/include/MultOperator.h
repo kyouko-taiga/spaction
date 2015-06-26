@@ -44,6 +44,7 @@ class MultOperator : public CltlFormula {
 
     inline const std::vector<CltlFormulaPtr> &childs() const { return _childs; }
 
+    std::size_t hash() const override;
     /// Returns whether or not `rhs` is syntactically equivalent to this formula.
     virtual bool syntactic_eq(const CltlFormula &rhs) const;
 

@@ -51,6 +51,8 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     /// Returns whether or not `rhs` is not the same formula.
     virtual inline bool operator!=(const CltlFormula &rhs) const { return !(*this == rhs); }
 
+    /// A hash
+    virtual std::size_t hash() const = 0;
     /// Returns whether or not `rhs` is syntactically equivalent to this formula.
     virtual inline bool syntactic_eq(const CltlFormula &rhs) const = 0;
 

@@ -28,6 +28,11 @@ UnaryOperator::UnaryOperator(UnaryOperatorType type, const CltlFormulaPtr &opera
     CltlFormula(creator), _type(type), _operand(operand) {
 }
 
+std::size_t UnaryOperator::hash() const {
+    // @todo improve this hash (take the type into account to avoid collisions)
+    return _operand->hash();
+}
+
 bool UnaryOperator::syntactic_eq(const CltlFormula &rhs) const {
     if (rhs.formula_type() != CltlFormula::kUnaryOperator)
         return false;
