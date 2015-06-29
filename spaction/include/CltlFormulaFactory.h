@@ -27,6 +27,18 @@
 
 namespace spaction {
 
+struct cltl_ptr_hash {
+    std::size_t operator()(CltlFormula* const op) const {
+        return op->hash();
+    }
+};
+
+struct cltl_ptr_equal {
+    bool operator()(CltlFormula* const lhs, CltlFormula* const rhs) const {
+        return lhs->syntactic_eq(*rhs);
+    }
+};
+
 /// A factory class for Cost LTL formulae.
 class CltlFormulaFactory {
  public:
@@ -66,7 +78,7 @@ class CltlFormulaFactory {
 
  private:
     /// Stores the unique index.
-    std::unordered_set<CltlFormula*> _formulae;
+    std::unordered_set<CltlFormula*, cltl_ptr_hash, cltl_ptr_equal> _formulae;
 
     CltlFormulaPtr _make_shared_formula(CltlFormula *formula);
 
