@@ -274,6 +274,35 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
             return _iterator.get_label();
         }
 
+        const MinMaxConfiguration<Q> get_source() const override {
+            return _source;
+        }
+        const MinMaxConfiguration<Q> get_sink() const override {
+            bool is_sink_bounded = _source.is_bounded();
+            unsigned int current_value = _source.current_value();
+            std::vector<unsigned int> values = _source.values();
+            auto ops = _iterator.get_label().get_operations();
+            for (std::size_t k = 0; k != ops.size(); ++k) {
+                assert(ops[k].size() == 1);
+                if (ops[k][0] & kIncrement) {
+                    values[k]++;
+                }
+                if (ops[k][0] & kCheck) {
+                    if (!is_sink_bounded) {
+                        is_sink_bounded = true;
+                        current_value = values[k];
+                    } else if (values[k] < current_value) {
+                        current_value = values[k];
+                    }
+                }
+                if (ops[k][0] & kReset) {
+                    values[k] = 0;
+                }
+            }
+            assert(_source.is_bounded() ? (is_sink_bounded and current_value <= _source.current_value()) : true);
+            return MinMaxConfiguration<Q>(_iterator.get_sink(), is_sink_bounded, current_value, values);
+        }
+
         const typename super_type::TransitionBaseIterator& operator++() override {
             ++_iterator;
             return *this;

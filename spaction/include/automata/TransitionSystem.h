@@ -82,6 +82,8 @@ template<typename Q, typename S> class TransitionSystem {
         //@todo should the accessors be const?
         //@todo add an accessor to the acceptance conditions
         virtual S get_label() const = 0;
+        virtual const Q get_source() const = 0;
+        virtual const Q get_sink() const = 0;
     };
 
     class StateBaseIterator {
@@ -158,6 +160,8 @@ template<typename Q, typename S> class TransitionSystem {
         ///         of type 'const Transition<Q,S> *'
         TransitionPtr<Q, S> operator*() { return **_base_iterator; }
         S get_label() const { return _base_iterator->get_label(); }
+        const Q get_source() const { return _base_iterator->get_source(); }
+        const Q get_sink() const { return _base_iterator->get_sink(); }
 
         const _TransitionIterator& operator++() {
             ++(*_base_iterator);

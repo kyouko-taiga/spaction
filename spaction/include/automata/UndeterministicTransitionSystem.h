@@ -81,6 +81,8 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
         }
 
         virtual S get_label() const { return (*_transition_it)->label(); }
+        virtual const Q get_source() const { return (*_transition_it)->source(); }
+        virtual const Q get_sink() const { return (*_transition_it)->sink(); }
 
         virtual const typename TransitionSystem<Q, S>::TransitionBaseIterator& operator++() {
             // increment the transition iterator

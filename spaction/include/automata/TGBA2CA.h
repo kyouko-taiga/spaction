@@ -207,6 +207,12 @@ private:
                            [this](unsigned f) { return this->_ts->get_acceptance(f); });
             return CounterLabel<bdd>(_it->current_condition(), op_list, accs);
         }
+        const Q get_source() const override {
+            return _source;
+        }
+        const Q get_sink() const override {
+            return _it->current_state();
+        }
 
         const TransitionBaseIterator& operator++() override {
             assert(_it != nullptr);

@@ -185,6 +185,12 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
         S get_label() const override {
             return _ts->_helper.build(_lhs.get_label(), _rhs.get_label());
         }
+        const Q get_source() const override {
+            return std::make_pair(_lhs.get_source(), _rhs.get_source());
+        }
+        const Q get_sink() const override {
+            return std::make_pair(_lhs.get_sink(), _rhs.get_sink());
+        }
 
         virtual const typename super_type::TransitionBaseIterator& operator++() override {
             incr();
