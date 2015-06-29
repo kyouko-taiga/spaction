@@ -75,8 +75,13 @@ template<typename Q, typename S> class TransitionSystem {
         virtual bool is_equal(const TransitionBaseIterator& rhs) const = 0;
         virtual TransitionBaseIterator *clone() const = 0;
 
+        //@note rather inefficient, try to use direct accessor to the letter instead
         virtual TransitionPtr<Q, S> operator*() = 0;
         virtual const TransitionBaseIterator& operator++() = 0;
+
+        //@todo should the accessors be const?
+        //@todo add an accessor to the acceptance conditions
+        virtual S get_label() const = 0;
     };
 
     class StateBaseIterator {
@@ -152,6 +157,7 @@ template<typename Q, typename S> class TransitionSystem {
         ///         Note that the pointed Transition is const, so consider TransitionPtr<Q,S> as if
         ///         of type 'const Transition<Q,S> *'
         TransitionPtr<Q, S> operator*() { return **_base_iterator; }
+        S get_label() const { return _base_iterator->get_label(); }
 
         const _TransitionIterator& operator++() {
             ++(*_base_iterator);

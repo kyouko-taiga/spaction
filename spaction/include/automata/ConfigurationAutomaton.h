@@ -270,6 +270,10 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
             return TransitionPtr<MinMaxConfiguration<Q>, S>(res, _ts->get_control_block());
         }
 
+        S get_label() const override {
+            return _iterator.get_label();
+        }
+
         const typename super_type::TransitionBaseIterator& operator++() override {
             ++_iterator;
             return *this;

@@ -199,6 +199,15 @@ private:
             return TransitionPtr<Q, S>(_ts->_make_transition(_source, _it->current_state(), cl), _ts->get_control_block());
         }
 
+        S get_label() const override {
+            std::vector<CounterOperationList> op_list;
+            auto tmp = _ts->_and_operands(_it->current_acceptance_conditions());
+            std::set<std::size_t> accs;
+            std::transform(tmp.begin(), tmp.end(), std::inserter(accs, accs.end()),
+                           [this](unsigned f) { return this->_ts->get_acceptance(f); });
+            return CounterLabel<bdd>(_it->current_condition(), op_list, accs);
+        }
+
         const TransitionBaseIterator& operator++() override {
             assert(_it != nullptr);
             _it->next();

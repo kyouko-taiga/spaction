@@ -80,6 +80,8 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
             return TransitionPtr<Q, S>(*_transition_it, _transition_system->get_control_block());
         }
 
+        virtual S get_label() const { return (*_transition_it)->label(); }
+
         virtual const typename TransitionSystem<Q, S>::TransitionBaseIterator& operator++() {
             // increment the transition iterator
             if (++_transition_it != _it->second.end()) {

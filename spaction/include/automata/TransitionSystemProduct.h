@@ -182,6 +182,10 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
             return TransitionPtr<Q, S>(res, _ts->get_control_block());
         }
 
+        S get_label() const override {
+            return _ts->_helper.build(_lhs.get_label(), _rhs.get_label());
+        }
+
         virtual const typename super_type::TransitionBaseIterator& operator++() override {
             incr();
             while (!done() && conditions_invalid()) {
