@@ -402,6 +402,11 @@ class APCollector : public CltlFormulaVisitor {
         formula->left()->accept(*this);
         formula->right()->accept(*this);
     }
+    void visit(const std::shared_ptr<MultOperator> &formula) final {
+        for (auto &c: formula->childs()) {
+            c->accept(*this);
+        }
+    }
 
     spot::ltl::atomic_prop_set get() const { return _res; }
 

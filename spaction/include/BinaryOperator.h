@@ -29,8 +29,6 @@ class CltlFormulaVisitor;
 class BinaryOperator : public CltlFormula {
  public:
     enum BinaryOperatorType : char {
-        kOr,
-        kAnd,
         kUntil,
         kRelease,
         kCostUntil,

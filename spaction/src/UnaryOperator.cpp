@@ -54,10 +54,6 @@ CltlFormulaPtr UnaryOperator::to_nnf() {
         if (_operand->formula_type() == CltlFormula::kBinaryOperator) {
             BinaryOperator *bo = static_cast<BinaryOperator*>(_operand.get());
             switch (bo->operator_type()) {
-                case BinaryOperator::kOr:
-                    return _creator->make_and(bo->left(), bo->right())->to_nnf();
-                case BinaryOperator::kAnd:
-                    return _creator->make_or(bo->left(), bo->right())->to_nnf();
                 case BinaryOperator::kUntil:
                     return _creator->make_release(bo->left(), bo->right())->to_nnf();
                 case BinaryOperator::kRelease:
@@ -66,6 +62,17 @@ CltlFormulaPtr UnaryOperator::to_nnf() {
                     return _creator->make_costrelease(bo->left(), bo->right())->to_nnf();
                 case BinaryOperator::kCostRelease:
                     return _creator->make_costuntil(bo->left(), bo->right())->to_nnf();
+            }
+        }
+
+        // if the operand is a nary operation
+        if (_operand->formula_type() == CltlFormula::kMultOperator) {
+            MultOperator *mo = static_cast<MultOperator*>(_operand.get());
+            switch (mo->operator_type()) {
+                case MultOperator::kOr:
+                    return _creator->make_and(mo->childs());
+                case MultOperator::kAnd:
+                    return _creator->make_or(mo->childs());
             }
         }
 

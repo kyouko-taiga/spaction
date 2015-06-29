@@ -62,8 +62,6 @@ void Instantiator::visit(const std::shared_ptr<BinaryOperator> &formula) {
     CltlFormulaFactory *factory = formula->creator();
 
     switch (formula->operator_type()) {
-        case BinaryOperator::kOr:
-        case BinaryOperator::kAnd:
         case BinaryOperator::kUntil:
         case BinaryOperator::kRelease:
             // for every boolean binary op o, (f o g)[n] = f[n] o f[n]
@@ -80,7 +78,17 @@ void Instantiator::visit(const std::shared_ptr<BinaryOperator> &formula) {
     }
 
     delete instantiator;
+}
 
+void Instantiator::visit(const std::shared_ptr<MultOperator> &formula) {
+    // use a copy of the current instantiator to instantiate operands
+    Instantiator *instantiator = this->copy();
+    std::vector<CltlFormulaPtr> tmp;
+    for (auto &c: formula->childs()) {
+        tmp.push_back((*instantiator)(c, _n));
+    }
+    _result = formula->creator()->make_and(tmp);
+    delete instantiator;
 }
 
 // recall that left and right are assumed to be LTL (already instantiated)

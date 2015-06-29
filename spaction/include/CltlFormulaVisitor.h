@@ -26,6 +26,7 @@ class AtomicProposition;
 class ConstantExpression;
 class UnaryOperator;
 class BinaryOperator;
+class MultOperator;
 
 class CltlFormulaVisitor {
  public:
@@ -35,6 +36,7 @@ class CltlFormulaVisitor {
     virtual void visit(const std::shared_ptr<ConstantExpression> &formula) = 0;
     virtual void visit(const std::shared_ptr<UnaryOperator> &formula) = 0;
     virtual void visit(const std::shared_ptr<BinaryOperator> &formula) = 0;
+    virtual void visit(const std::shared_ptr<MultOperator> &formula) = 0;
 };
 
 }  // namespace spaction

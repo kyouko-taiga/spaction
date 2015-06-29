@@ -195,6 +195,10 @@ class CltlTranslator {
                                     const std::vector<TransitionLabel*> &trace);
 
     /// Helper method that inserts a formula into a FormulaList and keeps the result sorted.
+    template<class Iterator>
+    FormulaList _insert(const FormulaList &list,
+                        const Iterator &begin,
+                        const Iterator &end) const;
     FormulaList _insert(const FormulaList &list,
                         const std::initializer_list<CltlFormulaPtr> &add_list) const;
 };

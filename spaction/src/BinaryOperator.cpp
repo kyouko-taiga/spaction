@@ -38,16 +38,7 @@ bool BinaryOperator::syntactic_eq(const CltlFormula &rhs) const {
     if (bo._type != _type)
         return false;
 
-    switch (bo.operator_type()) {
-        case BinaryOperator::kOr:
-        case BinaryOperator::kAnd:
-            return _leaves() == bo._leaves();
-        case BinaryOperator::kUntil:
-        case BinaryOperator::kRelease:
-        case BinaryOperator::kCostUntil:
-        case BinaryOperator::kCostRelease:
-            return ((bo._left == _left) and (bo._right == _right));
-    }
+    return ((bo._left == _left) and (bo._right == _right));
 }
 
 CltlFormulaPtr BinaryOperator::to_nnf() {
@@ -66,28 +57,28 @@ CltlFormulaPtr BinaryOperator::to_dnf() {
         const CltlFormulaPtr &right = bo_self->right()->to_dnf();
 
         // check if `nnf_self` is of the form (x && y)
-        if (bo_self->operator_type() == BinaryOperator::kAnd) {
-            if (right->formula_type() == CltlFormula::kBinaryOperator) {
-                BinaryOperator *bo_right = static_cast<BinaryOperator*>(right.get());
-                if (bo_right->operator_type() == BinaryOperator::kOr) {
-                    // distribute a * (b + c)
-                    const CltlFormulaPtr &a = _creator->make_and(left, bo_right->left());
-                    const CltlFormulaPtr &b = _creator->make_and(left, bo_right->right());
-                    return _creator->make_or(a, b)->to_dnf();
-                }
-            } else if (left->formula_type() == CltlFormula::kBinaryOperator) {
-                BinaryOperator *bo_left = static_cast<BinaryOperator*>(left.get());
-                if (bo_left->operator_type() == BinaryOperator::kOr) {
-                    // distribute (a + b) * c
-                    const CltlFormulaPtr &a = _creator->make_and(right, bo_left->left());
-                    const CltlFormulaPtr &b = _creator->make_and(right, bo_left->right());
-                    return _creator->make_or(a, b)->to_dnf();
-                }
-            }
-        } else {
+//        if (bo_self->operator_type() == BinaryOperator::kAnd) {
+//            if (right->formula_type() == CltlFormula::kBinaryOperator) {
+//                BinaryOperator *bo_right = static_cast<BinaryOperator*>(right.get());
+//                if (bo_right->operator_type() == BinaryOperator::kOr) {
+//                    // distribute a * (b + c)
+//                    const CltlFormulaPtr &a = _creator->make_and(left, bo_right->left());
+//                    const CltlFormulaPtr &b = _creator->make_and(left, bo_right->right());
+//                    return _creator->make_or(a, b)->to_dnf();
+//                }
+//            } else if (left->formula_type() == CltlFormula::kBinaryOperator) {
+//                BinaryOperator *bo_left = static_cast<BinaryOperator*>(left.get());
+//                if (bo_left->operator_type() == BinaryOperator::kOr) {
+//                    // distribute (a + b) * c
+//                    const CltlFormulaPtr &a = _creator->make_and(right, bo_left->left());
+//                    const CltlFormulaPtr &b = _creator->make_and(right, bo_left->right());
+//                    return _creator->make_or(a, b)->to_dnf();
+//                }
+//            }
+//        } else {
             // returns a binary operator with transformed operands
             return _creator->make_binary(bo_self->operator_type(), left, right);
-        }
+//        }
     }
 
     // no further transformation to be performed since `nnf_self` is not a binary operator
@@ -151,16 +142,7 @@ bool BinaryOperator::is_supltl() const {
 }
 
 bool BinaryOperator::is_propositional() const {
-    switch (_type) {
-        case BinaryOperator::kUntil:
-        case BinaryOperator::kRelease:
-        case BinaryOperator::kCostUntil:
-        case BinaryOperator::kCostRelease:
-            return false;
-        case BinaryOperator::kOr:
-        case BinaryOperator::kAnd:
-            return _left->is_propositional() and _right->is_propositional();
-    }
+    return false;
 }
 
 bool BinaryOperator::is_nnf() const {
@@ -178,12 +160,6 @@ std::string BinaryOperator::dump() const {
     result += _left->dump();
     result += ") ";
     switch (_type) {
-        case kOr:
-            result += "||";
-            break;
-        case kAnd:
-            result += "&&";
-            break;
         case kUntil:
             result += "U";
             break;
