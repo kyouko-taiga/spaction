@@ -22,9 +22,22 @@
 
 #include "BinaryOperator.h"
 #include "CltlFormula.h"
+#include "MultOperator.h"
 #include "UnaryOperator.h"
 
 namespace spaction {
+
+struct cltl_ptr_hash {
+    std::size_t operator()(CltlFormula* const op) const {
+        return op->hash();
+    }
+};
+
+struct cltl_ptr_equal {
+    bool operator()(CltlFormula* const lhs, CltlFormula* const rhs) const {
+        return lhs->syntactic_eq(*rhs);
+    }
+};
 
 /// A factory class for Cost LTL formulae.
 class CltlFormulaFactory {
@@ -39,8 +52,14 @@ class CltlFormulaFactory {
 
     CltlFormulaPtr make_binary(BinaryOperator::BinaryOperatorType operator_type,
                                const CltlFormulaPtr &left, const CltlFormulaPtr &right);
+    CltlFormulaPtr make_nary(MultOperator::MultOperatorType operator_type,
+                             const std::vector<CltlFormulaPtr> &ops);
+    CltlFormulaPtr make_nary(MultOperator::MultOperatorType operator_type,
+                             const CltlFormulaPtr &left, const CltlFormulaPtr &right);
     CltlFormulaPtr make_or(const CltlFormulaPtr &left, const CltlFormulaPtr &right);
+    CltlFormulaPtr make_or(const std::vector<CltlFormulaPtr> &ops);
     CltlFormulaPtr make_and(const CltlFormulaPtr &left, const CltlFormulaPtr &right);
+    CltlFormulaPtr make_and(const std::vector<CltlFormulaPtr> &ops);
     CltlFormulaPtr make_until(const CltlFormulaPtr &left, const CltlFormulaPtr &right);
     CltlFormulaPtr make_release(const CltlFormulaPtr &left, const CltlFormulaPtr &right);
     CltlFormulaPtr make_costuntil(const CltlFormulaPtr &left, const CltlFormulaPtr &right);
@@ -59,7 +78,7 @@ class CltlFormulaFactory {
 
  private:
     /// Stores the unique index.
-    std::unordered_set<CltlFormula*> _formulae;
+    std::unordered_set<CltlFormula*, cltl_ptr_hash, cltl_ptr_equal> _formulae;
 
     CltlFormulaPtr _make_shared_formula(CltlFormula *formula);
 

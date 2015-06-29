@@ -32,6 +32,7 @@
 #include "AtomicProposition.h"
 #include "BinaryOperator.h"
 #include "ConstantExpression.h"
+#include "MultOperator.h"
 #include "UnaryOperator.h"
 #include "CltlFormulaFactory.h"
 
@@ -78,12 +79,6 @@ class spot_transformer : public CltlFormulaVisitor {
         const spot::ltl::formula *right = result;
 
         switch (formula->operator_type()) {
-            case BinaryOperator::kOr:
-                result = spot::ltl::multop::instance(spot::ltl::multop::Or, left, right);
-                break;
-            case BinaryOperator::kAnd:
-                result = spot::ltl::multop::instance(spot::ltl::multop::And, left, right);
-                break;
             case BinaryOperator::kUntil:
                 result = spot::ltl::binop::instance(spot::ltl::binop::U, left, right);
                 break;
@@ -95,6 +90,23 @@ class spot_transformer : public CltlFormulaVisitor {
                 LOG_FATAL << "cost operators are not convertible to spot" << std::endl;
                 result = nullptr;
                 throw std::runtime_error("cost operators are not convertible to spot");
+                break;
+        }
+    }
+
+    void visit(const std::shared_ptr<MultOperator> &formula) final {
+        std::vector<const spot::ltl::formula *> tmp;
+        for (auto &c: formula->childs()) {
+            c->accept(*this);
+            tmp.push_back(result);
+        }
+
+        switch (formula->operator_type()) {
+            case MultOperator::kOr:
+                result = spot::ltl::multop::instance(spot::ltl::multop::Or, &tmp);
+                break;
+            case MultOperator::kAnd:
+                result = spot::ltl::multop::instance(spot::ltl::multop::And, &tmp);
                 break;
         }
     }

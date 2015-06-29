@@ -17,6 +17,7 @@
 		4AC30FE01B3AFFDD00BEF3F1 /* libbddx.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AC30FDA1B3AFF7E00BEF3F1 /* libbddx.0.dylib */; };
 		4AC30FE11B3AFFDD00BEF3F1 /* libspot.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AC30FDC1B3AFF9100BEF3F1 /* libspot.0.dylib */; };
 		4AC30FE21B3AFFDD00BEF3F1 /* libspotltsmin.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4AC30FDE1B3AFF9F00BEF3F1 /* libspotltsmin.0.dylib */; };
+		4AC30FE61B3C2C1000BEF3F1 /* MultOperator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4AC30FE51B3C2C1000BEF3F1 /* MultOperator.cpp */; };
 		753EF59819DDA16200106D3C /* CltlTranslator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 753EF59719DDA16200106D3C /* CltlTranslator.cpp */; };
 		755CEA42196EBA8C00DD3677 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 755CEA41196EBA8C00DD3677 /* main.cpp */; };
 		755CEA44196EBA8C00DD3677 /* spactiontest.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 755CEA43196EBA8C00DD3677 /* spactiontest.1 */; };
@@ -82,6 +83,8 @@
 		4AC30FDA1B3AFF7E00BEF3F1 /* libbddx.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbddx.0.dylib; path = ../spot/newlocal/lib/libbddx.0.dylib; sourceTree = "<group>"; };
 		4AC30FDC1B3AFF9100BEF3F1 /* libspot.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspot.0.dylib; path = ../spot/newlocal/lib/libspot.0.dylib; sourceTree = "<group>"; };
 		4AC30FDE1B3AFF9F00BEF3F1 /* libspotltsmin.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libspotltsmin.0.dylib; path = ../spot/newlocal/lib/libspotltsmin.0.dylib; sourceTree = "<group>"; };
+		4AC30FE31B3C2A6D00BEF3F1 /* MultOperator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MultOperator.h; sourceTree = "<group>"; };
+		4AC30FE51B3C2C1000BEF3F1 /* MultOperator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MultOperator.cpp; sourceTree = "<group>"; };
 		4AE621131AA052C3004724E6 /* ConfigurationAutomaton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfigurationAutomaton.h; sourceTree = "<group>"; };
 		753EF59719DDA16200106D3C /* CltlTranslator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = CltlTranslator.cpp; sourceTree = "<group>"; };
 		753EF59919DEEA6900106D3C /* TransitionSystem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TransitionSystem.h; sourceTree = "<group>"; };
@@ -216,6 +219,7 @@
 				756EE5FF19C9B2B7002261FF /* ConstantExpression.h */,
 				756EE60119C9B438002261FF /* UnaryOperator.h */,
 				756EE60319C9B675002261FF /* BinaryOperator.h */,
+				4AC30FE31B3C2A6D00BEF3F1 /* MultOperator.h */,
 				756EE5FD19C9AD1F002261FF /* CltlFormulaVisitor.h */,
 				756EE61619CC1C78002261FF /* Instantiator.h */,
 			);
@@ -234,6 +238,7 @@
 				756EE60D19CAD6E8002261FF /* ConstantExpression.cpp */,
 				756EE61019CAD793002261FF /* UnaryOperator.cpp */,
 				756EE61319CAD902002261FF /* BinaryOperator.cpp */,
+				4AC30FE51B3C2C1000BEF3F1 /* MultOperator.cpp */,
 				756EE60719C9C6D0002261FF /* Instantiator.cpp */,
 			);
 			path = src;
@@ -434,6 +439,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				756EE61219CAD793002261FF /* UnaryOperator.cpp in Sources */,
+				4AC30FE61B3C2C1000BEF3F1 /* MultOperator.cpp in Sources */,
 				755CEA5D196EBB6C00DD3677 /* spotcheck.cc in Sources */,
 				756EE60919C9C6D0002261FF /* Instantiator.cpp in Sources */,
 				4A2541A319F5465B00E52660 /* cltllex.cc in Sources */,
