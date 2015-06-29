@@ -135,7 +135,7 @@ public:
     }
 
     virtual spot::state* current_state() const override {
-        return new state_adapter<Q>((*_current)->sink());
+        return new state_adapter<Q>(_current.get_sink());
     }
 
     virtual bdd current_condition() const override {

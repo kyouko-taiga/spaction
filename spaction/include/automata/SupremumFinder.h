@@ -116,7 +116,7 @@ class SupremumFinder {
             // inc_transitions();  // for stats
             // Fetch the values (destination state, acceptance conditions
             // of the arc) we are interested in...
-            MinMaxConfiguration<Q> dest = (*succ)->sink();
+            MinMaxConfiguration<Q> dest = succ.get_sink();
             std::set<std::size_t> acc = succ.get_label().get_acceptance();
 
             //{@logging
@@ -377,10 +377,10 @@ class SupremumFinder {
         my_iterator_pair succs(tmp.successors().begin(), tmp.successors().end());
         
         for (;;) {
-            for (auto i : succs) {
+            for (iterator_type i = succs.begin() ; i != succs.end() ; ++i) {
                 //                inc_transitions();  // for stats
                 
-                MinMaxConfiguration<Q> s = i->sink();
+                MinMaxConfiguration<Q> s = i.get_sink();
                 auto spi = _h.find(s);
                 
                 // This state is not necessarily in H, because if we were doing inclusion checking

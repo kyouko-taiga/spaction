@@ -266,7 +266,7 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
                 }
             }
             assert(_source.is_bounded() ? (is_sink_bounded and current_value <= _source.current_value()) : true);
-            auto res =_ts->add_transition(_source, MinMaxConfiguration<Q>((*_iterator)->sink(), is_sink_bounded, current_value, values), _iterator.get_label());
+            auto res =_ts->add_transition(_source, MinMaxConfiguration<Q>(_iterator.get_sink(), is_sink_bounded, current_value, values), _iterator.get_label());
             return TransitionPtr<MinMaxConfiguration<Q>, S>(res, _ts->get_control_block());
         }
 
