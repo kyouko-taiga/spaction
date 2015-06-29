@@ -117,7 +117,7 @@ class SupremumFinder {
             // Fetch the values (destination state, acceptance conditions
             // of the arc) we are interested in...
             MinMaxConfiguration<Q> dest = (*succ)->sink();
-            std::set<std::size_t> acc = (*succ)->label().get_acceptance();
+            std::set<std::size_t> acc = succ.get_label().get_acceptance();
 
             //{@logging
 //            std::cerr << " ------- " << std::endl;

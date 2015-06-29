@@ -197,10 +197,7 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
     protected:
         bool done() const { return !(_lhs != _lend or _rhs != _rend); }
         bool conditions_invalid() {
-            TransitionPtr<Q1, S1> l = *_lhs;
-            TransitionPtr<Q2, S2> r = *_rhs;
-            auto cond = _ts->_helper.build(l->label(), r->label());
-            return _ts->_helper.is_false(cond);
+            return _ts->_helper.is_false(_ts->_helper.build(_lhs.get_label(), _rhs.get_label()));
         }
 
         void incr() {

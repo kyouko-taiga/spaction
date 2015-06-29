@@ -247,7 +247,7 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
             bool is_sink_bounded = _source.is_bounded();
             unsigned int current_value = _source.current_value();
             std::vector<unsigned int> values = _source.values();
-            auto ops = (*_iterator)->label().get_operations();
+            auto ops = _iterator.get_label().get_operations();
             for (std::size_t k = 0; k != ops.size(); ++k) {
                 assert(ops[k].size() == 1);
                 if (ops[k][0] & kIncrement) {
@@ -266,7 +266,7 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
                 }
             }
             assert(_source.is_bounded() ? (is_sink_bounded and current_value <= _source.current_value()) : true);
-            auto res =_ts->add_transition(_source, MinMaxConfiguration<Q>((*_iterator)->sink(), is_sink_bounded, current_value, values), (*_iterator)->label());
+            auto res =_ts->add_transition(_source, MinMaxConfiguration<Q>((*_iterator)->sink(), is_sink_bounded, current_value, values), _iterator.get_label());
             return TransitionPtr<MinMaxConfiguration<Q>, S>(res, _ts->get_control_block());
         }
 

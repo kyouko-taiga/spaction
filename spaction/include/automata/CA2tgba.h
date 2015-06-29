@@ -96,11 +96,11 @@ public:
 
     /// Transforms the letter (conditions) of a CA transition to a spot condition in bdd.
     /// @note       in practice, a condition is a conjunction of atomic propositions
-    /// @param      the transition whose condition is to be converted
-    /// @return     a bdd equivalent to the condition of \a trans
-    bdd get_condition(const TransitionPtr<Q, CounterLabel<S>> &trans) const {
+    /// @param      the condition to be converted
+    /// @return     a bdd equivalent to the letter of \a label
+    bdd get_condition(const CounterLabel<S> &label) const {
         const spot::ltl::formula * fspot = spot::ltl::constant::true_instance();
-        for (auto f : trans->label().letter()) {
+        for (auto f : label.letter()) {
             fspot = spot::ltl::multop::instance(spot::ltl::multop::And, cltl2spot(f), fspot);
         }
         return spot::formula_to_bdd(fspot, _ts->get_dict(), (void*)_ts);
@@ -139,11 +139,11 @@ public:
     }
 
     virtual bdd current_condition() const override {
-        return _succ_helper<Q, S, TS>(_ts).get_condition(*_current);
+        return _succ_helper<Q, S, TS>(_ts).get_condition(_current.get_label());
     }
 
     virtual spot::acc_cond::mark_t current_acceptance_conditions() const override {
-        auto accs = (*_current)->label().get_acceptance();
+        auto accs = _current.get_label().get_acceptance();
         spot::acc_cond::mark_t result(accs.begin(), accs.end());
         return result;
     }
