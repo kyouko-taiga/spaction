@@ -34,7 +34,7 @@ namespace spaction {
 ///             I just beautified it to match our style, and turned it to a singleton.
 template<class cT, class traits = std::char_traits<cT>>
 class basic_nullbuf: public std::basic_streambuf<cT, traits> {
-    typename traits::int_type overflow(typename traits::int_type c) {
+    typename traits::int_type overflow(typename traits::int_type c) override {
         return traits::not_eof(c);  // indicate success
     }
 };
@@ -78,11 +78,11 @@ template<std::ostream &os> class Logger {
 public:
     /// Enumeration of the log levels.
     enum class LogLevel: char {
-        kDEBUG      = 4,
-        kINFO       = 3,
-        kWARNING    = 2,
-        kERROR      = 1,
-        kFATAL      = 0
+        kDEBUG      = '4',
+        kINFO       = '3',
+        kWARNING    = '2',
+        kERROR      = '1',
+        kFATAL      = '0'
     };
 
     virtual ~Logger() {}
@@ -163,6 +163,12 @@ public:
         _loglevel = l;
     }
 
+    inline bool is_fatal() const { return _loglevel >= LogLevel::kFATAL; }
+    inline bool is_error() const { return _loglevel >= LogLevel::kERROR; }
+    inline bool is_warning() const { return _loglevel >= LogLevel::kWARNING; }
+    inline bool is_info() const { return _loglevel >= LogLevel::kINFO; }
+    inline bool is_debug() const { return _loglevel >= LogLevel::kDEBUG; }
+
 private:
     /// the current verbosity level (default is INFO)
     LogLevel _loglevel;
@@ -189,5 +195,11 @@ template<std::ostream &os> std::unique_ptr<Logger<os>> Logger<os>::_instance;
 template<std::ostream &os> std::once_flag Logger<os>::_once_flag;
 
 }  // namespace spaction
+
+#define LOG_FATAL   if (spaction::Logger<std::cerr>::instance().is_fatal())     spaction::Logger<std::cerr>::instance().fatal()
+#define LOG_ERROR   if (spaction::Logger<std::cerr>::instance().is_error())     spaction::Logger<std::cerr>::instance().error()
+#define LOG_WARNING if (spaction::Logger<std::cerr>::instance().is_warning())   spaction::Logger<std::cerr>::instance().warning()
+#define LOG_INFO    if (spaction::Logger<std::cerr>::instance().is_info())      spaction::Logger<std::cerr>::instance().info()
+#define LOG_DEBUG   if (spaction::Logger<std::cerr>::instance().is_debug())     spaction::Logger<std::cerr>::instance().debug()
 
 #endif  // SPACTION_INCLUDE_LOGGER_H_
