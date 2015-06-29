@@ -196,18 +196,18 @@ int main(int argc, char* argv[]) {
                 } else if (std::string("CEGAR") == optarg) {
                     strategy = spaction::BoundSearchStrategy::CEGAR;
                 } else {
-                    spaction::Logger<std::cerr>::instance().error() << "unknown strategy "
-                        << optarg << std::endl << "use default strategy instead" << std::endl;
+                    LOG_ERROR << "unknown strategy " << optarg << std::endl
+                        << "use default strategy instead" << std::endl;
                 }
                 break;
             case 'v':
                 if (optarg)
-                    log_level = static_cast<spaction::Logger<std::cerr>::LogLevel>(optarg[0] - 'a');
+                    log_level = static_cast<spaction::Logger<std::cerr>::LogLevel>(optarg[0]);
                 else
                     log_level = spaction::Logger<std::cerr>::LogLevel::kDEBUG;
                 break;
             default:
-                spaction::Logger<std::cerr>::instance().fatal() << "unknown option " << c << std::endl;
+                LOG_FATAL << "unknown option " << c << std::endl;
                 usage();
                 return 1;
         }
@@ -217,13 +217,13 @@ int main(int argc, char* argv[]) {
     spaction::Logger<std::cerr>::instance().set_verbose(log_level);
 
     if (cltl_string == "") {
-        spaction::Logger<std::cerr>::instance().fatal() << "no input formula, abort" << std::endl;
+        LOG_FATAL << "no input formula, abort" << std::endl;
         return 1;
     }
 
     spaction::CltlFormulaPtr f = spaction::cltlparse::parse_formula(cltl_string);
     if (f == nullptr) {
-        spaction::Logger<std::cerr>::instance().fatal() << "formula parsing went wrong, abort" << std::endl;
+        LOG_FATAL << "formula parsing went wrong, abort" << std::endl;
         return 1;
     }
 

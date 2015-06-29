@@ -222,20 +222,22 @@ class CA2tgba : public spot::twa {
 
         /// debug informations
         ///{@
-        spaction::Logger<std::cerr>::instance().debug() << "Computing value of word." << std::endl;
-        spaction::Logger<std::cerr>::instance().debug() << "The Counter Automaton:" << std::endl;
-        _automaton->print(spaction::Logger<std::cerr>::instance().debug());
-        spaction::Logger<std::cerr>::instance().debug() << "The Lasso Automaton:" << std::endl;
-        lasso_ca.print(spaction::Logger<std::cerr>::instance().debug());
-        spaction::Logger<std::cerr>::instance().debug() << "The Lasso X Counter Automaton:" << std::endl;
-        prod.print(spaction::Logger<std::cerr>::instance().debug());
+        if (spaction::Logger<std::cerr>::instance().is_debug()) {
+            LOG_DEBUG << "Computing value of word." << std::endl;
+            LOG_DEBUG << "The Counter Automaton:" << std::endl;
+            _automaton->print(spaction::Logger<std::cerr>::instance().debug());
+            LOG_DEBUG << "The Lasso Automaton:" << std::endl;
+            lasso_ca.print(spaction::Logger<std::cerr>::instance().debug());
+            LOG_DEBUG << "The Lasso X Counter Automaton:" << std::endl;
+            prod.print(spaction::Logger<std::cerr>::instance().debug());
+        }
         ///@}
 
         auto config_prod = make_minmax_configuration_automaton(prod);
         auto sup_finder = make_sup_comput(config_prod);
         auto value = sup_finder.find_supremum(upper_bound);
 
-        spaction::Logger<std::cerr>::instance().debug() << "value for lasso is " << (value.infinite?(-1):value.value) << std::endl;
+        LOG_DEBUG << "value for lasso is " << (value.infinite?(-1):value.value) << std::endl;
 
         // @todo the min value is not computed, and arbitrary values are returned...
         return { 0, value.value, false, value.infinite };

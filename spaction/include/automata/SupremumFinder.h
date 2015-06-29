@@ -220,9 +220,9 @@ class SupremumFinder {
                     max_val = dest.current_value() > max_val ? dest.current_value() : max_val;
                 }
                 //{@logging
-                Logger<std::cerr>::instance().info() << "accepting SCC encountered, its value is " << (dest.is_bounded()?dest.current_value():-1) << std::endl;
-                Logger<std::cerr>::instance().info() << "new candidate value is " << max_val << std::endl;
-                Logger<std::cerr>::instance().info() << "the given bound is " << bound << std::endl;
+                LOG_INFO << "accepting SCC encountered, its value is " << (dest.is_bounded()?dest.current_value():-1) << std::endl;
+                LOG_INFO << "new candidate value is " << max_val << std::endl;
+                LOG_INFO << "the given bound is " << bound << std::endl;
                 //}
                 // if unbounded, or if beyond the given bound, we have reached \infty
                 if (!dest.is_bounded() or max_val > bound) {
@@ -234,14 +234,14 @@ class SupremumFinder {
                         // dec_depth();  // for stats
                     }
                     // @todo have only one return (and one log of the number of shortcuts)
-                    Logger<std::cerr>::instance().info() << "took " << number_shortcuts << " shortcuts" << std::endl;
+                    LOG_INFO << "took " << number_shortcuts << " shortcuts" << std::endl;
                     return { true, 0 };
                 }
                 // @todo    compute a lasso that witnesses newly found value
             }
         }
 
-        Logger<std::cerr>::instance().info() << "took " << number_shortcuts << " shortcuts" << std::endl;
+        LOG_INFO << "took " << number_shortcuts << " shortcuts" << std::endl;
 
         // We are done exploring the configuration automaton, and a finite supremum has been found.
         assert(max_val <= bound);

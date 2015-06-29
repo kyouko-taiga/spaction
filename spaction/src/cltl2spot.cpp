@@ -92,7 +92,7 @@ class spot_transformer : public CltlFormulaVisitor {
                 break;
 
             default:
-                spaction::Logger<std::cerr>::instance().fatal() << "cost operators are not convertible to spot" << std::endl;
+                LOG_FATAL << "cost operators are not convertible to spot" << std::endl;
                 result = nullptr;
                 throw std::runtime_error("cost operators are not convertible to spot");
                 break;
@@ -209,7 +209,7 @@ class cltl_transformer : public spot::ltl::visitor {
     }
 
     void visit(const spot::ltl::bunop* node) override {
-        spaction::Logger<std::cerr>::instance().fatal() << "bunop not supported, and should not occur in an LTL formula." << std::endl;
+        LOG_FATAL << "bunop not supported, and should not occur in an LTL formula." << std::endl;
         throw std::runtime_error("spot bunop are not supported by spaction, and should not occur in an LTL formula.");
     }
 
