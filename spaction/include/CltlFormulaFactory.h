@@ -22,6 +22,7 @@
 
 #include "BinaryOperator.h"
 #include "CltlFormula.h"
+#include "MultOperator.h"
 #include "UnaryOperator.h"
 
 namespace spaction {
@@ -39,8 +40,14 @@ class CltlFormulaFactory {
 
     CltlFormulaPtr make_binary(BinaryOperator::BinaryOperatorType operator_type,
                                const CltlFormulaPtr &left, const CltlFormulaPtr &right);
+    CltlFormulaPtr make_nary(MultOperator::MultOperatorType operator_type,
+                             const std::vector<CltlFormulaPtr> &ops);
+    CltlFormulaPtr make_nary(MultOperator::MultOperatorType operator_type,
+                             const CltlFormulaPtr &left, const CltlFormulaPtr &right);
     CltlFormulaPtr make_or(const CltlFormulaPtr &left, const CltlFormulaPtr &right);
+    CltlFormulaPtr make_or(const std::vector<CltlFormulaPtr> &ops);
     CltlFormulaPtr make_and(const CltlFormulaPtr &left, const CltlFormulaPtr &right);
+    CltlFormulaPtr make_and(const std::vector<CltlFormulaPtr> &ops);
     CltlFormulaPtr make_until(const CltlFormulaPtr &left, const CltlFormulaPtr &right);
     CltlFormulaPtr make_release(const CltlFormulaPtr &left, const CltlFormulaPtr &right);
     CltlFormulaPtr make_costuntil(const CltlFormulaPtr &left, const CltlFormulaPtr &right);

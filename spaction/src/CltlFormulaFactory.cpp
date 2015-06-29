@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
+#include <cassert>
 #include <functional>
 
 #include "CltlFormulaFactory.h"
@@ -66,12 +68,47 @@ CltlFormulaPtr CltlFormulaFactory::make_binary(BinaryOperator::BinaryOperatorTyp
     return _make_shared_formula(new BinaryOperator(operator_type, left, right, this));
 }
 
+CltlFormulaPtr CltlFormulaFactory::make_nary(MultOperator::MultOperatorType operator_type,
+                                             const std::vector<CltlFormulaPtr> &ops) {
+    std::vector<CltlFormulaPtr> tmp(ops.begin(), ops.end());
+    std::vector<CltlFormulaPtr>::const_iterator end;
+    switch (operator_type) {
+        case MultOperator::kOr:
+            end = std::remove(tmp.begin(), tmp.end(), make_constant(false));
+            break;
+        case MultOperator::kAnd:
+            end = std::remove(tmp.begin(), tmp.end(), make_constant(true));
+            break;
+    }
+    tmp.erase(end, tmp.end());
+    assert(end == tmp.end());
+    std::sort(tmp.begin(), tmp.end());
+    return _make_shared_formula(new MultOperator(operator_type, tmp, this));
+}
+
+CltlFormulaPtr CltlFormulaFactory::make_nary(MultOperator::MultOperatorType operator_type,
+                                             const CltlFormulaPtr &left,
+                                             const CltlFormulaPtr &right) {
+    std::vector<CltlFormulaPtr> tmp = { left, right };
+    return make_nary(operator_type, tmp);
+}
+
 CltlFormulaPtr CltlFormulaFactory::make_or(const CltlFormulaPtr &l, const CltlFormulaPtr &r) {
-    return _make_shared_formula(new BinaryOperator(BinaryOperator::kOr, l, r, this));
+    std::vector<CltlFormulaPtr> tmp = { l, r };
+    return make_or(tmp);
+}
+
+CltlFormulaPtr CltlFormulaFactory::make_or(const std::vector<CltlFormulaPtr> &ops) {
+    return make_nary(MultOperator::kOr, ops);
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_and(const CltlFormulaPtr &l, const CltlFormulaPtr &r) {
-    return _make_shared_formula(new BinaryOperator(BinaryOperator::kAnd, l, r, this));
+    std::vector<CltlFormulaPtr> tmp = { l, r };
+    return make_and(tmp);
+}
+
+CltlFormulaPtr CltlFormulaFactory::make_and(const std::vector<CltlFormulaPtr> &ops) {
+    return make_nary(MultOperator::kAnd, ops);
 }
 
 CltlFormulaPtr CltlFormulaFactory::make_until(const CltlFormulaPtr &l, const CltlFormulaPtr &r) {

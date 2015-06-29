@@ -36,7 +36,8 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
         kAtomicProposition,
         kConstantExpression,
         kUnaryOperator,
-        kBinaryOperator
+        kBinaryOperator,
+        kMultOperator
     };
 
     /// Returns a pointer to the factory that created this formula.
