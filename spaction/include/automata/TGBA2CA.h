@@ -18,8 +18,6 @@
 #ifndef SPACTION_INCLUDE_AUTOMATA_TGBA2CA_H_
 #define SPACTION_INCLUDE_AUTOMATA_TGBA2CA_H_
 
-#include <set>
-
 #include <spot/twa/twa.hh>
 #include <spot/twa/bddprint.hh>
 #include <spot/twaalgos/reachiter.hh>
@@ -67,9 +65,9 @@ public:
     {
         if (_tgba) {
             // create the acceptance conditions
-            auto accs = _and_operands(_tgba->acc());
+            accs_t accs = _and_operands(_tgba->acc());
             unsigned i = 0;
-            for (auto a : accs) {
+            for (auto a : accs.sets()) {
                 if (_accs_map.find(a) == _accs_map.end()) {
                     _accs_map[a] = i++;
                 }
@@ -128,16 +126,11 @@ private:
     /// helper map for acceptance conditions
     std::map<unsigned, unsigned> _accs_map;
 
-    static std::set<unsigned> _and_operands(const spot::acc_cond::mark_t &conds) {
-        std::vector<unsigned> tmp = conds.sets();
-        return std::set<unsigned>(tmp.begin(), tmp.end());
-    }
-
-    static std::set<unsigned> _and_operands(const spot::acc_cond &conds) {
+    static accs_t _and_operands(const spot::acc_cond &conds) {
         if (! conds.is_generalized_buchi())
             throw std::runtime_error("acceptance other than generalized buchi are not supported");
 
-        return _and_operands(conds.all_sets());
+        return conds.all_sets();
     }
 
     /// The transition iterator
@@ -191,21 +184,21 @@ private:
 
         TransitionPtr<Q, S> operator*() override {
             std::vector<CounterOperationList> op_list;
-            auto tmp = _ts->_and_operands(_it->current_acceptance_conditions());
-            std::set<unsigned> accs;
-            std::transform(tmp.begin(), tmp.end(), std::inserter(accs, accs.end()),
-                           [this](unsigned f) { return this->_ts->get_acceptance(f); });
-            CounterLabel<bdd> cl(_it->current_condition(), op_list, accs_t(accs.begin(), accs.end()));
+            accs_t accs = accs_t();
+            for (auto i : _it->current_acceptance_conditions().sets()) {
+                accs.set(this->_ts->get_acceptance(i));
+            }
+            CounterLabel<bdd> cl(_it->current_condition(), op_list, accs);
             return TransitionPtr<Q, S>(_ts->_make_transition(_source, _it->current_state(), cl), _ts->get_control_block());
         }
 
         S get_label() const override {
             std::vector<CounterOperationList> op_list;
-            auto tmp = _ts->_and_operands(_it->current_acceptance_conditions());
-            std::set<unsigned> accs;
-            std::transform(tmp.begin(), tmp.end(), std::inserter(accs, accs.end()),
-                           [this](unsigned f) { return this->_ts->get_acceptance(f); });
-            return CounterLabel<bdd>(_it->current_condition(), op_list, accs_t(accs.begin(), accs.end()));
+            accs_t accs = accs_t();
+            for (auto i : _it->current_acceptance_conditions().sets()) {
+                accs.set(this->_ts->get_acceptance(i));
+            }
+            return CounterLabel<bdd>(_it->current_condition(), op_list, accs);
         }
         const Q get_source() const override {
             return _source;
