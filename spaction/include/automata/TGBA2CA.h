@@ -18,6 +18,8 @@
 #ifndef SPACTION_INCLUDE_AUTOMATA_TGBA2CA_H_
 #define SPACTION_INCLUDE_AUTOMATA_TGBA2CA_H_
 
+#include <set>
+
 #include <spot/twa/twa.hh>
 #include <spot/twa/bddprint.hh>
 #include <spot/twaalgos/reachiter.hh>

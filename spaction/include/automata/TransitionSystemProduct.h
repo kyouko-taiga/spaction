@@ -18,8 +18,6 @@
 #ifndef SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRODUCT_H_
 #define SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEMPRODUCT_H_
 
-#include <set>
-
 #include "automata/TransitionSystem.h"
 
 namespace spaction {
