@@ -25,6 +25,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include <twa/acc.hh>
+
 #include "automata/TransitionSystem.h"
 #include "automata/TransitionSystemPrinter.h"
 
@@ -48,6 +50,9 @@ inline CounterOperation operator&(const CounterOperation &l, const CounterOperat
 }
 
 std::string print_counter_operation(CounterOperation c);
+
+/// spot already implements acceptance conditions as bitsets
+typedef spot::acc_cond::mark_t accs_t;
 
 }  // namespace automata
 }  // namespace spaction
@@ -76,7 +81,7 @@ class CounterAutomaton {
     typedef TransitionSystemType<Q, CounterLabel<S>> transition_system_t;
     typedef Transition<Q, CounterLabel<S>>           transition_t;
 
-    explicit CounterAutomaton(std::size_t counters, std::size_t nb_acceptance) :
+    explicit CounterAutomaton(std::size_t counters, unsigned nb_acceptance) :
         _counters(counters, 0), _nb_acceptance(nb_acceptance), _initial_state(nullptr) {
         // static_cast prevents the template from being incompatible
         _transition_system =
@@ -123,8 +128,8 @@ class CounterAutomaton {
         return *this;
     }
 
-    inline std::size_t num_counters()        const { return _counters.size(); }
-    inline std::size_t num_acceptance_sets() const { return _nb_acceptance; }
+    inline std::size_t num_counters()       const { return _counters.size(); }
+    inline unsigned num_acceptance_sets()   const { return _nb_acceptance; }
 
     inline transition_system_t *transition_system() const {
         return static_cast<transition_system_t*>(this->_transition_system);
@@ -147,7 +152,7 @@ class CounterAutomaton {
     /// Helper method to create transition labels.
     CounterLabel<S> make_label(const S &letter,
                                const std::vector<CounterOperationList> &operations,
-                               const std::set<std::size_t> &accs) {
+                               const accs_t &accs) {
         assert(operations.size() == this->num_counters());
         return CounterLabel<S>(letter, operations, accs);
     }
@@ -165,8 +170,8 @@ class CounterAutomaton {
  protected:
     TransitionSystem<Q, CounterLabel<S>> *_transition_system;
 
-    std::vector<std::size_t> _counters;
-    std::size_t _nb_acceptance;
+    std::vector<unsigned> _counters;
+    unsigned _nb_acceptance;
 
     const Q *_initial_state;
 };
@@ -178,7 +183,7 @@ template<typename S> class CounterLabel {
     }
 
     explicit CounterLabel(const S &letter, const std::vector<CounterOperationList> &operations,
-                          const std::set<std::size_t> &accs) :
+                          const accs_t &accs) :
         _letter(letter), _operations(operations), _acceptance_conditions(accs), _hash_dirty(true) {
     }
 
@@ -236,12 +241,12 @@ template<typename S> class CounterLabel {
     /// Gets the vector of counter operations.
     const std::vector<CounterOperationList> &get_operations() const { return _operations; }
     /// Gets the set of acceptance conditions.
-    const std::set<std::size_t> &get_acceptance() const { return _acceptance_conditions; }
+    const accs_t &get_acceptance() const { return _acceptance_conditions; }
 
  private:
     const S _letter;
     std::vector<CounterOperationList> _operations;
-    std::set<std::size_t> _acceptance_conditions;
+    accs_t _acceptance_conditions;
 
     /// This flag indicates if the actual hash function must be computed when hash() is called.
     /// @remarks
@@ -265,7 +270,7 @@ std::ostream &operator<<(std::ostream &os, const CounterLabel<S>& label) {
     }
     os << "]" << std::endl;
     // print acceptance conditions
-    for (auto a : label.get_acceptance()) {
+    for (auto a : label.get_acceptance().sets()) {
         os << "Acc(" << a << ")" << std::endl;
     }
     return os;

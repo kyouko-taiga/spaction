@@ -387,7 +387,7 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
         bool _is_end;
 
         std::unordered_set<MinMaxConfiguration<Q>> _seen;
-        std::size_t _current;
+        unsigned _current;
         typename std::unordered_set<MinMaxConfiguration<Q>>::iterator _current_it;
 
         struct stack_item {

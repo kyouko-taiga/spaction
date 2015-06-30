@@ -411,15 +411,14 @@ void CltlTranslator::_add_nonepsilon_transition(Node *source, Node *sink,
     }
 
     // build acceptance conditions
-    std::set<std::size_t> accs;
-    // @TODO using std::generate would be better
-    for (std::size_t i = 0 ; i != _nb_acceptances ; ++i) {
-        accs.insert(i);
+    accs_t accs = accs_t();
+    for (unsigned i = 0 ; i != _nb_acceptances ; ++i) {
+        accs.set(i);
     }
     for (auto t : trace) {
         auto it = _acceptances_maps.find(t->postponed);
         if (it != _acceptances_maps.end())
-            accs.erase(it->second);
+            accs.clear(it->second);
     }
 
     // add into the automaton

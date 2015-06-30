@@ -66,7 +66,7 @@ public:
         if (_tgba) {
             // create the acceptance conditions
             auto accs = _and_operands(_tgba->acc());
-            std::size_t i = 0;
+            unsigned i = 0;
             for (auto a : accs) {
                 if (_accs_map.find(a) == _accs_map.end()) {
                     _accs_map[a] = i++;
@@ -79,7 +79,7 @@ public:
     ~TGBATransitionSystem() {}
 
     const spot::bdd_dict_ptr tgba_dict() const { return _tgba->get_dict(); }
-    std::size_t get_acceptance(unsigned f) const {
+    unsigned get_acceptance(unsigned f) const {
         auto it = _accs_map.find(f);
         assert(it != _accs_map.end());
         return it->second;
@@ -115,7 +115,7 @@ public:
         }
         os << "]" << std::endl;
         // print acceptance conditions
-        for (auto a : s.get_acceptance()) {
+        for (auto a : s.get_acceptance().sets()) {
             os << "Acc(" << a << ")" << std::endl;
         }
     }
@@ -124,13 +124,11 @@ private:
     /// the underlying tgba
     spot::const_twa_ptr _tgba;
     /// helper map for acceptance conditions
-    std::map<unsigned, std::size_t> _accs_map;
+    std::map<unsigned, unsigned> _accs_map;
 
     static std::set<unsigned> _and_operands(const spot::acc_cond::mark_t &conds) {
-        std::set<unsigned> result;
         std::vector<unsigned> tmp = conds.sets();
-        result.insert(tmp.begin(), tmp.end());
-        return result;
+        return std::set<unsigned>(tmp.begin(), tmp.end());
     }
 
     static std::set<unsigned> _and_operands(const spot::acc_cond &conds) {
@@ -192,20 +190,20 @@ private:
         TransitionPtr<Q, S> operator*() override {
             std::vector<CounterOperationList> op_list;
             auto tmp = _ts->_and_operands(_it->current_acceptance_conditions());
-            std::set<std::size_t> accs;
+            std::set<unsigned> accs;
             std::transform(tmp.begin(), tmp.end(), std::inserter(accs, accs.end()),
                            [this](unsigned f) { return this->_ts->get_acceptance(f); });
-            CounterLabel<bdd> cl(_it->current_condition(), op_list, accs);
+            CounterLabel<bdd> cl(_it->current_condition(), op_list, accs_t(accs.begin(), accs.end()));
             return TransitionPtr<Q, S>(_ts->_make_transition(_source, _it->current_state(), cl), _ts->get_control_block());
         }
 
         S get_label() const override {
             std::vector<CounterOperationList> op_list;
             auto tmp = _ts->_and_operands(_it->current_acceptance_conditions());
-            std::set<std::size_t> accs;
+            std::set<unsigned> accs;
             std::transform(tmp.begin(), tmp.end(), std::inserter(accs, accs.end()),
                            [this](unsigned f) { return this->_ts->get_acceptance(f); });
-            return CounterLabel<bdd>(_it->current_condition(), op_list, accs);
+            return CounterLabel<bdd>(_it->current_condition(), op_list, accs_t(accs.begin(), accs.end()));
         }
         const Q get_source() const override {
             return _source;

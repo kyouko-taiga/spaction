@@ -55,7 +55,7 @@ class SupremumFinder {
             auto insert_res = _h.insert(std::make_pair(init, num));
             assert(insert_res.second);  // ensures insertion did take place
             _root.push(scc_t(num));
-            _arc.push(std::set<std::size_t>());
+            _arc.push(accs_t());
             auto itb = (*_automaton.transition_system())(init).successors().begin();
             auto ite = (*_automaton.transition_system())(init).successors().end();
             todo.push(state_iter(init, itb, ite));
@@ -117,7 +117,7 @@ class SupremumFinder {
             // Fetch the values (destination state, acceptance conditions
             // of the arc) we are interested in...
             MinMaxConfiguration<Q> dest = succ.get_sink();
-            std::set<std::size_t> acc = succ.get_label().get_acceptance();
+            accs_t acc = succ.get_label().get_acceptance();
 
             //{@logging
 //            std::cerr << " ------- " << std::endl;
@@ -191,8 +191,8 @@ class SupremumFinder {
             {
                 assert(!_root.empty());
                 assert(!_arc.empty());
-                acc.insert(_root.top().conditions.begin(), _root.top().conditions.end());
-                acc.insert(_arc.top().begin(), _arc.top().end());
+                acc |= _root.top().conditions;
+                acc |= _arc.top();
                 rem.splice(rem.end(), _root.top().rem);
                 _root.pop();
                 _arc.pop();
@@ -203,7 +203,7 @@ class SupremumFinder {
             // been merged with a lower SCC.
 
             // Accumulate all acceptance conditions into the merged SCC.
-            _root.top().conditions.insert(acc.begin(), acc.end());
+            _root.top().conditions |= acc;
             _root.top().rem.splice(_root.top().rem.end(), rem);
 
 
@@ -211,7 +211,7 @@ class SupremumFinder {
             //{@logging
 //            std::cerr << "SCC found, is it accepting?" << std::endl;
             //}
-            if (_root.top().conditions.size() == _automaton.num_acceptance_sets())
+            if (_root.top().conditions.count() == _automaton.num_acceptance_sets())
             {
 
                 // Yes, we have found an accepting SCC.
@@ -257,10 +257,10 @@ class SupremumFinder {
     /// a set of accepting conditions
     /// a list of remaining states
     struct scc_t {
-        explicit scc_t(int i = -1): index(i) {}
+        explicit scc_t(int i = -1): index(i), conditions(accs_t()) {}
 
         int index;
-        std::set<unsigned> conditions;
+        accs_t conditions;
         std::list<MinMaxConfiguration<Q>> rem;
     };
 
@@ -283,7 +283,7 @@ class SupremumFinder {
     // a stack of SCC
     std::stack<scc_t> _root;
     // a stack of acceptance conditions between SCC
-    std::stack<std::set<std::size_t>> _arc;
+    std::stack<accs_t> _arc;
     // a hash of states
     std::unordered_map<MinMaxConfiguration<Q>, int> _h;
 
@@ -292,7 +292,7 @@ class SupremumFinder {
     void print_debug(std::ostream &os) {
         os << std::endl;
         std::stack<scc_t> root2;
-        std::stack<std::set<std::size_t>> arc2;
+        std::stack<accs_t> arc2;
         assert(_root.size() == _arc.size());
         while (!_root.empty()) {
             os << "(" << _root.top().index << " ";
@@ -303,10 +303,10 @@ class SupremumFinder {
             }
             os << "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t|";
 
-            for (auto i : _root.top().conditions)
+            for (auto i : _root.top().conditions.sets())
                 os << i << ",";
             os << "\t\tarc : ";
-            for (auto i : _arc.top())
+            for (auto i : _arc.top().sets())
                 os << i << ",";
             os << ")" << std::endl;
 

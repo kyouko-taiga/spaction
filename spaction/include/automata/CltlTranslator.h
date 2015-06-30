@@ -142,9 +142,9 @@ class CltlTranslator {
     /// Stores the actual automaton
     automaton_type _automaton;
 
-    std::size_t _nb_acceptances;
+    unsigned _nb_acceptances;
     /// Associates each Until sub-formula to an acceptance condition
-    std::map<CltlFormulaPtr, std::size_t> _acceptances_maps;
+    std::map<CltlFormulaPtr, unsigned> _acceptances_maps;
     std::size_t _nb_counters;
     /// Associates each Cost sub-formula to a counter
     std::map<CltlFormulaPtr, std::size_t> _counters_maps;

@@ -143,9 +143,7 @@ public:
     }
 
     virtual spot::acc_cond::mark_t current_acceptance_conditions() const override {
-        auto accs = _current.get_label().get_acceptance();
-        spot::acc_cond::mark_t result(accs.begin(), accs.end());
-        return result;
+        return _current.get_label().get_acceptance();
     }
 
     TransitionPtr<Q, CounterLabel<S>> get_trans() const { return *_current; }

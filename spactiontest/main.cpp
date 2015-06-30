@@ -60,7 +60,7 @@ void test_counter_automata() {
 
     automaton.transition_system()->add_transition("q", "q",
         automaton.make_label('a', {{CounterOperation::kIncrement,
-                                    CounterOperation::kCheck}}, std::set<std::size_t>()));
+                                    CounterOperation::kCheck}}, spaction::automata::accs_t()));
 
     automaton.transition_system()->add_transition("q", "q",
         automaton.make_label('b', {{CounterOperation::kIncrement,

@@ -106,7 +106,7 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
 
     explicit TSLabelProdImpl() {}
     template<typename... Args>
-    explicit TSLabelProdImpl(std::size_t counter_offset, std::size_t acceptance_offset, Args... args)
+    explicit TSLabelProdImpl(std::size_t counter_offset, unsigned acceptance_offset, Args... args)
     : _lhandler(LabelProduct<L1, L2>(args...))
     , _counter_offset(counter_offset)
     , _acceptance_offset(acceptance_offset) {}
@@ -119,11 +119,14 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
                                                    cl.get_operations().begin() + _counter_offset);
 
         // keep the acceptance conditions below `_acceptance_offset`
-        std::set<std::size_t> left_accs(cl.get_acceptance().begin(),
-                                        cl.get_acceptance().lower_bound(_acceptance_offset));
+        accs_t strip;
+        for (unsigned i = _acceptance_offset ; i != cl.get_acceptance().max_set() ; ++i) {
+            strip.set(i);
+        }
+        accs_t cl_accs = cl.get_acceptance().strip(strip);
 
         // rebuild a CounterLabel
-        return CounterLabel<L1>(_lhandler.lhs(cl.letter()), left_ops, left_accs);
+        return CounterLabel<L1>(_lhandler.lhs(cl.letter()), left_ops, cl_accs);
     }
 
     const CounterLabel<L2> rhs(const CounterLabel<P> &cl) const override {
@@ -132,14 +135,12 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
                                                     cl.get_operations().end());
         assert(right_ops.size() + _counter_offset == cl.get_operations().size());
 
-        std::set<std::size_t> right_accs;
         // keep the acceptance conditions above `_acceptance_offset`, and shift them down
-        std::transform(cl.get_acceptance().lower_bound(_acceptance_offset),
-                       cl.get_acceptance().end(),
-                       std::inserter(right_accs, right_accs.end()),
-                       [this](std::size_t x) {
-                           assert(x >= _acceptance_offset);
-                           return x - _acceptance_offset; });
+        accs_t strip;
+        for (unsigned i = 0 ; i != _acceptance_offset ; ++i) {
+            strip.set(i);
+        }
+        accs_t right_accs = cl.get_acceptance().strip(strip);
 
         // rebuild a CounterLabel
         return CounterLabel<L2>(_lhandler.rhs(cl.letter()), right_ops, right_accs);
@@ -155,10 +156,10 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
         counters.insert(counters.end(), r.get_operations().begin(), r.get_operations().end());
 
         // regroup the acceptance conditions, by shifting up those from `r`
-        std::set<std::size_t> accs(l.get_acceptance().begin(), l.get_acceptance().end());
-        std::transform(r.get_acceptance().begin(), r.get_acceptance().end(),
-                       std::inserter(accs, accs.end()),
-                       [this](std::size_t x) { return x + _acceptance_offset; });
+        accs_t accs = l.get_acceptance();
+        for (auto i : r.get_acceptance().sets()) {
+            accs.set(i + _acceptance_offset);
+        }
 
         // rebuild a CounterLabel
         return CounterLabel<P>(_lhandler.build(l.letter(), r.letter()), counters, accs);
@@ -171,7 +172,7 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
  private:
     LabelProduct<L1, L2> _lhandler;
     std::size_t _counter_offset;
-    std::size_t _acceptance_offset;
+    unsigned _acceptance_offset;
 };
 
 /// The class CLWrapper.
