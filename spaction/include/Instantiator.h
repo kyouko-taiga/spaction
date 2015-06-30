@@ -39,6 +39,7 @@ class Instantiator : public CltlFormulaVisitor {
     virtual void visit(const std::shared_ptr<ConstantExpression> &formula) final;
     virtual void visit(const std::shared_ptr<UnaryOperator> &formula) final;
     virtual void visit(const std::shared_ptr<BinaryOperator> &formula) final;
+    virtual void visit(const std::shared_ptr<MultOperator> &formula) final;
 
  protected:
     unsigned int _n;

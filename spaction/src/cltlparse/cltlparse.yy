@@ -33,6 +33,7 @@ struct union_tag {
     spaction::CltlFormulaPtr form;
     spaction::UnaryOperator::UnaryOperatorType u_type;
     spaction::BinaryOperator::BinaryOperatorType b_type;
+    spaction::MultOperator::MultOperatorType m_type;
 };
 
 // tell bison to use our custom struct for return values
@@ -61,6 +62,7 @@ typedef std::list<parse_error> parse_error_list;
 %type   <form>                      constant
 %type   <u_type>                    unary
 %type   <b_type>                    binary
+%type   <m_type>                    mult
 
 %token                              END         0
 %token                              LPAR
@@ -104,6 +106,7 @@ formula
 | unary formula             { $$ = _factory().make_unary($1, $2); }
 | formula IMPLY formula     { $$ = _factory().make_imply($1, $3); }
 | formula binary formula    { $$ = _factory().make_binary($2, $1, $3); }
+| formula mult formula      { $$ = _factory().make_nary($2, $1, $3); }
 | LPAR formula RPAR         { $$ = $2; }
 | FINALLY formula           { $$ = _factory().make_finally($2); }
 | GLOBALLY formula          { $$ = _factory().make_globally($2); }
@@ -123,10 +126,13 @@ unary
 | NEXT                      { $$ = spaction::UnaryOperator::kNext; }
 ;
 
+mult
+: AND                       { $$ = spaction::MultOperator::kAnd; }
+| OR                        { $$ = spaction::MultOperator::kOr; }
+;
+
 binary
-: AND                       { $$ = spaction::BinaryOperator::kAnd; }
-| OR                        { $$ = spaction::BinaryOperator::kOr; }
-| UNTIL                     { $$ = spaction::BinaryOperator::kUntil; }
+: UNTIL                     { $$ = spaction::BinaryOperator::kUntil; }
 | RELEASE                   { $$ = spaction::BinaryOperator::kRelease; }
 | COSTUNTIL                 { $$ = spaction::BinaryOperator::kCostUntil; }
 | COSTRELEASE               { $$ = spaction::BinaryOperator::kCostRelease; }

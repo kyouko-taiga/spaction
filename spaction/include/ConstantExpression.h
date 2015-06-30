@@ -34,6 +34,7 @@ class ConstantExpression : public CltlFormula {
 
     inline const FormulaType formula_type() const override { return kConstantExpression; };
 
+    std::size_t hash() const override;
     /// Returns whether or not `rhs` is syntactically equivalent to this formula.
     virtual bool syntactic_eq(const CltlFormula &rhs) const;
 

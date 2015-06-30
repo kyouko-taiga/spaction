@@ -47,6 +47,7 @@ spaction_hdrs     = include/automata/CA2tgba.h \
 										include/ConstantExpression.h \
 										include/Instantiator.h \
 										include/Logger.h \
+										include/MultOperator.h \
 										include/spotcheck.h \
 										include/UnaryOperator.h
 
@@ -60,6 +61,7 @@ spaction_srcs     = src/automata/CltlTranslator.cpp \
 										src/CltlFormulaFactory.cpp \
 										src/ConstantExpression.cpp \
 										src/Instantiator.cpp \
+										src/MultOperator.cpp \
 										src/spotcheck.cc \
 										src/UnaryOperator.cpp
 

@@ -386,36 +386,20 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
         // convert the spot formula to a spaction formula
         CltlFormulaPtr fspaction = spot2cltl(fspot, _factory);
 
-        // "unfold" the big and formula to a list of conjuncts
-        std::stack<CltlFormulaPtr> todo;
-        todo.push(fspaction);
-        while (!todo.empty()) {
-            CltlFormulaPtr f = todo.top();
-            todo.pop();
-
-            if (f->formula_type() == CltlFormula::kBinaryOperator) {
-                const BinaryOperator *bf = static_cast<const BinaryOperator *>(f.get());
-                assert(bf);
-                assert(bf->operator_type() == BinaryOperator::kAnd);
-                todo.push(bf->left());
-                todo.push(bf->right());
-                continue;
-            }
-            
-            if (f->formula_type() == CltlFormula::kAtomicProposition) {
-                rr.push_back(f);
-                continue;
-            }
-
-            if (f->formula_type() == CltlFormula::kUnaryOperator) {
-                const UnaryOperator *uf = static_cast<const UnaryOperator *>(f.get());
-                assert(uf);
-                assert(uf->operator_type() == UnaryOperator::kNot);
-                rr.push_back(f);
-                continue;
-            }
-            
-            assert(false);
+        if (fspaction->formula_type() == CltlFormula::kMultOperator) {
+            const MultOperator *mf = static_cast<const MultOperator*>(fspaction.get());
+            assert(mf);
+            assert(mf->operator_type() == MultOperator::kAnd);
+            rr.insert(rr.end(), mf->childs().begin(), mf->childs().end());
+        } else if (fspaction->formula_type() == CltlFormula::kAtomicProposition) {
+            rr.push_back(fspaction);
+        } else if (fspaction->formula_type() == CltlFormula::kUnaryOperator) {
+            const UnaryOperator *uf = static_cast<const UnaryOperator *>(fspaction.get());
+            assert(uf);
+            assert(uf->operator_type() == UnaryOperator::kNot);
+            rr.push_back(fspaction);
+        } else {
+            throw std::runtime_error("condition should be in CNF...");
         }
 
         // sort the produced list

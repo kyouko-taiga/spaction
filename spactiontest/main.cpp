@@ -229,7 +229,6 @@ int main(int argc, char* argv[]) {
 
     std::cout << "input: " << cltl_string << std::endl;
     std::cout << "nnf:   " << f->to_nnf()->dump() << std::endl;
-    std::cout << "dnf:   " << f->to_dnf()->dump() << std::endl;
     std::cout << "the input formula is " << f->dump() << std::endl;
 
     ///@todo This belongs to the logging mechanism, and not to this file...

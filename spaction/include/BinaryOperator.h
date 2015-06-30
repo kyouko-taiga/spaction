@@ -29,8 +29,6 @@ class CltlFormulaVisitor;
 class BinaryOperator : public CltlFormula {
  public:
     enum BinaryOperatorType : char {
-        kOr,
-        kAnd,
         kUntil,
         kRelease,
         kCostUntil,
@@ -45,14 +43,12 @@ class BinaryOperator : public CltlFormula {
     inline const FormulaType formula_type() const override { return kBinaryOperator; };
     BinaryOperatorType operator_type() const { return _type; }
 
+    std::size_t hash() const override;
     /// Returns whether or not `rhs` is syntactically equivalent to this formula.
     virtual bool syntactic_eq(const CltlFormula &rhs) const;
 
     /// Returns a equivalent formula in negation normal form.
     virtual CltlFormulaPtr to_nnf();
-
-    /// Returns a equivalent formula in disjunctive normal form.
-    virtual CltlFormulaPtr to_dnf();
 
     inline const CltlFormulaPtr &left() const { return _left; }
     inline const CltlFormulaPtr &right() const { return _right; }
