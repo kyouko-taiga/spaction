@@ -142,8 +142,7 @@ class cltl_transformer : public spot::ltl::visitor {
                 result = _factory->make_constant(false);
                 break;
             default:
-                std::cerr << "Empty word is not valid for a CLTL formula" << std::endl;
-                assert(false);
+                throw std::runtime_error("Empty word is not valid for a CLTL formula");
                 break;
         }
     }
@@ -164,8 +163,7 @@ class cltl_transformer : public spot::ltl::visitor {
                 result = _factory->make_release(left, right);
                 break;
             default:
-                std::cerr << "operator not supported by spot to cltl translation" << std::endl;
-                assert(false);
+                throw std::runtime_error("operator (binop other than =>, U, R) not supported by spaction, and should not occur in an LTL formula");
                 break;
         }
     }
@@ -187,8 +185,7 @@ class cltl_transformer : public spot::ltl::visitor {
                 result = _factory->make_globally(child);
                 break;
             default:
-                std::cerr << "operator not supported by spot to cltl translation" << std::endl;
-                assert(false);
+                throw std::runtime_error("operator (unop other than NOT, X, F, G) not supported by spaction, and should not occur in an LTL formula");
                 break;
         }
     }
@@ -202,20 +199,13 @@ class cltl_transformer : public spot::ltl::visitor {
         }
         switch (node->op()) {
             case spot::ltl::multop::Or:
-                result = _factory->make_or(children[0], children[1]);
-                for (unsigned i = 2 ; i != children.size() ; ++i) {
-                    result = _factory->make_or(result, children[i]);
-                }
+                result = _factory->make_or(children);
                 break;
             case spot::ltl::multop::And:
-                result = _factory->make_and(children[0], children[1]);
-                for (unsigned i = 2 ; i != children.size() ; ++i) {
-                    result = _factory->make_and(result, children[i]);
-                }
+                result = _factory->make_and(children);
                 break;
             default:
-                std::cerr << "operator not supported by spot to cltl translation" << std::endl;
-                assert(false);
+                throw std::runtime_error("operator (multop other than AND and OR) not supported by spaction, and should not occur in an LTL formula");
                 break;
         }
     }
