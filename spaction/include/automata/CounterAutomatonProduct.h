@@ -18,6 +18,10 @@
 #ifndef SPACTION_INCLUDE_AUTOMATA_COUNTERAUTOMATONPRODUCT_H_
 #define SPACTION_INCLUDE_AUTOMATA_COUNTERAUTOMATONPRODUCT_H_
 
+#include <unordered_map>
+
+#include <misc/bddlt.hh>
+
 #include "automata/CounterAutomaton.h"
 #include "automata/TransitionSystemProduct.h"
 
@@ -380,31 +384,37 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
     virtual product_type build(const lhs_type &l, const rhs_type &r) const override {
         // translate the bdd to a FormulaList
         lhs_type rr;
+        auto it = _bdd2formulalist_cache.find(r);
+        if (it == _bdd2formulalist_cache.end()) {
+            // translate the bdd to a spot LTL formula, and convert it to a spaction formula
+            const spot::ltl::formula *fspot = spot::bdd_to_formula(r, _dict);
+            CltlFormulaPtr fspaction = spot2cltl(fspot, _factory);
 
-        // translate the bdd to a spot LTL formula
-        const spot::ltl::formula *fspot = spot::bdd_to_formula(r, _dict);
-        // convert the spot formula to a spaction formula
-        CltlFormulaPtr fspaction = spot2cltl(fspot, _factory);
+            if (fspaction->formula_type() == CltlFormula::kMultOperator) {
+                const MultOperator *mf = static_cast<const MultOperator*>(fspaction.get());
+                assert(mf);
+                assert(mf->operator_type() == MultOperator::kAnd);
+                rr.insert(rr.end(), mf->childs().begin(), mf->childs().end());
+            } else if (fspaction->formula_type() == CltlFormula::kAtomicProposition) {
+                rr.push_back(fspaction);
+            } else if (fspaction->formula_type() == CltlFormula::kUnaryOperator) {
+                const UnaryOperator *uf = static_cast<const UnaryOperator *>(fspaction.get());
+                assert(uf);
+                assert(uf->operator_type() == UnaryOperator::kNot);
+                rr.push_back(fspaction);
+            } else {
+                throw std::runtime_error("condition should be in CNF...");
+            }
 
-        if (fspaction->formula_type() == CltlFormula::kMultOperator) {
-            const MultOperator *mf = static_cast<const MultOperator*>(fspaction.get());
-            assert(mf);
-            assert(mf->operator_type() == MultOperator::kAnd);
-            rr.insert(rr.end(), mf->childs().begin(), mf->childs().end());
-        } else if (fspaction->formula_type() == CltlFormula::kAtomicProposition) {
-            rr.push_back(fspaction);
-        } else if (fspaction->formula_type() == CltlFormula::kUnaryOperator) {
-            const UnaryOperator *uf = static_cast<const UnaryOperator *>(fspaction.get());
-            assert(uf);
-            assert(uf->operator_type() == UnaryOperator::kNot);
-            rr.push_back(fspaction);
+            // sort the produced list
+            auto compare = CltlTranslator::get_formula_order();
+            std::sort(rr.begin(), rr.end(), compare);
+
+            // store result in cache
+            _bdd2formulalist_cache[r] = rr;
         } else {
-            throw std::runtime_error("condition should be in CNF...");
+            rr = it->second;
         }
-
-        // sort the produced list
-        auto compare = CltlTranslator::get_formula_order();
-        std::sort(rr.begin(), rr.end(), compare);
 
         // call the version to combine two FormulaList
         return _AutLabelProduct<lhs_type, lhs_type>(_factory).build(l, rr);
@@ -436,6 +446,7 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
  private:
     spot::bdd_dict_ptr _dict;
     CltlFormulaFactory *_factory;
+    mutable std::unordered_map<rhs_type, lhs_type, spot::bdd_hash> _bdd2formulalist_cache;
 };
 
 template<typename A, typename B> using AutLabelProduct = _AutLabelProduct<A, B>;
