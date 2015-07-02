@@ -109,6 +109,22 @@ public:
 private:
     const CA2tgba<Q,S,TS> *_ts;
 };
+/// A specialization for bdd based Counter Automata
+template<typename Q, template<typename, typename> class TS>
+class _succ_helper<Q, bdd, TS> {
+    using S = bdd;
+public:
+    explicit _succ_helper(const CA2tgba<Q,S,TS> *) { }
+
+    /// Transforms the letter (conditions) of a CA transition to a spot condition in bdd.
+    /// @note       in practice, a condition is a conjunction of atomic propositions
+    /// @param      the condition to be converted
+    /// @return     a bdd equivalent to the letter of \a label
+    /// When the original letter is already a bdd, the conversion is trivial
+    inline bdd get_condition(const CounterLabel<S> &label) const {
+        return label.letter();
+    }
+};
 
 /// A class to embed CA transition iterator as spot TGBA transition iterators
 template<typename Q, typename S, template<typename, typename> class TS>

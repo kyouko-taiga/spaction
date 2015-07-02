@@ -211,7 +211,7 @@ unsigned int find_bound_max_dichoto(const CltlFormulaPtr &formula, const std::st
 // @param   formula is assumed to be CLTL[>]
 automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
                                  spot::kripke_ptr model,
-                                 spot::bdd_dict_ptr dict) {
+                                 spot::bdd_dict_ptr) {
     assert(formula->is_supltl());
     // sup \emptyset = 0
     automata::value_t res = {false, 0};
@@ -283,7 +283,9 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
         translator.get_automaton().print(ca_file.str());
 #endif
 
-        auto prod = automata::make_aut_product(translator.get_automaton(), *model_ca, dict, formula->creator());
+        automata::CltlTranslator::final_automaton_type * form_automaton =
+            translator.get_final_automaton(model_ca->transition_system()->get_data());
+        auto prod = automata::make_aut_product(*form_automaton, *model_ca);
 
 // @todo merge to logging mechanism
 #ifdef TRACE
@@ -294,7 +296,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
 
         LOG_INFO << "product done" << std::endl;
 
-        auto prod_tgba = automata::make_tgba(&prod);
+        auto prod_tgba = automata::make_tgba(&prod, prod.transition_system()->get_data());
 
         LOG_INFO << "product as tgba" << std::endl;
 
@@ -346,6 +348,8 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
             LOG_INFO << "and phi is now " << phi->dump() << std::endl;
         }
 
+        delete form_automaton;
+
         first_pass = false;
     } while (is_nonempty);
 
@@ -358,7 +362,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
 // @param   formula is assumed to be CLTL[>]
 automata::value_t find_max_direct(const CltlFormulaPtr &formula,
                                   spot::kripke_ptr model,
-                                  spot::bdd_dict_ptr dict) {
+                                  spot::bdd_dict_ptr) {
     assert(formula->is_supltl());
     assert(model);
     automata::tgba_ca *model_ca = new automata::tgba_ca(model);
@@ -368,7 +372,9 @@ automata::value_t find_max_direct(const CltlFormulaPtr &formula,
     automata::CltlTranslator translator(formula);
     translator.build_automaton();
 
-    auto prod = automata::make_aut_product(translator.get_automaton(), *model_ca, dict, formula->creator());
+    automata::CltlTranslator::final_automaton_type * formula_automaton =
+        translator.get_final_automaton(model_ca->transition_system()->get_data());
+    auto prod = automata::make_aut_product(*formula_automaton, *model_ca);
 
     auto config_aut = automata::make_minmax_configuration_automaton(prod);
     auto sup_comput = automata::make_sup_comput(config_aut);
@@ -381,7 +387,9 @@ automata::value_t find_max_direct(const CltlFormulaPtr &formula,
         ++formula_aut_size;
     }
 
-    return sup_comput.find_supremum(model_size * formula_aut_size);
+    automata::value_t result = sup_comput.find_supremum(model_size * formula_aut_size);
+    delete formula_automaton;
+    return result;
 }
 
 /// A CLTL formula visitor to collect the AP used by a formula.
