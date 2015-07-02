@@ -65,11 +65,6 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
     typedef TransitionSystem<StateProd<Q1, Q2>, S> super_type;
 
  public:
-    /// default constructor
-    // @todo check whether the helper is default-constructible
-    explicit TransitionSystemProduct():
-        TransitionSystemProduct(nullptr, nullptr, LabelProd<S1, S2>()) {}
-
     /// constructor
     /// @note the product does not become responsible for its operands `lhs` and `rhs`
     explicit TransitionSystemProduct(TransitionSystem<Q1, S1> *lhs,

@@ -80,16 +80,13 @@ class CounterAutomaton {
     typedef TransitionSystemType<Q, CounterLabel<S>> transition_system_t;
     typedef Transition<Q, CounterLabel<S>>           transition_t;
 
-    explicit CounterAutomaton(std::size_t counters, unsigned nb_acceptance) :
+    template<class ... Args>
+    explicit CounterAutomaton(std::size_t counters, unsigned nb_acceptance, Args... args) :
         _counters(counters, 0), _nb_acceptance(nb_acceptance), _initial_state(nullptr) {
         // static_cast prevents the template from being incompatible
         _transition_system =
-            static_cast<TransitionSystem<Q, CounterLabel<S>>*>(new transition_system_t());
+            static_cast<TransitionSystem<Q, CounterLabel<S>>*>(new transition_system_t(args...));
     }
-
-    // a convenient default constructor
-    // @todo restrict its usage?
-    explicit CounterAutomaton(): CounterAutomaton(0, 0) {}
 
     virtual ~CounterAutomaton() {
         // delete the pointer to the initial state, if ever created

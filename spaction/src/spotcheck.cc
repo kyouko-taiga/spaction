@@ -284,8 +284,9 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
 #endif
 
         automata::CltlTranslator::final_automaton_type * form_automaton =
-            translator.get_final_automaton(model_ca->transition_system()->get_data());
-        auto prod = automata::make_aut_product(*form_automaton, *model_ca);
+            translator.get_final_automaton(model_ca->get_dict());
+        auto prod = automata::make_aut_product(*form_automaton, *model_ca,
+                                               std::make_shared<automata::DataBddDict>(model_ca->get_dict()));
 
 // @todo merge to logging mechanism
 #ifdef TRACE
@@ -296,7 +297,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
 
         LOG_INFO << "product done" << std::endl;
 
-        auto prod_tgba = automata::make_tgba(&prod, prod.transition_system()->get_data());
+        auto prod_tgba = automata::make_tgba(&prod, model_ca->get_dict());
 
         LOG_INFO << "product as tgba" << std::endl;
 
@@ -373,8 +374,9 @@ automata::value_t find_max_direct(const CltlFormulaPtr &formula,
     translator.build_automaton();
 
     automata::CltlTranslator::final_automaton_type * formula_automaton =
-        translator.get_final_automaton(model_ca->transition_system()->get_data());
-    auto prod = automata::make_aut_product(*formula_automaton, *model_ca);
+        translator.get_final_automaton(model_ca->get_dict());
+    auto prod = automata::make_aut_product(*formula_automaton, *model_ca,
+                                           std::make_shared<automata::DataBddDict>(model_ca->get_dict()));
 
     auto config_aut = automata::make_minmax_configuration_automaton(prod);
     auto sup_comput = automata::make_sup_comput(config_aut);

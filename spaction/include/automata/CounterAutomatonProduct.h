@@ -108,7 +108,6 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
     /// a shortcut for the label product
     using P = typename ALabel<L1, L2, LabelProduct>::autprod_label;
 
-    explicit TSLabelProdImpl() {}
     template<typename... Args>
     explicit TSLabelProdImpl(std::size_t counter_offset, unsigned acceptance_offset, Args... args)
     : _lhandler(LabelProduct<L1, L2>(args...))
@@ -240,14 +239,11 @@ class CounterAutomatonProduct: public CAPBase<Q1, S1, TS1, Q2, S2, TS2, LabelPro
     template<typename... Args>
     explicit CounterAutomatonProduct(CounterAutomaton<Q1, S1, TS1> &lhs,
                                      CounterAutomaton<Q2, S2, TS2> &rhs,
-                                     Args... args)
+                                     std::shared_ptr<Data> d, Args... args)
     : super_type(lhs.num_counters() + rhs.num_counters(),
-                 lhs.num_acceptance_sets() + rhs.num_acceptance_sets()) {
-        super_type::_transition_system =
-            new typename super_type::transition_system_t(
-                lhs.transition_system(),
-                rhs.transition_system(),
-                TSLabelType(lhs.num_counters(), lhs.num_acceptance_sets(), args...));
+                 lhs.num_acceptance_sets() + rhs.num_acceptance_sets(),
+                 lhs.transition_system(), rhs.transition_system(),
+                 TSLabelType(lhs.num_counters(), lhs.num_acceptance_sets(), args...), d) {
         this->set_initial_state(StateProd<Q1, Q2>(*lhs.initial_state(), *rhs.initial_state()));
     }
 
@@ -280,7 +276,6 @@ class _AutLabelProduct<CltlTranslator::FormulaList, CltlTranslator::FormulaList>
                                 CltlTranslator::FormulaList,
                                 CltlTranslator::FormulaList>;
 
-    explicit _AutLabelProduct(): _AutLabelProduct(nullptr) {}
     explicit _AutLabelProduct(CltlFormulaFactory *f): _factory(f) {}
 
     virtual product_type build(const lhs_type &l, const rhs_type &r) const override {
@@ -373,7 +368,6 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
                                 bdd,
                                 CltlTranslator::FormulaList>;
 
-    explicit _AutLabelProduct(): _AutLabelProduct(nullptr, nullptr) {}
     explicit _AutLabelProduct(spot::bdd_dict_ptr d, CltlFormulaFactory *f): _dict(d), _factory(f) {}
 
     ~_AutLabelProduct() {

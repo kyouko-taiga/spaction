@@ -184,9 +184,6 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
     // helper typedef for base
     using super_type = TransitionSystem<MinMaxConfiguration<Q>, S>;
 
-    // @todo clean this up (restrict visibility?)
-    explicit MinMaxConfigTS(): MinMaxConfigTS(nullptr, 0) {}
-
     explicit MinMaxConfigTS(TS<Q, S> *ts, std::size_t nb_counters)
     : super_type(new RefControlBlock<Transition<MinMaxConfiguration<Q>, S>>(
             std::bind(&MinMaxConfigTS::_delete_transition, this, std::placeholders::_1)), ts->get_data())
@@ -480,14 +477,9 @@ class MinMaxConfigurationAutomaton : public CounterAutomaton<MinMaxConfiguration
     using super_type = CounterAutomaton<MinMaxConfiguration<Q>, S, MinMaxConfigurationTS<TransitionSystemType>::template type>;
     /// constructor
     explicit MinMaxConfigurationAutomaton(const CounterAutomaton<Q, S, TransitionSystemType> &ca)
-    : super_type(ca.num_counters(), ca.num_acceptance_sets())
+    : super_type(ca.num_counters(), ca.num_acceptance_sets(), ca.transition_system(), ca.num_counters())
     {
-        // @todo add a set_transition_system method to CounterAutomaton to make it cleaner?
-        MinMaxConfigTS<Q, CounterLabel<S>, TransitionSystemType> * tmp =
-            new MinMaxConfigTS<Q, CounterLabel<S>, TransitionSystemType>(ca.transition_system(), ca.num_counters());
-        delete super_type::_transition_system;
-        super_type::_transition_system = tmp;
-        super_type::set_initial_state(tmp->default_config(*ca.initial_state()));
+        super_type::set_initial_state(static_cast<typename super_type::transition_system_t*>(super_type::_transition_system)->default_config(*ca.initial_state()));
     }
 //    ~MinMaxConfigurationAutomaton();
 

@@ -174,8 +174,8 @@ private:
 template<typename Q, typename S, template<typename, typename> class TS>
 class CA2tgba : public spot::twa {
  public:
-    explicit CA2tgba(CounterAutomaton<Q, S, TS> *a, const spot::bdd_dict_ptr &d = nullptr)
-    : twa(d?d:spot::make_bdd_dict())
+    explicit CA2tgba(CounterAutomaton<Q, S, TS> *a, const spot::bdd_dict_ptr &d)
+    : twa(d)
     , _automaton(a) {
         // DO NOT declare all the AP to the bdd dictionnary yet, to be done on the fly
 
@@ -275,8 +275,8 @@ class CA2tgba : public spot::twa {
 };
 
 template<typename Q, typename S, template<typename, typename> class TS>
-std::shared_ptr<CA2tgba<Q, S, TS>> make_tgba(CounterAutomaton<Q, S, TS> *a) {
-    return std::make_shared<CA2tgba<Q, S, TS>>(a);
+std::shared_ptr<CA2tgba<Q, S, TS>> make_tgba(CounterAutomaton<Q, S, TS> *a, spot::bdd_dict_ptr dict) {
+    return std::make_shared<CA2tgba<Q, S, TS>>(a, dict);
 }
 
 }  // namespace automata

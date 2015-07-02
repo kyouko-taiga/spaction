@@ -33,10 +33,16 @@ namespace spaction {
 namespace automata {
 
 CltlTranslator::CltlTranslator(const CltlFormulaPtr &formula) :
-    _formula(formula->to_nnf()), _nb_acceptances(0), _nb_counters(0) {
+    _formula(formula->to_nnf()),
+    _transition_system(std::make_shared<DataVoid>()),
+    _automaton(0, 0, std::make_shared<DataVoid>()),
+    _nb_acceptances(0), _nb_counters(0) {
         assert(_formula->is_nnf());
         this->map_costop_to_counters(_formula);
-        _automaton = CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem>(_nb_counters, _nb_acceptances);
+        // `map_costop_to_counters` computes the appropriate number of acc conditions and counters,
+        // and stores them into attributes `_nb_acceptances` and `_nb_counters`.
+        // It is thus mandatory to update `_automaton`
+        _automaton = automaton_type(_nb_counters, _nb_acceptances, std::make_shared<DataVoid>());
 }
 
 void CltlTranslator::build_automaton() {
@@ -536,8 +542,9 @@ const std::string CltlTranslator::TransitionLabel::dump() const {
 }
 
 CltlTranslator::final_automaton_type * CltlTranslator::get_final_automaton(spot::bdd_dict_ptr dict) const {
-    final_automaton_type * result =
-        new final_automaton_type(_automaton.num_counters(), _automaton.num_acceptance_sets(), dict);
+    final_automaton_type * result = new final_automaton_type(_automaton.num_counters(),
+                                                             _automaton.num_acceptance_sets(),
+                                                             std::make_shared<DataBddDict>(dict));
 
     std::map<Node*,unsigned> node_to_int;
     {
@@ -569,8 +576,7 @@ CltlTranslator::final_automaton_type * CltlTranslator::get_final_automaton(spot:
                 vector->push_back(cltl2spot(f));
             }
             const spot::ltl::formula *fspot = spot::ltl::multop::instance(spot::ltl::multop::And, vector);
-            bdd bdd_letter = spot::formula_to_bdd(fspot, result->transition_system()->get_data()._dict,
-                                                  (void*)&result->transition_system()->get_data());
+            bdd bdd_letter = spot::formula_to_bdd(fspot, dict, result);
 
             result->transition_system()->add_transition(
                current_index,

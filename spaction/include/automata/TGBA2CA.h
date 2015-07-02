@@ -59,7 +59,6 @@ class TGBATransitionSystem<spot::state*, CounterLabel<bdd>> : public TransitionS
     using S = CounterLabel<bdd>;
 public:
     /// constructor
-    explicit TGBATransitionSystem(): TGBATransitionSystem(nullptr) {}
     explicit TGBATransitionSystem(spot::const_twa_ptr t)
     : super_type(new RefControlBlock<Transition<Q, S>>(std::bind(&TGBATransitionSystem::_delete_transition, this, std::placeholders::_1)),
                  std::make_shared<DataBddDict>(t->get_dict()))
@@ -301,13 +300,18 @@ class tgba_ca : public CounterAutomaton<spot::state*, bdd, TGBATransitionSystem>
     using S = bdd;
 public:
     /// constructor
-    explicit tgba_ca(spot::const_twa_ptr t): CounterAutomaton(0, t->acc().num_sets()) {
-        _transition_system = new transition_system_t(t);
+    explicit tgba_ca(spot::const_twa_ptr t): CounterAutomaton(0, t->acc().num_sets(), t) {
         this->set_initial_state(t->get_init_state());
     }
 
     /// destructor
     ~tgba_ca() {}
+
+    spot::bdd_dict_ptr get_dict() const {
+        transition_system_t * tmp = static_cast<transition_system_t*>(_transition_system);
+        assert(tmp);
+        return tmp->tgba_dict();
+    }
 
 };
 
