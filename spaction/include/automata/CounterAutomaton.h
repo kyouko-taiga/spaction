@@ -93,6 +93,9 @@ class CounterAutomaton {
         if (_initial_state)
             delete _initial_state;
 
+        if (_transition_system)
+            _transition_system->get_data()->destroy(this);
+
         // delete the transition system
         delete _transition_system;
     }

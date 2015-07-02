@@ -233,6 +233,8 @@ class CA2tgba : public spot::twa {
         spot::twa_graph_ptr lasso = spot::tgba_run_to_tgba(this->shared_from_this(), run);
         tgba_ca lasso_ca(lasso);
         auto prod = make_aut_product(*_automaton, lasso_ca, std::make_shared<DataBddDict>(lasso_ca.get_dict()));
+        lasso_ca.get_dict()->register_all_propositions_of(_automaton, &prod);
+        lasso_ca.get_dict()->register_all_propositions_of(&lasso_ca, &prod);
 
         /// debug informations
         ///{@

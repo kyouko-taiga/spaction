@@ -302,10 +302,13 @@ public:
     /// constructor
     explicit tgba_ca(spot::const_twa_ptr t): CounterAutomaton(0, t->acc().num_sets(), t) {
         this->set_initial_state(t->get_init_state());
+        this->get_dict()->register_all_propositions_of(t, this);
     }
 
     /// destructor
-    ~tgba_ca() {}
+    ~tgba_ca() {
+        this->get_dict()->unregister_all_my_variables(this);
+    }
 
     spot::bdd_dict_ptr get_dict() const {
         transition_system_t * tmp = static_cast<transition_system_t*>(_transition_system);

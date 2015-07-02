@@ -59,7 +59,6 @@ template<typename Q, typename S> class TransitionSystem {
         : _control_block(cb), _data(d) {}
     virtual ~TransitionSystem() {
         delete _control_block;
-        _data->destroy(this);
     }
 
     virtual void add_state(const Q &state) = 0;
