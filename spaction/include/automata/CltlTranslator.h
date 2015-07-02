@@ -122,6 +122,11 @@ class CltlTranslator {
     /// the type of the automaton built
     typedef CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem> automaton_type;
     inline automaton_type & get_automaton() { return _automaton; }
+    /// the type of the final automaton
+    /// the final automaton does not use CltlFormula for efficiency
+    typedef CounterAutomaton<unsigned, bdd, UndeterministicTransitionSystem> final_automaton_type;
+    /// creates a new pointer
+    final_automaton_type * get_final_automaton(spot::bdd_dict_ptr dict) const;
 
     static std::function<bool (const CltlFormulaPtr &, const CltlFormulaPtr &)> get_formula_order();
 

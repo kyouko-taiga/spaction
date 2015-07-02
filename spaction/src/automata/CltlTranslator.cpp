@@ -19,7 +19,11 @@
 
 #include <algorithm>
 
+#include <ltlast/multop.hh>
+#include <twa/formula2bdd.hh>
+
 #include "BinaryOperator.h"
+#include "cltl2spot.h"
 #include "CltlFormulaFactory.h"
 #include "ConstantExpression.h"
 #include "MultOperator.h"
@@ -528,6 +532,58 @@ const std::string CltlTranslator::TransitionLabel::dump() const {
         result += "\\n";
         result += "PP { " + postponed->dump() + " }";
     }
+    return result;
+}
+
+CltlTranslator::final_automaton_type * CltlTranslator::get_final_automaton(spot::bdd_dict_ptr dict) const {
+    final_automaton_type * result =
+        new final_automaton_type(_automaton.num_counters(), _automaton.num_acceptance_sets(), dict);
+
+    std::map<Node*,unsigned> node_to_int;
+    {
+        unsigned index = 0;
+        for (auto s : _automaton.transition_system()->states()) {
+            result->transition_system()->add_state(index);
+            node_to_int[s] = index++;
+        }
+    }
+
+    std::stack<Node*> todo;
+    std::set<Node*> done;
+    todo.push(*_automaton.initial_state());
+    while (!todo.empty()) {
+        Node* current = todo.top();
+        todo.pop();
+        done.insert(current);
+
+        assert(node_to_int.find(current) != node_to_int.end());
+        unsigned current_index = node_to_int[current];
+
+        for (auto it : (*_automaton.transition_system())(current).successors()) {
+            if (done.find(it->sink()) == done.end()) {
+                todo.push(it->sink());
+            }
+
+            spot::ltl::multop::vec *vector = new spot::ltl::multop::vec();
+            for (auto &f : it->label().letter()) {
+                vector->push_back(cltl2spot(f));
+            }
+            const spot::ltl::formula *fspot = spot::ltl::multop::instance(spot::ltl::multop::And, vector);
+            bdd bdd_letter = spot::formula_to_bdd(fspot, result->transition_system()->get_data()._dict,
+                                                  (void*)&result->transition_system()->get_data());
+
+            result->transition_system()->add_transition(
+               current_index,
+               node_to_int[it->sink()],
+               CounterLabel<bdd>(bdd_letter,
+                                 it->label().get_operations(),
+                                 it->label().get_acceptance()));
+        }
+    }
+
+    assert(node_to_int.find(*_automaton.initial_state()) != node_to_int.end());
+    result->set_initial_state(node_to_int[*_automaton.initial_state()]);
+
     return result;
 }
 
