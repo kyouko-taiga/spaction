@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+#include "bdd_util.h"
 #include "CltlFormula.h"
 #include "automata/CounterAutomaton.h"
 #include "automata/TransitionSystemPrinter.h"

@@ -456,8 +456,9 @@ template<   typename Q1, typename S1, template<typename Q1_, typename S1_> class
             typename Q2, typename S2, template<typename Q2_, typename S2_> class TS2,
             typename... Args>
 CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>
-make_aut_product(CounterAutomaton<Q1, S1, TS1> &l, CounterAutomaton<Q2, S2, TS2> &r, Args... args) {
-    return CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>(l, r, args...);
+make_aut_product(CounterAutomaton<Q1, S1, TS1> &l, CounterAutomaton<Q2, S2, TS2> &r,
+                 std::shared_ptr<Data> d, Args... args) {
+    return CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>(l, r, d, args...);
 }
 
 }  // namespace automata

@@ -154,8 +154,8 @@ class UndeterministicTransitionSystem : public TransitionSystem<Q, S> {
     };
 
  public:
-    explicit UndeterministicTransitionSystem():
-        TransitionSystem<Q, S>(new DumbControlBlock<Transition<Q, S>>()) {}
+    explicit UndeterministicTransitionSystem(std::shared_ptr<Data> d):
+        TransitionSystem<Q, S>(new DumbControlBlock<Transition<Q, S>>(), d) {}
 
     ~UndeterministicTransitionSystem() {
         for (auto &it : _graph) {

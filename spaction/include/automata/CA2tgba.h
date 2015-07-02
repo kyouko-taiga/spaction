@@ -216,7 +216,7 @@ class CA2tgba : public spot::twa {
     run_value value_word(spot::tgba_run_ptr run, unsigned int upper_bound, CltlFormulaFactory *factory) const {
         spot::twa_graph_ptr lasso = spot::tgba_run_to_tgba(this->shared_from_this(), run);
         tgba_ca lasso_ca(lasso);
-        auto prod = make_aut_product(*_automaton, lasso_ca, get_dict(), factory);
+        auto prod = make_aut_product(*_automaton, lasso_ca, std::make_shared<DataBddDict>(lasso_ca.get_dict()));
 
         /// debug informations
         ///{@

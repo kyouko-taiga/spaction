@@ -22,6 +22,7 @@
 #include <spot/twa/bddprint.hh>
 #include <spot/twaalgos/reachiter.hh>
 
+#include "bdd_util.h"
 #include "automata/CounterAutomaton.h"
 
 namespace std {
@@ -60,7 +61,8 @@ public:
     /// constructor
     explicit TGBATransitionSystem(): TGBATransitionSystem(nullptr) {}
     explicit TGBATransitionSystem(spot::const_twa_ptr t)
-    : super_type(new RefControlBlock<Transition<Q, S>>(std::bind(&TGBATransitionSystem::_delete_transition, this, std::placeholders::_1)))
+    : super_type(new RefControlBlock<Transition<Q, S>>(std::bind(&TGBATransitionSystem::_delete_transition, this, std::placeholders::_1)),
+                 std::make_shared<DataBddDict>(t->get_dict()))
     , _tgba(t)
     {
         if (_tgba) {

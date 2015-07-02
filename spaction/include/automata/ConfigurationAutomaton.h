@@ -189,7 +189,7 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
 
     explicit MinMaxConfigTS(TS<Q, S> *ts, std::size_t nb_counters)
     : super_type(new RefControlBlock<Transition<MinMaxConfiguration<Q>, S>>(
-            std::bind(&MinMaxConfigTS::_delete_transition, this, std::placeholders::_1)))
+            std::bind(&MinMaxConfigTS::_delete_transition, this, std::placeholders::_1)), ts->get_data())
     , _transition_system(ts)
     , _nb_counters(nb_counters)
     {}

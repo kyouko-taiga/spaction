@@ -28,6 +28,20 @@ namespace automata {
 template<typename Q, typename S> class Transition;
 template<typename Q, typename S> class TransitionPtr;
 
+/// A dummy struct, for most TS that store nothing in their extra field.
+class Data {
+ public:
+    virtual ~Data() { }
+    virtual void destroy(void*) = 0;
+};
+
+class DataVoid final: public Data {
+ public:
+    void destroy(void*) {}
+};
+
+/// Q       is the type of the states
+/// S       is the type of the labels
 template<typename Q, typename S> class TransitionSystem {
  protected:
     class _TransitionIterator;
@@ -41,8 +55,12 @@ template<typename Q, typename S> class TransitionSystem {
     typedef _TransitionIterator TransitionIterator;
     typedef _StateIterator StateIterator;
 
-    explicit TransitionSystem(ControlBlock<Transition<Q, S>> *cb): _control_block(cb) {}
-    virtual ~TransitionSystem() { delete _control_block; }
+    explicit TransitionSystem(ControlBlock<Transition<Q, S>> *cb, std::shared_ptr<Data> d)
+        : _control_block(cb), _data(d) {}
+    virtual ~TransitionSystem() {
+        delete _control_block;
+        _data->destroy(this);
+    }
 
     virtual void add_state(const Q &state) = 0;
     virtual void remove_state(const Q &state) = 0;
@@ -55,12 +73,14 @@ template<typename Q, typename S> class TransitionSystem {
     virtual void remove_transition(const Q &source, const Q &sink, const S &label) = 0;
 
     virtual ControlBlock<Transition<Q, S>> *get_control_block() const { return _control_block; }
+    inline std::shared_ptr<Data> get_data() const { return _data; }
 
     virtual void print_state(std::ostream &os, const Q &q) const = 0;
     virtual void print_label(std::ostream &os, const S &s) const = 0;
 
  protected:
     ControlBlock<Transition<Q, S>> *_control_block;
+    std::shared_ptr<Data> _data;
 
     class TransitionBaseIterator {
      public:

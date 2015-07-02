@@ -74,9 +74,9 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
     /// @note the product does not become responsible for its operands `lhs` and `rhs`
     explicit TransitionSystemProduct(TransitionSystem<Q1, S1> *lhs,
                                      TransitionSystem<Q2, S2> *rhs,
-                                     const LabelProd<S1, S2> &h):
+                                     const LabelProd<S1, S2> &h, std::shared_ptr<Data> d):
     super_type(new RefControlBlock<Transition<Q, S>>(
-         std::bind(&TransitionSystemProduct::_delete_transition, this, std::placeholders::_1))),
+         std::bind(&TransitionSystemProduct::_delete_transition, this, std::placeholders::_1)), d),
     _lhs(lhs), _rhs(rhs), _helper(h) { }
 
     /// Destructor.
