@@ -37,12 +37,36 @@ struct mycompare {
     }
 };
 
+/// specialization for unsigned int... -_-
+template<>
+struct mycompare<unsigned int> {
+    int operator()(unsigned int lhs, unsigned int rhs) const {
+        if (lhs < rhs)
+            return -1;
+        if (rhs < lhs)
+            return 1;
+        return 0;
+    }
+};
+
 /// specialization for spot::state*
 template<>
 struct mycompare<spot::state*> {
     int operator()(spot::state *lhs, spot::state *rhs) const {
         assert(lhs);
         return lhs->compare(rhs);
+    }
+};
+
+/// specialization for bdd
+template<>
+struct mycompare<bdd> {
+    int operator()(bdd lhs, bdd rhs) const {
+        if (lhs == rhs)
+            return 0;
+        if (spot::bdd_less_than()(lhs, rhs))
+            return -1;
+        return 1;
     }
 };
 
