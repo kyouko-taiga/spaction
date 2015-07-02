@@ -153,7 +153,8 @@ private:
         { if (_it) _it->first(); }
 
         virtual ~TransitionBaseIterator() {
-            delete _it;
+            if (_ts)
+                _ts->_tgba->release_iter(_it);
         }
 
         explicit TransitionBaseIterator(const TransitionBaseIterator &other)
