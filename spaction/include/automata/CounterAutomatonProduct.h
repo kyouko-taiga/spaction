@@ -449,6 +449,34 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
     mutable std::unordered_map<rhs_type, lhs_type, spot::bdd_hash> _bdd2formulalist_cache;
 };
 
+/// A specialization to combine two bdd-based automata
+template<>
+class _AutLabelProduct<bdd, bdd> : public IAutLabelProd<bdd, bdd, bdd> {
+ public:
+    explicit _AutLabelProduct() { }
+    virtual ~_AutLabelProduct() { }
+
+    virtual product_type build(const lhs_type &lhs, const rhs_type &rhs) const override {
+        return bdd_and(lhs, rhs);
+    }
+
+    virtual bool is_false(const product_type &p) const override {
+        return p == bdd_false();
+    }
+
+    /// @todo   these definitions of lhs and rhs may not yield the expected results, but it's rather
+    ///         a problem with the current implementation of UndeterministicTransitionSystem.
+    ///         When asking the succs with label L, we actually want to iterate over all the
+    ///         transition with label compatible with L, rather than L exactly.
+    virtual lhs_type lhs(const product_type &p) const override {
+        return p;
+    }
+    
+    virtual rhs_type rhs(const product_type &p) const override {
+        return p;
+    }
+};
+
 template<typename A, typename B> using AutLabelProduct = _AutLabelProduct<A, B>;
 
 /// A factory function
