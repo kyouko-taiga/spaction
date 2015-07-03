@@ -135,6 +135,11 @@ public:
                               const typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator &e,
                               const CA2tgba<Q,S,TS> *t)
     : _current(b), _begin(b), _end(e), _ts(t) {}
+    explicit succiter_adapter(typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator &&b,
+                              typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator &&e,
+                              const CA2tgba<Q,S,TS> *t)
+    // `b` MUST be duplicated, so one copy is unavoidable here
+    : _current(b), _begin(std::move(b)), _end(std::move(e)), _ts(t) {}
     /// destructor @todo make it private?
     ~succiter_adapter() {}
 

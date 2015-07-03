@@ -243,10 +243,10 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
 
     class TransitionBaseIterator : public super_type::TransitionBaseIterator {
      public:
-        explicit TransitionBaseIterator(MinMaxConfigTS *ts, const MinMaxConfiguration<Q> &s, typename TS<Q,S>::TransitionIterator it)
+        explicit TransitionBaseIterator(MinMaxConfigTS *ts, const MinMaxConfiguration<Q> &s, typename TS<Q,S>::TransitionIterator &&it)
         : _ts(ts)
         , _source(s)
-        , _iterator(it)
+        , _iterator(std::move(it))
         {
             // @debug
             assert(_source.values().size() > 0);

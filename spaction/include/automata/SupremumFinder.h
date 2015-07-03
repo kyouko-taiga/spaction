@@ -56,9 +56,8 @@ class SupremumFinder {
             assert(insert_res.second);  // ensures insertion did take place
             _root.push(scc_t(num));
             _arc.push(accs_t());
-            auto itb = (*_automaton.transition_system())(init).successors().begin();
-            auto ite = (*_automaton.transition_system())(init).successors().end();
-            todo.push(state_iter(init, itb, ite));
+            auto tmp_init = (*_automaton.transition_system())(init);
+            todo.push(state_iter(init, tmp_init.successors().begin(), tmp_init.successors().end()));
             // inc_depth();  // for stats
         }
 
@@ -152,9 +151,8 @@ class SupremumFinder {
                 assert(insert_res.second);
                 _root.push(scc_t(num));
                 _arc.push(acc);
-                auto itb = (*_automaton.transition_system())(dest).successors().begin();
-                auto ite = (*_automaton.transition_system())(dest).successors().end();
-                todo.push(state_iter(dest, itb, ite));
+                auto tmp_dest = (*_automaton.transition_system())(dest);
+                todo.push(state_iter(dest, tmp_dest.successors().begin(), tmp_dest.successors().end()));
                 // inc_depth();  // for stats
 
                 continue;
@@ -268,11 +266,11 @@ class SupremumFinder {
     /// to test whether the iterator is done, we have to store the end iterator as well
     struct state_iter {
         explicit state_iter(const MinMaxConfiguration<Q> &s,
-                            typename MinMaxConfigTS<Q, CounterLabel<S>, TS>::TransitionIterator i,
-                            typename MinMaxConfigTS<Q, CounterLabel<S>, TS>::TransitionIterator ie)
+                            typename MinMaxConfigTS<Q, CounterLabel<S>, TS>::TransitionIterator &&i,
+                            typename MinMaxConfigTS<Q, CounterLabel<S>, TS>::TransitionIterator &&ie)
         : state(s)
-        , iter(i)
-        , iter_end(ie)
+        , iter(std::move(i))
+        , iter_end(std::move(ie))
         {}
 
         MinMaxConfiguration<Q> state;
@@ -356,10 +354,13 @@ class SupremumFinder {
             iterator_type _begin, _end;
 
         public:
-            explicit my_iterator_pair(iterator_type b, iterator_type e): _begin(b), _end(e) {}
+            explicit my_iterator_pair(iterator_type &&b, iterator_type &&e)
+            : _begin(std::move(b))
+            , _end(std::move(e))
+            {}
 
-            iterator_type begin() const { return _begin; }
-            iterator_type end() const { return _end; }
+            const iterator_type & begin() const { return _begin; }
+            const iterator_type & end() const { return _end; }
         };
         std::stack<my_iterator_pair> to_remove;
 

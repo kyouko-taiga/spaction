@@ -148,6 +148,32 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
             }
         }
 
+        explicit TransitionBaseIterator(typename TransitionSystem<Q1, S1>::TransitionIterator &&l,
+                                        typename TransitionSystem<Q1, S1>::TransitionIterator &&lend,
+                                        typename TransitionSystem<Q2, S2>::TransitionIterator &&r,
+                                        typename TransitionSystem<Q2, S2>::TransitionIterator &&rbegin,
+                                        typename TransitionSystem<Q2, S2>::TransitionIterator &&rend,
+                                        TransitionSystemProduct *t)
+        : _lhs(std::move(l))
+        , _lend(std::move(lend))
+        , _rhs(std::move(r))
+        , _rbegin(std::move(rbegin))
+        , _rend(std::move(rend))
+        , _ts(t) {
+            if (!(_rbegin != _rend)) {
+                _lhs = _lend;
+                _rhs = _rend;
+            }
+            if (!(_lhs != _lend)) {
+                _rhs = _rend;
+            }
+            assert((_lhs != _lend) or (!(_rhs != _rend)));
+
+            while (!done() && conditions_invalid()) {
+                incr();
+            }
+        }
+
         virtual ~TransitionBaseIterator() { }
 
         virtual typename super_type::TransitionBaseIterator *clone() const override {
@@ -271,25 +297,36 @@ class TransitionSystemProduct : public TransitionSystem<StateProd<Q1, Q2>, typen
     virtual typename super_type::TransitionBaseIterator *_successor_begin(const Q &state, const S *label) override {
         // differentiate the labeled and unlabeled versions
         if (label == nullptr) {
-            auto lb = (*_lhs)(state.first).successors().begin();
-            auto le = (*_lhs)(state.first).successors().end();
             auto rb = (*_rhs)(state.second).successors().begin();
-            auto re = (*_rhs)(state.second).successors().end();
-            return new TransitionBaseIterator(lb, le, rb, rb, re, this);
+            auto rb2 = rb;
+            return new TransitionBaseIterator((*_lhs)(state.first).successors().begin(),
+                                              (*_lhs)(state.first).successors().end(),
+                                              std::move(rb),
+                                              std::move(rb2),
+                                              (*_rhs)(state.second).successors().end(),
+                                              this);
         }
         // else
-        auto lb = (*_lhs)(state.first).successors(_helper.lhs(*label)).begin();
-        auto le = (*_lhs)(state.first).successors(_helper.lhs(*label)).end();
         auto rb = (*_rhs)(state.second).successors(_helper.rhs(*label)).begin();
-        auto re = (*_rhs)(state.second).successors(_helper.rhs(*label)).end();
-        return new TransitionBaseIterator(lb, le, rb, rb, re, this);
+        auto rb2 = rb;
+        return new TransitionBaseIterator((*_lhs)(state.first).successors(_helper.lhs(*label)).begin(),
+                                          (*_lhs)(state.first).successors(_helper.lhs(*label)).end(),
+                                          std::move(rb),
+                                          std::move(rb2),
+                                          (*_rhs)(state.second).successors(_helper.rhs(*label)).end(),
+                                          this);
     }
     virtual typename super_type::TransitionBaseIterator *_successor_end(const Q &state) override {
-        auto lb = (*_lhs)(state.first).successors().begin();
         auto le = (*_lhs)(state.first).successors().end();
-        auto rb = (*_rhs)(state.second).successors().begin();
+        auto le2 = le;
         auto re = (*_rhs)(state.second).successors().end();
-        return new TransitionBaseIterator(le, le, re, rb, re, this);
+        auto re2 = re;
+        return new TransitionBaseIterator(std::move(le),
+                                          std::move(le2),
+                                          std::move(re),
+                                          (*_rhs)(state.second).successors().begin(),
+                                          std::move(re2),
+                                          this);
     }
 
     /// @note not implemented yet

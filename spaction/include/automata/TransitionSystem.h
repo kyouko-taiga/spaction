@@ -167,6 +167,18 @@ template<typename Q, typename S> class TransitionSystem {
             return *this;
         }
 
+        // move constructor
+        _TransitionIterator(_TransitionIterator &&other) :
+            _base_iterator(other._base_iterator) {
+            other._base_iterator = nullptr;
+        }
+
+        // move assignment operator
+        _TransitionIterator &operator=(_TransitionIterator &&other) {
+            std::swap(_base_iterator, other._base_iterator);
+            return *this;
+        }
+
         bool operator!=(const _TransitionIterator& rhs) const {
             return *(_base_iterator) != *(rhs._base_iterator);
         }
