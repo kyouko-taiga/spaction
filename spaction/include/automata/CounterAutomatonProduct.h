@@ -155,6 +155,7 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
 
         // regroup the counter operations
         std::vector<CounterOperationList> counters;
+        counters.reserve(l.get_operations().size() + r.get_operations().size());
         counters.insert(counters.end(), l.get_operations().begin(), l.get_operations().end());
         counters.insert(counters.end(), r.get_operations().begin(), r.get_operations().end());
 
@@ -165,7 +166,7 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
         }
 
         // rebuild a CounterLabel
-        return CounterLabel<P>(_lhandler.build(l.letter(), r.letter()), counters, accs);
+        return CounterLabel<P>(_lhandler.build(l.letter(), r.letter()), std::move(counters), accs);
     }
 
     bool is_false(const CounterLabel<P> &prod) const override {

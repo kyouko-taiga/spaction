@@ -178,13 +178,17 @@ class CounterAutomaton {
 template<typename S> class CounterLabel {
  public:
     explicit CounterLabel(const S &letter, std::size_t counters) : _letter(letter),
-        _operations(counters), _hash_dirty(true) {
-    }
+        _operations(counters), _hash_dirty(true) { }
 
     explicit CounterLabel(const S &letter, const std::vector<CounterOperationList> &operations,
                           const accs_t &accs) :
-        _letter(letter), _operations(operations), _acceptance_conditions(accs), _hash_dirty(true) {
-    }
+        _letter(letter), _operations(operations),
+        _acceptance_conditions(accs), _hash_dirty(true) { }
+
+    explicit CounterLabel(const S &letter, std::vector<CounterOperationList> &&operations,
+                          const accs_t &accs) :
+        _letter(letter), _operations(std::move(operations)),
+        _acceptance_conditions(accs), _hash_dirty(true) { }
 
     bool operator==(const CounterLabel<S>& rhs) const {
         return      this->_letter == rhs._letter
