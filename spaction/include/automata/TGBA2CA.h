@@ -151,11 +151,10 @@ private:
         TransitionBaseIterator& operator=(TransitionBaseIterator &&) = delete;
 
         bool is_equal(const super_type::TransitionBaseIterator& rhs) const override {
-            const TransitionBaseIterator &r = static_cast<const TransitionBaseIterator &>(rhs);
             /// the spot::tgba_succ_iterator do not work that way and do not have a comparison operator
             /// instead they have a 'done' method, which is the intent of our operator!=
             /// we thus have to assume that `rhs` MUST be the end iterator
-            assert(r._it == nullptr);
+            assert(static_cast<const TransitionBaseIterator &>(rhs)._it == nullptr);
             return _it == nullptr || _it->done();
         }
 

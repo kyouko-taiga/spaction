@@ -52,7 +52,7 @@ class SupremumFinder {
         // setup DFS from the initial state
         {
             const MinMaxConfiguration<Q> &init = *_automaton.initial_state();
-            auto insert_res = _h.insert(std::make_pair(init, num));
+            auto insert_res = _h.emplace(init, num);
             assert(insert_res.second);  // ensures insertion did take place
             _root.push(scc_t(num));
             _arc.push(accs_t());
@@ -141,15 +141,12 @@ class SupremumFinder {
             }
 
             // Are we going to a new state?
-            auto spit = _h.find(dest);
-
-            if (spit == _h.end())
+            auto spit = _h.emplace(dest, num+1);
+            if (spit.second)
             {
                 // Yes, we are going to a new state.
                 //  Number it, stack it, and register its successors for later processing.
-                auto insert_res = _h.insert(std::make_pair(dest, ++num));
-                assert(insert_res.second);
-                _root.push(scc_t(num));
+                _root.push(scc_t(++num));
                 _arc.push(acc);
                 auto tmp_dest = (*_automaton.transition_system())(dest);
                 todo.push(state_iter(dest, tmp_dest.successors().begin(), tmp_dest.successors().end()));
@@ -169,7 +166,7 @@ class SupremumFinder {
             //}
 
             // If we have reached a dead component, ignore it.
-            if (spit->second == -1)
+            if (spit.first->second == -1)
                 continue;
 
             // Now this is the most interesting case.  We have reached a
@@ -183,7 +180,7 @@ class SupremumFinder {
             // ROOT is ascending: we just have to merge all SCCs from the
             // top of ROOT that have an index greater to the one of
             // the SCC of S2 (called the "threshold").
-            int threshold = spit->second;
+            int threshold = spit.first->second;
             std::list<MinMaxConfiguration<Q>> rem;
             while (threshold < _root.top().index)
             {
