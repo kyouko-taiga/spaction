@@ -113,6 +113,18 @@ class TGBATSIterator : public ITransitionBaseIterator<Q,S,TGBATSIterator<Q,S>> {
     }
     const Q get_source() const override { return _source; }
     const Q get_sink() const override { return _it->current_state(); }
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, accs_t>::type _get_acceptance() const {
+        return _it->current_acceptance_conditions();
+    }
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, typename LetterType<S>::type>::type _get_letter() const {
+        return _it->current_condition();
+    }
+    template<bool U = is_counter_label<S>::value>
+    inline typename std::enable_if<U, std::vector<CounterOperationList>>::type _get_operations() const {
+        return {};
+    }
 
     const super_type& operator++() override {
         assert(_it != nullptr);

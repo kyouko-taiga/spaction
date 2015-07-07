@@ -211,7 +211,8 @@ class MinMaxTSIterator : public ITransitionBaseIterator<MinMaxConfiguration<Q>, 
         bool is_sink_bounded = _source.is_bounded();
         unsigned int current_value = _source.current_value();
         std::vector<unsigned int> values = _source.values();
-        auto ops = _iterator.get_label().get_operations();
+        auto label = _iterator.get_label();
+        auto ops = label.get_operations();
         for (std::size_t k = 0; k != ops.size(); ++k) {
             assert(ops[k].size() == 1);
             if (ops[k][0] & kIncrement) {
@@ -230,7 +231,7 @@ class MinMaxTSIterator : public ITransitionBaseIterator<MinMaxConfiguration<Q>, 
             }
         }
         assert(_source.is_bounded() ? (is_sink_bounded and current_value <= _source.current_value()) : true);
-        auto res =_ts->add_transition(_source, MinMaxConfiguration<Q>(_iterator.get_sink(), is_sink_bounded, current_value, values), _iterator.get_label());
+        auto res =_ts->add_transition(_source, MinMaxConfiguration<Q>(_iterator.get_sink(), is_sink_bounded, current_value, values), label);
         return TransitionPtr<MinMaxConfiguration<Q>, S>(res, _ts->get_control_block());
     }
 
@@ -245,7 +246,7 @@ class MinMaxTSIterator : public ITransitionBaseIterator<MinMaxConfiguration<Q>, 
         bool is_sink_bounded = _source.is_bounded();
         unsigned int current_value = _source.current_value();
         std::vector<unsigned int> values = _source.values();
-        auto ops = _iterator.get_label().get_operations();
+        auto ops = _iterator.get_operations();
         for (std::size_t k = 0; k != ops.size(); ++k) {
             assert(ops[k].size() == 1);
             if (ops[k][0] & kIncrement) {
@@ -265,6 +266,18 @@ class MinMaxTSIterator : public ITransitionBaseIterator<MinMaxConfiguration<Q>, 
         }
         assert(_source.is_bounded() ? (is_sink_bounded and current_value <= _source.current_value()) : true);
         return MinMaxConfiguration<Q>(_iterator.get_sink(), is_sink_bounded, current_value, values);
+    }
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, accs_t>::type _get_acceptance() const {
+        return _iterator.get_acceptance();
+    }
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, typename LetterType<S>::type>::type _get_letter() const {
+        return _iterator.get_condition();
+    }
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, std::vector<CounterOperationList>>::type _get_operations() const {
+        return _iterator.get_operations();
     }
 
     const super_type & operator++() override {

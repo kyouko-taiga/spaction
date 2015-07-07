@@ -86,6 +86,18 @@ public:
     virtual S get_label() const { return (*_transition_it)->label(); }
     virtual const Q get_source() const { return (*_transition_it)->source(); }
     virtual const Q get_sink() const { return (*_transition_it)->sink(); }
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, typename LetterType<S>::type>::type _get_letter() const {
+        return (*_transition_it)->label().letter();
+    }
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, accs_t>::type _get_acceptance() const {
+        return (*_transition_it)->label().get_acceptance();
+    }
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, std::vector<CounterOperationList>>::type _get_operations() const {
+        return (*_transition_it)->label().get_operations();
+    }
 
     virtual const ITransitionBaseIterator<Q,S,UndeterministicTSIterator<Q,S>> & operator++() {
         // increment the transition iterator

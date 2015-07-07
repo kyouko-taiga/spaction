@@ -153,6 +153,22 @@ class TSProductIterator : public ITransitionBaseIterator<   StateProd<Q1,Q2>, ty
     const Q get_sink() const override {
         return std::make_pair(_lhs.get_sink(), _rhs.get_sink());
     }
+    /// @TODO the implementations should depend on whether
+    ///     S1 is a CounterLabel
+    ///     S2 is a CounterLabel
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U && is_counter_label<S1>::value && is_counter_label<S2>::value, typename LetterType<S>::type>::type _get_letter() const {
+        return _ts->_helper.build_letter(_lhs.get_letter(), _rhs.get_letter());
+    }
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, accs_t>::type _get_acceptance() const {
+        return _ts->_helper.build_acceptance(_lhs.get_acceptance(), _rhs.get_acceptance());
+    }
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, std::vector<CounterOperationList>>::type _get_operations() const {
+        return _ts->_helper.build_operations(_lhs.get_operations(), _rhs.get_operations());
+    }
+
 
     virtual const super_type& operator++() override {
         incr();
@@ -165,7 +181,7 @@ class TSProductIterator : public ITransitionBaseIterator<   StateProd<Q1,Q2>, ty
  protected:
     bool done() const { return !(_lhs != _lend or _rhs != _rend); }
     bool conditions_invalid() {
-        return _ts->_helper.is_false(_ts->_helper.build(_lhs.get_label(), _rhs.get_label()));
+        return _ts->_helper.is_false(this->_get_letter());
     }
 
     void incr() {

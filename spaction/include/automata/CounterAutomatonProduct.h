@@ -166,11 +166,36 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
         }
 
         // rebuild a CounterLabel
-        return CounterLabel<P>(_lhandler.build(l.letter(), r.letter()), std::move(counters), accs);
+        return CounterLabel<P>(build_letter(l.letter(), r.letter()), std::move(counters), accs);
     }
 
     bool is_false(const CounterLabel<P> &prod) const override {
-        return _lhandler.is_false(prod.letter());
+        return is_false(prod.letter());
+    }
+
+    bool is_false(const P &letter) const {
+        return _lhandler.is_false(letter);
+    }
+
+    P build_letter(const L1 &l, const L2 &r) const {
+        return _lhandler.build(l, r);
+    }
+
+    accs_t build_acceptance(const accs_t &l, const accs_t &r) const {
+        // regroup the acceptance conditions, by shifting up those from `r`
+        accs_t accs = l;
+        for (auto i : r.sets()) {
+            accs.set(i + _acceptance_offset);
+        }
+        return accs;
+    }
+
+    std::vector<CounterOperationList> build_operations(std::vector<CounterOperationList> &&l,
+                                                       std::vector<CounterOperationList> &&r) const {
+        std::vector<CounterOperationList> result(l.size() + r.size());
+        auto it = std::swap_ranges(l.begin(), l.end(), result.begin());
+        std::swap_ranges(r.begin(), r.end(), it);
+        return result;
     }
 
  private:

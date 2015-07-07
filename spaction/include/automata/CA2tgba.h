@@ -98,9 +98,9 @@ public:
     /// @note       in practice, a condition is a conjunction of atomic propositions
     /// @param      the condition to be converted
     /// @return     a bdd equivalent to the letter of \a label
-    bdd get_condition(const CounterLabel<S> &label) const {
+    bdd get_condition(const S &label) const {
         const spot::ltl::formula * fspot = spot::ltl::constant::true_instance();
-        for (auto f : label.letter()) {
+        for (auto f : label) {
             fspot = spot::ltl::multop::instance(spot::ltl::multop::And, cltl2spot(f), fspot);
         }
         return spot::formula_to_bdd(fspot, _ts->get_dict(), (void*)_ts);
@@ -121,8 +121,8 @@ public:
     /// @param      the condition to be converted
     /// @return     a bdd equivalent to the letter of \a label
     /// When the original letter is already a bdd, the conversion is trivial
-    inline bdd get_condition(const CounterLabel<S> &label) const {
-        return label.letter();
+    inline bdd get_condition(const S &label) const {
+        return label;
     }
 };
 
@@ -160,11 +160,11 @@ public:
     }
 
     virtual bdd current_condition() const override {
-        return _succ_helper<Q, S, TS>(_ts).get_condition(_current.get_label());
+        return _succ_helper<Q, S, TS>(_ts).get_condition(_current.get_letter());
     }
 
     virtual spot::acc_cond::mark_t current_acceptance_conditions() const override {
-        return _current.get_label().get_acceptance();
+        return _current.get_acceptance();
     }
 
     TransitionPtr<Q, CounterLabel<S>> get_trans() const { return *_current; }
