@@ -102,14 +102,11 @@ class TGBATSIterator : public ITransitionBaseIterator<Q,S,TGBATSIterator<Q,S>> {
     }
 
     TransitionPtr<Q, S> operator*() override {
-        std::vector<CounterOperationList> op_list;
-        CounterLabel<bdd> cl(_it->current_condition(), op_list, _it->current_acceptance_conditions());
-        return TransitionPtr<Q, S>(_ts->_make_transition(_source, _it->current_state(), cl), _ts->get_control_block());
+        return TransitionPtr<Q, S>(_ts->_make_transition(_source, _it->current_state(), get_label()), _ts->get_control_block());
     }
 
     S get_label() const override {
-        std::vector<CounterOperationList> op_list;
-        return CounterLabel<bdd>(_it->current_condition(), op_list, _it->current_acceptance_conditions());
+        return CounterLabel<bdd>(_it->current_condition(), {}, _it->current_acceptance_conditions());
     }
     const Q get_source() const override { return _source; }
     const Q get_sink() const override { return _it->current_state(); }

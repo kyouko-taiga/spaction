@@ -356,7 +356,7 @@ class SupremumFinder {
             , _end(std::move(e))
             {}
 
-            const iterator_type & begin() const { return _begin; }
+            iterator_type & begin() { return _begin; }
             const iterator_type & end() const { return _end; }
         };
         std::stack<my_iterator_pair> to_remove;
@@ -375,7 +375,7 @@ class SupremumFinder {
         my_iterator_pair succs(tmp.successors().begin(), tmp.successors().end());
         
         for (;;) {
-            for (iterator_type i = succs.begin() ; i != succs.end() ; ++i) {
+            for (iterator_type &i = succs.begin() ; i != succs.end() ; ++i) {
                 //                inc_transitions();  // for stats
                 
                 MinMaxConfiguration<Q> s = i.get_sink();
@@ -390,14 +390,13 @@ class SupremumFinder {
                 if (spi->second != -1) {
                     spi->second = -1;
                     auto tmp = (*ts)(s);
-                    my_iterator_pair topush(tmp.successors().begin(), tmp.successors().end());
-                    to_remove.push(topush);
+                    to_remove.emplace(tmp.successors().begin(), tmp.successors().end());
                 }
             }
             if (to_remove.empty())
                 break;
-            
-            succs = to_remove.top();
+
+            succs = std::move(to_remove.top());
             to_remove.pop();
         }
     }
