@@ -238,8 +238,10 @@ template<typename Q, typename S, typename Derived, typename Iterator> class Tran
         // copy assignment operator
         _TransitionIterator &operator=(const _TransitionIterator &other) {
             if (this != &other) {
-                delete _base_iterator;
-                _base_iterator = other._base_iterator->clone();
+                // take advantage of the CRTP to avoid memory deallocation/allocation, copy in place
+                assert(_base_iterator != other._base_iterator);
+                Iterator *tmp = static_cast<Iterator*>(_base_iterator);
+                *tmp = *static_cast<Iterator*>(other._base_iterator);
             }
             return *this;
         }

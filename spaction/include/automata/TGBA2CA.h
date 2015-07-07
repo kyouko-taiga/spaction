@@ -85,7 +85,26 @@ class TGBATSIterator : public ITransitionBaseIterator<Q,S,TGBATSIterator<Q,S>> {
             }
         }
     }
-    TGBATSIterator& operator=(const TGBATSIterator &) = delete;
+    TGBATSIterator& operator=(const TGBATSIterator &other) {
+        if (this != &other) {
+            _source = other._source;
+            if (_ts)
+                _ts->_tgba->release_iter(_it);
+            _ts = other._ts;
+            _n = other._n;
+            if (other._it == nullptr) {
+                _it = nullptr;
+            } else {
+                assert(_ts != nullptr);
+                _it = other._ts->_tgba->succ_iter(_source);
+                _it->first();
+                for (unsigned i = 0 ; !_it->done() && i != _n ; ++i) {
+                    _it->next();
+                }
+            }
+        }
+        return *this;
+    }
     explicit TGBATSIterator(TGBATSIterator &&) = delete;
     TGBATSIterator& operator=(TGBATSIterator &&) = delete;
 
