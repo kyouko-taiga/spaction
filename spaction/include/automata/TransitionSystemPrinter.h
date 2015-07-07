@@ -26,9 +26,9 @@
 namespace spaction {
 namespace automata {
 
-template<typename Q, typename S> class TSPrinter {
+template<typename Q, typename S, typename Derived, typename Iterator> class TSPrinter {
  public:
-    explicit TSPrinter(TransitionSystem<Q, S> &s): _system(s) { }
+    explicit TSPrinter(TransitionSystem<Q, S, Derived, Iterator> &s): _system(s) { }
     ~TSPrinter() { }
 
     void dump(const std::string &filename) {
@@ -71,7 +71,7 @@ template<typename Q, typename S> class TSPrinter {
     }
 
  private:
-    TransitionSystem<Q, S> &_system;
+    TransitionSystem<Q, S, Derived, Iterator> &_system;
 };
 
 /// a helper class to handle pointers
@@ -97,6 +97,12 @@ struct PrinterHelper<std::pair<A, B>> {
         os << ")";
     }
 };
+
+template<typename Q, typename S, typename Derived, typename Iterator>
+TSPrinter<Q, S, Derived, Iterator>
+make_ts_printer(TransitionSystem<Q, S, Derived, Iterator> &s) {
+    return TSPrinter<Q, S, Derived, Iterator>(s);
+}
 
 }  // namespace automata
 }  // namespace spaction

@@ -51,13 +51,95 @@ namespace automata {
 template<typename Q, typename S>
 class TGBATransitionSystem {};
 
+/// The transition iterator
+template<typename Q, typename S>
+class TGBATSIterator : public ITransitionBaseIterator<Q,S,TGBATSIterator<Q,S>> {
+    using super_type = ITransitionBaseIterator<Q,S,TGBATSIterator<Q,S>>;
+ public:
+    explicit TGBATSIterator(): TGBATSIterator(nullptr, nullptr, nullptr) {}
+    /// the iterator does not acquire the source state, but does acquire the iterator
+    explicit TGBATSIterator(spot::state *s, spot::twa_succ_iterator *t, TGBATransitionSystem<Q,S> *ts)
+    : _source(s)
+    , _it(t)
+    , _ts(ts)
+    , _n(0)
+    { if (_it) _it->first(); }
+
+    virtual ~TGBATSIterator() {
+        delete _it;
+    }
+
+    explicit TGBATSIterator(const TGBATSIterator &other)
+    : _source(other._source)
+    , _ts(other._ts)
+    , _n(other._n)
+    {
+        if (other._it == nullptr) {
+            _it = nullptr;
+        } else {
+            assert(_ts != nullptr);
+            _it = other._ts->_tgba->succ_iter(_source);
+            _it->first();
+            for (unsigned i = 0 ; !_it->done() && i != _n ; ++i) {
+                _it->next();
+            }
+        }
+    }
+    TGBATSIterator& operator=(const TGBATSIterator &) = delete;
+    explicit TGBATSIterator(TGBATSIterator &&) = delete;
+    TGBATSIterator& operator=(TGBATSIterator &&) = delete;
+
+    bool is_equal(const super_type & rhs) const override {
+        /// the spot::tgba_succ_iterator do not work that way and do not have a comparison operator
+        /// instead they have a 'done' method, which is the intent of our operator!=
+        /// we thus have to assume that `rhs` MUST be the end iterator
+        assert(static_cast<const TGBATSIterator &>(rhs)._it == nullptr);
+        return _it == nullptr || _it->done();
+    }
+
+    TGBATSIterator *clone() const override {
+        return new TGBATSIterator(*this);
+    }
+
+    TransitionPtr<Q, S> operator*() override {
+        std::vector<CounterOperationList> op_list;
+        CounterLabel<bdd> cl(_it->current_condition(), op_list, _it->current_acceptance_conditions());
+        return TransitionPtr<Q, S>(_ts->_make_transition(_source, _it->current_state(), cl), _ts->get_control_block());
+    }
+
+    S get_label() const override {
+        std::vector<CounterOperationList> op_list;
+        return CounterLabel<bdd>(_it->current_condition(), op_list, _it->current_acceptance_conditions());
+    }
+    const Q get_source() const override { return _source; }
+    const Q get_sink() const override { return _it->current_state(); }
+
+    const super_type& operator++() override {
+        assert(_it != nullptr);
+        _it->next();
+        ++_n;
+        assert(_n != 0); // to detect overflows
+        return *this;
+    }
+
+ private:
+    spot::state *_source;
+    spot::twa_succ_iterator *_it;
+    TGBATransitionSystem<Q,S> *_ts;
+    unsigned _n;
+};
+
 template<>
-class TGBATransitionSystem<spot::state*, CounterLabel<bdd>> : public TransitionSystem<spot::state*, CounterLabel<bdd>> {
+class TGBATransitionSystem<spot::state*, CounterLabel<bdd>>:
+    public TransitionSystem<spot::state*, CounterLabel<bdd>, TGBATransitionSystem<spot::state*, CounterLabel<bdd>>, TGBATSIterator<spot::state*, CounterLabel<bdd>>> {
     /// useful typedefs
-    using super_type = TransitionSystem<spot::state*, CounterLabel<bdd>>;
+    using super_type = TransitionSystem<spot::state*, CounterLabel<bdd>, TGBATransitionSystem<spot::state*, CounterLabel<bdd>>, TGBATSIterator<spot::state*, CounterLabel<bdd>>>;
     using Q = spot::state*;
     using S = CounterLabel<bdd>;
-public:
+ public:
+    using TransitionBaseIterator = TGBATSIterator<spot::state*, CounterLabel<bdd>>;
+    friend class TGBATSIterator<spot::state*, CounterLabel<bdd>>;
+    using TransitionIterator = typename super_type::TransitionIterator;
     /// constructor
     explicit TGBATransitionSystem(spot::const_twa_ptr t)
     : super_type(new RefControlBlock<Transition<Q, S>>(std::bind(&TGBATransitionSystem::_delete_transition, this, std::placeholders::_1)),
@@ -113,86 +195,6 @@ public:
 private:
     /// the underlying tgba
     spot::const_twa_ptr _tgba;
-
-    /// The transition iterator
-    class TransitionBaseIterator : public super_type::TransitionBaseIterator {
-     public:
-        explicit TransitionBaseIterator(): TransitionBaseIterator(nullptr, nullptr, nullptr) {}
-        /// the iterator does not acquire the source state, but does acquire the iterator
-        explicit TransitionBaseIterator(spot::state *s, spot::twa_succ_iterator *t, TGBATransitionSystem *ts)
-        : _source(s)
-        , _it(t)
-        , _ts(ts)
-        , _n(0)
-        { if (_it) _it->first(); }
-
-        virtual ~TransitionBaseIterator() {
-            delete _it;
-        }
-
-        explicit TransitionBaseIterator(const TransitionBaseIterator &other)
-        : _source(other._source)
-        , _ts(other._ts)
-        , _n(other._n)
-        {
-            if (other._it == nullptr) {
-                _it = nullptr;
-            } else {
-                assert(_ts != nullptr);
-                _it = other._ts->_tgba->succ_iter(_source);
-                _it->first();
-                for (unsigned i = 0 ; !_it->done() && i != _n ; ++i) {
-                    _it->next();
-                }
-            }
-        }
-        TransitionBaseIterator& operator=(const TransitionBaseIterator &) = delete;
-        explicit TransitionBaseIterator(TransitionBaseIterator &&) = delete;
-        TransitionBaseIterator& operator=(TransitionBaseIterator &&) = delete;
-
-        bool is_equal(const super_type::TransitionBaseIterator& rhs) const override {
-            /// the spot::tgba_succ_iterator do not work that way and do not have a comparison operator
-            /// instead they have a 'done' method, which is the intent of our operator!=
-            /// we thus have to assume that `rhs` MUST be the end iterator
-            assert(static_cast<const TransitionBaseIterator &>(rhs)._it == nullptr);
-            return _it == nullptr || _it->done();
-        }
-
-        TransitionBaseIterator *clone() const override {
-            return new TransitionBaseIterator(*this);
-        }
-
-        TransitionPtr<Q, S> operator*() override {
-            std::vector<CounterOperationList> op_list;
-            CounterLabel<bdd> cl(_it->current_condition(), op_list, _it->current_acceptance_conditions());
-            return TransitionPtr<Q, S>(_ts->_make_transition(_source, _it->current_state(), cl), _ts->get_control_block());
-        }
-
-        S get_label() const override {
-            std::vector<CounterOperationList> op_list;
-            return CounterLabel<bdd>(_it->current_condition(), op_list, _it->current_acceptance_conditions());
-        }
-        const Q get_source() const override {
-            return _source;
-        }
-        const Q get_sink() const override {
-            return _it->current_state();
-        }
-
-        const TransitionBaseIterator& operator++() override {
-            assert(_it != nullptr);
-            _it->next();
-            ++_n;
-            assert(_n != 0); // to detect overflows
-            return *this;
-        }
-
-     private:
-        spot::state *_source;
-        spot::twa_succ_iterator *_it;
-        TGBATransitionSystem *_ts;
-        unsigned _n;
-    };
 
     /// this implementation relies on spot DFS and is quite inefficient for our purpose, but it works
     class StateBaseIterator : public super_type::StateBaseIterator, public spot::tgba_reachable_iterator_depth_first {

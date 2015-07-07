@@ -66,7 +66,7 @@ void test_counter_automata() {
         automaton.make_label('b', {{CounterOperation::kIncrement,
                                     CounterOperation::kReset}}, {0}));
 
-    spaction::automata::TSPrinter<qt, spaction::automata::CounterLabel<st>> printer(*automaton.transition_system());
+    auto printer = make_ts_printer(*automaton.transition_system());
     // printer.dump("/tmp/counter.dot");
     printer.dump(std::cout);
 }

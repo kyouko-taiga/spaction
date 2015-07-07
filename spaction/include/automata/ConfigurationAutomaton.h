@@ -177,12 +177,114 @@ class MinMaxConfiguration {
     std::vector<unsigned int> _counter_values;
 };
 
+/// forward declaration
+template<typename Q, typename S, template<typename, typename> class TS>
+class MinMaxConfigTS;
+
+template<typename Q, typename S, template<typename, typename> class TS>
+class MinMaxTSIterator : public ITransitionBaseIterator<MinMaxConfiguration<Q>, S,
+                                                        MinMaxTSIterator<Q,S,TS>> {
+    using super_type = ITransitionBaseIterator<MinMaxConfiguration<Q>, S, MinMaxTSIterator<Q,S,TS>>;
+ public:
+    explicit MinMaxTSIterator(MinMaxConfigTS<Q,S,TS> *ts, const MinMaxConfiguration<Q> &s, typename TS<Q,S>::TransitionIterator &&it)
+    : _ts(ts)
+    , _source(s)
+    , _iterator(std::move(it))
+    {
+        // @debug
+        assert(_source.values().size() > 0);
+    }
+    ~MinMaxTSIterator() {}
+
+    // @todo make the overriden methods virtual for further inheritance?
+    bool is_equal(const super_type & rhs) const override {
+        const MinMaxTSIterator *rr = static_cast<const MinMaxTSIterator *>(&rhs);
+        return _source == rr->_source && !(_iterator != rr->_iterator);
+    }
+
+    // @todo is the iterator properly copied?
+    super_type *clone() const override {
+        return new MinMaxTSIterator(*this);
+    }
+
+    TransitionPtr<MinMaxConfiguration<Q>, S> operator*() override {
+        bool is_sink_bounded = _source.is_bounded();
+        unsigned int current_value = _source.current_value();
+        std::vector<unsigned int> values = _source.values();
+        auto ops = _iterator.get_label().get_operations();
+        for (std::size_t k = 0; k != ops.size(); ++k) {
+            assert(ops[k].size() == 1);
+            if (ops[k][0] & kIncrement) {
+                values[k]++;
+            }
+            if (ops[k][0] & kCheck) {
+                if (!is_sink_bounded) {
+                    is_sink_bounded = true;
+                    current_value = values[k];
+                } else if (values[k] < current_value) {
+                    current_value = values[k];
+                }
+            }
+            if (ops[k][0] & kReset) {
+                values[k] = 0;
+            }
+        }
+        assert(_source.is_bounded() ? (is_sink_bounded and current_value <= _source.current_value()) : true);
+        auto res =_ts->add_transition(_source, MinMaxConfiguration<Q>(_iterator.get_sink(), is_sink_bounded, current_value, values), _iterator.get_label());
+        return TransitionPtr<MinMaxConfiguration<Q>, S>(res, _ts->get_control_block());
+    }
+
+    S get_label() const override {
+        return _iterator.get_label();
+    }
+
+    const MinMaxConfiguration<Q> get_source() const override {
+        return _source;
+    }
+    const MinMaxConfiguration<Q> get_sink() const override {
+        bool is_sink_bounded = _source.is_bounded();
+        unsigned int current_value = _source.current_value();
+        std::vector<unsigned int> values = _source.values();
+        auto ops = _iterator.get_label().get_operations();
+        for (std::size_t k = 0; k != ops.size(); ++k) {
+            assert(ops[k].size() == 1);
+            if (ops[k][0] & kIncrement) {
+                values[k]++;
+            }
+            if (ops[k][0] & kCheck) {
+                if (!is_sink_bounded) {
+                    is_sink_bounded = true;
+                    current_value = values[k];
+                } else if (values[k] < current_value) {
+                    current_value = values[k];
+                }
+            }
+            if (ops[k][0] & kReset) {
+                values[k] = 0;
+            }
+        }
+        assert(_source.is_bounded() ? (is_sink_bounded and current_value <= _source.current_value()) : true);
+        return MinMaxConfiguration<Q>(_iterator.get_sink(), is_sink_bounded, current_value, values);
+    }
+
+    const super_type & operator++() override {
+        ++_iterator;
+        return *this;
+    }
+
+ private:
+    MinMaxConfigTS<Q,S,TS> *_ts;
+    const MinMaxConfiguration<Q> _source;
+    typename TS<Q,S>::TransitionIterator _iterator;
+};
+
 /// a class to represent the configuration automaton's TS
 template<typename Q, typename S, template<typename, typename> class TS>
-class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
+class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S, MinMaxConfigTS<Q,S,TS>, MinMaxTSIterator<Q,S,TS>> {
  public:
     // helper typedef for base
-    using super_type = TransitionSystem<MinMaxConfiguration<Q>, S>;
+    using super_type = TransitionSystem<MinMaxConfiguration<Q>, S, MinMaxConfigTS<Q,S,TS>, MinMaxTSIterator<Q,S,TS>>;
+    using TransitionBaseIterator = MinMaxTSIterator<Q,S,TS>;
 
     explicit MinMaxConfigTS(TS<Q, S> *ts, std::size_t nb_counters)
     : super_type(new RefControlBlock<Transition<MinMaxConfiguration<Q>, S>>(
@@ -240,100 +342,6 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
     TS<Q,S> *_transition_system;
     // the number of counters
     std::size_t _nb_counters;
-
-    class TransitionBaseIterator : public super_type::TransitionBaseIterator {
-     public:
-        explicit TransitionBaseIterator(MinMaxConfigTS *ts, const MinMaxConfiguration<Q> &s, typename TS<Q,S>::TransitionIterator &&it)
-        : _ts(ts)
-        , _source(s)
-        , _iterator(std::move(it))
-        {
-            // @debug
-            assert(_source.values().size() > 0);
-        }
-        ~TransitionBaseIterator() {}
-
-        // @todo make the overriden methods virtual for further inheritance?
-        bool is_equal(const typename super_type::TransitionBaseIterator& rhs) const override {
-            const TransitionBaseIterator *rr = static_cast<const TransitionBaseIterator *>(&rhs);
-            return _source == rr->_source && !(_iterator != rr->_iterator);
-        }
-
-        // @todo is the iterator properly copied?
-        typename super_type::TransitionBaseIterator *clone() const override {
-            return new TransitionBaseIterator(*this);
-        }
-
-        TransitionPtr<MinMaxConfiguration<Q>, S> operator*() override {
-            bool is_sink_bounded = _source.is_bounded();
-            unsigned int current_value = _source.current_value();
-            std::vector<unsigned int> values = _source.values();
-            auto ops = _iterator.get_label().get_operations();
-            for (std::size_t k = 0; k != ops.size(); ++k) {
-                assert(ops[k].size() == 1);
-                if (ops[k][0] & kIncrement) {
-                    values[k]++;
-                }
-                if (ops[k][0] & kCheck) {
-                    if (!is_sink_bounded) {
-                        is_sink_bounded = true;
-                        current_value = values[k];
-                    } else if (values[k] < current_value) {
-                        current_value = values[k];
-                    }
-                }
-                if (ops[k][0] & kReset) {
-                    values[k] = 0;
-                }
-            }
-            assert(_source.is_bounded() ? (is_sink_bounded and current_value <= _source.current_value()) : true);
-            auto res =_ts->add_transition(_source, MinMaxConfiguration<Q>(_iterator.get_sink(), is_sink_bounded, current_value, values), _iterator.get_label());
-            return TransitionPtr<MinMaxConfiguration<Q>, S>(res, _ts->get_control_block());
-        }
-
-        S get_label() const override {
-            return _iterator.get_label();
-        }
-
-        const MinMaxConfiguration<Q> get_source() const override {
-            return _source;
-        }
-        const MinMaxConfiguration<Q> get_sink() const override {
-            bool is_sink_bounded = _source.is_bounded();
-            unsigned int current_value = _source.current_value();
-            std::vector<unsigned int> values = _source.values();
-            auto ops = _iterator.get_label().get_operations();
-            for (std::size_t k = 0; k != ops.size(); ++k) {
-                assert(ops[k].size() == 1);
-                if (ops[k][0] & kIncrement) {
-                    values[k]++;
-                }
-                if (ops[k][0] & kCheck) {
-                    if (!is_sink_bounded) {
-                        is_sink_bounded = true;
-                        current_value = values[k];
-                    } else if (values[k] < current_value) {
-                        current_value = values[k];
-                    }
-                }
-                if (ops[k][0] & kReset) {
-                    values[k] = 0;
-                }
-            }
-            assert(_source.is_bounded() ? (is_sink_bounded and current_value <= _source.current_value()) : true);
-            return MinMaxConfiguration<Q>(_iterator.get_sink(), is_sink_bounded, current_value, values);
-        }
-
-        const typename super_type::TransitionBaseIterator& operator++() override {
-            ++_iterator;
-            return *this;
-        }
-
-     private:
-        MinMaxConfigTS *_ts;
-        const MinMaxConfiguration<Q> _source;
-        typename TS<Q,S>::TransitionIterator _iterator;
-    };
 
     /// @note   makes a DFS of the configuration TS. Quite inefficient, but there seems to be no
     ///         other solution, given the definition of configurations...
@@ -422,13 +430,13 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S> {
         // @debug
         assert(state.values().size() > 0);
         if (label)
-            return new TransitionBaseIterator(this, state, (*_transition_system)(state.state()).successors(*label).begin());
+            return new MinMaxTSIterator<Q,S,TS>(this, state, (*_transition_system)(state.state()).successors(*label).begin());
         else
-            return new TransitionBaseIterator(this, state, (*_transition_system)(state.state()).successors().begin());
+            return new MinMaxTSIterator<Q,S,TS>(this, state, (*_transition_system)(state.state()).successors().begin());
     }
     virtual typename super_type::TransitionBaseIterator *
     _successor_end(const MinMaxConfiguration<Q> &state) override {
-        return new TransitionBaseIterator(this, state, (*_transition_system)(state.state()).successors().end());
+        return new MinMaxTSIterator<Q,S,TS>(this, state, (*_transition_system)(state.state()).successors().end());
     }
 
     /// @note deliberately left unimplemented

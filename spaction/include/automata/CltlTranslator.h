@@ -56,7 +56,7 @@ class CltlTranslator {
         _automaton.print(dotfile);
     }
     void epsilon_dot(const std::string &dotfile) {
-        TSPrinter<Node*, TransitionLabel*> p(_transition_system);
+        auto p = make_ts_printer(_transition_system);
         p.dump(dotfile);
     }
 

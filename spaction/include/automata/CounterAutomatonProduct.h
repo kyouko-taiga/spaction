@@ -197,21 +197,21 @@ struct CLWrapper {
 
 /// Helper struct to enforce (6)
 /// Once again, workaround the impossibility to specialize templated typedef
-template <typename Q, typename S1, typename S2, typename S, template<typename A, typename B> class LP>
+template <typename Q, typename S1, typename S2, typename S, typename D1, typename D2, template<typename A, typename B> class LP>
 struct _TSP {};
 
-template<   typename Q1, typename L1, typename Q2, typename L2,
+template<   typename Q1, typename L1, typename D1, typename Q2, typename L2, typename D2,
             template<typename, typename> class AutLP>
-struct _TSP<StateProd<Q1, Q2>, CounterLabel<L1>, CounterLabel<L2>, typename ALabel<L1, L2, AutLP>::tsprod_label, AutLP> {
-    using type = TransitionSystemProduct<   Q1, CounterLabel<L1>,
-                                            Q2, CounterLabel<L2>,
+struct _TSP<StateProd<Q1, Q2>, CounterLabel<L1>, CounterLabel<L2>, typename ALabel<L1, L2, AutLP>::tsprod_label, D1, D2, AutLP> {
+    using type = TransitionSystemProduct<   Q1, CounterLabel<L1>, D1,
+                                            Q2, CounterLabel<L2>, D2,
                                             CLWrapper<AutLP>::template type>;
 };
 
 /// Final helper to enforce (6), by currying template arguments of _TSP
-template<typename L1, typename L2, template<typename, typename> class LP>
+template<typename L1, typename L2, typename D1, typename D2, template<typename, typename> class LP>
 struct TSP {
-    template<typename Q, typename S> using type = typename _TSP<Q, L1, L2, S, LP>::type;
+    template<typename Q, typename S> using type = typename _TSP<Q, L1, L2, S, D1, D2, LP>::type;
 };
 
 /// Useful alias for the base class of CounterAutomatonProduct
@@ -221,7 +221,7 @@ template<   typename Q1, typename S1, template<typename Q1_, typename S1_> class
             template<typename, typename> class LabelProduct>
 using CAPBase = CounterAutomaton<StateProd<Q1, Q2>,
             typename ALabel<S1, S2, LabelProduct>::autprod_label,
-            TSP<CounterLabel<S1>, CounterLabel<S2>, LabelProduct>::template type>;
+            TSP<CounterLabel<S1>, CounterLabel<S2>, TS1<Q1,CounterLabel<S1>>, TS2<Q2,CounterLabel<S2>>, LabelProduct>::template type>;
 
 /// The class CounterAutomatonProduct
 /// Has a lot of arguments in the general case

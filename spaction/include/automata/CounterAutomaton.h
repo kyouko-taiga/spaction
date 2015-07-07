@@ -24,68 +24,25 @@
 #include <unordered_map>
 #include <vector>
 
-#include <twa/acc.hh>
-
 #include "automata/TransitionSystem.h"
 #include "automata/TransitionSystemPrinter.h"
 
 namespace spaction {
 namespace automata {
 
-enum CounterOperation : unsigned int {
-    kIncrement  = 1,
-    kCheck      = 2,
-    kReset      = 4
-};
-
-typedef std::vector<CounterOperation> CounterOperationList;
-template<typename S> class CounterLabel;
-
-inline CounterOperation operator|(const CounterOperation &l, const CounterOperation &r) {
-    return static_cast<CounterOperation>(static_cast<unsigned int>(l) | static_cast<unsigned int>(r));
-}
-inline CounterOperation operator&(const CounterOperation &l, const CounterOperation &r) {
-    return static_cast<CounterOperation>(static_cast<unsigned int>(l) & static_cast<unsigned int>(r));
-}
-
-std::string print_counter_operation(CounterOperation c);
-
-/// spot already implements acceptance conditions as bitsets
-typedef spot::acc_cond::mark_t accs_t;
-
-}  // namespace automata
-}  // namespace spaction
-
-namespace std {
-
-/// Hash function for CounterLabel type, so it can be used as a key in map-like STL containers.
-template<typename S>
-struct hash<spaction::automata::CounterLabel<S>> {
-    typedef spaction::automata::CounterLabel<S> argument_type;
-    typedef std::size_t result_type;
-
-    result_type operator()(const argument_type &cl) const {
-        return cl.hash();
-    }
-};
-
-}  // namespace std
-
-namespace spaction {
-namespace automata {
-
-template<typename Q, typename S, template<typename Q_, typename S_> class TransitionSystemType>
+template<typename Q, typename S, template<typename, typename> class TransitionSystemType>
 class CounterAutomaton {
  public:
     typedef TransitionSystemType<Q, CounterLabel<S>> transition_system_t;
     typedef Transition<Q, CounterLabel<S>>           transition_t;
+    typedef typename transition_system_t::TransitionBaseIterator ts_iterator_t;
 
     template<class ... Args>
     explicit CounterAutomaton(std::size_t counters, unsigned nb_acceptance, Args... args) :
         _counters(counters, 0), _nb_acceptance(nb_acceptance), _initial_state(nullptr) {
         // static_cast prevents the template from being incompatible
         _transition_system =
-            static_cast<TransitionSystem<Q, CounterLabel<S>>*>(new transition_system_t(args...));
+            static_cast<TransitionSystem<Q, CounterLabel<S>, transition_system_t, ts_iterator_t>*>(new transition_system_t(args...));
     }
 
     virtual ~CounterAutomaton() {
@@ -157,17 +114,17 @@ class CounterAutomaton {
     }
 
     void print(const std::string &dotfile) const {
-        TSPrinter<Q, CounterLabel<S>> p(*_transition_system);
+        TSPrinter<Q, CounterLabel<S>, transition_system_t, ts_iterator_t> p(*_transition_system);
         p.dump(dotfile);
     }
 
     void print(std::ostream &os) const {
-        TSPrinter<Q, CounterLabel<S>> p(*_transition_system);
+        TSPrinter<Q, CounterLabel<S>, transition_system_t, ts_iterator_t> p(*_transition_system);
         p.dump(os);
     }
 
  protected:
-    TransitionSystem<Q, CounterLabel<S>> *_transition_system;
+    TransitionSystem<Q, CounterLabel<S>, transition_system_t, ts_iterator_t> *_transition_system;
 
     std::vector<unsigned> _counters;
     unsigned _nb_acceptance;

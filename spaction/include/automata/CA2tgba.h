@@ -131,12 +131,12 @@ template<typename Q, typename S, template<typename, typename> class TS>
 class succiter_adapter : public spot::twa_succ_iterator {
 public:
     /// constructor
-    explicit succiter_adapter(const typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator &b,
-                              const typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator &e,
+    explicit succiter_adapter(const typename TS<Q,CounterLabel<S>>::TransitionIterator &b,
+                              const typename TS<Q,CounterLabel<S>>::TransitionIterator &e,
                               const CA2tgba<Q,S,TS> *t)
     : _current(b), _begin(b), _end(e), _ts(t) {}
-    explicit succiter_adapter(typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator &&b,
-                              typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator &&e,
+    explicit succiter_adapter(typename TS<Q,CounterLabel<S>>::TransitionIterator &&b,
+                              typename TS<Q,CounterLabel<S>>::TransitionIterator &&e,
                               const CA2tgba<Q,S,TS> *t)
     // `b` MUST be duplicated, so one copy is unavoidable here
     : _current(b), _begin(std::move(b)), _end(std::move(e)), _ts(t) {}
@@ -170,8 +170,8 @@ public:
     TransitionPtr<Q, CounterLabel<S>> get_trans() const { return *_current; }
 
 private:
-    mutable typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator _current;
-    const typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator _begin, _end;
+    mutable typename TS<Q,CounterLabel<S>>::TransitionIterator _current;
+    const typename TS<Q,CounterLabel<S>>::TransitionIterator _begin, _end;
     const CA2tgba<Q,S,TS> *_ts;
 };
 
