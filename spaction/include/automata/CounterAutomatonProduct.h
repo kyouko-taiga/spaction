@@ -18,6 +18,10 @@
 #ifndef SPACTION_INCLUDE_AUTOMATA_COUNTERAUTOMATONPRODUCT_H_
 #define SPACTION_INCLUDE_AUTOMATA_COUNTERAUTOMATONPRODUCT_H_
 
+#include <unordered_map>
+
+#include <misc/bddlt.hh>
+
 #include "automata/CounterAutomaton.h"
 #include "automata/TransitionSystemProduct.h"
 
@@ -104,9 +108,8 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
     /// a shortcut for the label product
     using P = typename ALabel<L1, L2, LabelProduct>::autprod_label;
 
-    explicit TSLabelProdImpl() {}
     template<typename... Args>
-    explicit TSLabelProdImpl(std::size_t counter_offset, std::size_t acceptance_offset, Args... args)
+    explicit TSLabelProdImpl(std::size_t counter_offset, unsigned acceptance_offset, Args... args)
     : _lhandler(LabelProduct<L1, L2>(args...))
     , _counter_offset(counter_offset)
     , _acceptance_offset(acceptance_offset) {}
@@ -119,11 +122,14 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
                                                    cl.get_operations().begin() + _counter_offset);
 
         // keep the acceptance conditions below `_acceptance_offset`
-        std::set<std::size_t> left_accs(cl.get_acceptance().begin(),
-                                        cl.get_acceptance().lower_bound(_acceptance_offset));
+        accs_t strip;
+        for (unsigned i = _acceptance_offset ; i != cl.get_acceptance().max_set() ; ++i) {
+            strip.set(i);
+        }
+        accs_t cl_accs = cl.get_acceptance().strip(strip);
 
         // rebuild a CounterLabel
-        return CounterLabel<L1>(_lhandler.lhs(cl.letter()), left_ops, left_accs);
+        return CounterLabel<L1>(_lhandler.lhs(cl.letter()), left_ops, cl_accs);
     }
 
     const CounterLabel<L2> rhs(const CounterLabel<P> &cl) const override {
@@ -132,14 +138,12 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
                                                     cl.get_operations().end());
         assert(right_ops.size() + _counter_offset == cl.get_operations().size());
 
-        std::set<std::size_t> right_accs;
         // keep the acceptance conditions above `_acceptance_offset`, and shift them down
-        std::transform(cl.get_acceptance().lower_bound(_acceptance_offset),
-                       cl.get_acceptance().end(),
-                       std::inserter(right_accs, right_accs.end()),
-                       [this](std::size_t x) {
-                           assert(x >= _acceptance_offset);
-                           return x - _acceptance_offset; });
+        accs_t strip;
+        for (unsigned i = 0 ; i != _acceptance_offset ; ++i) {
+            strip.set(i);
+        }
+        accs_t right_accs = cl.get_acceptance().strip(strip);
 
         // rebuild a CounterLabel
         return CounterLabel<L2>(_lhandler.rhs(cl.letter()), right_ops, right_accs);
@@ -151,27 +155,53 @@ class TSLabelProdImpl<  CounterLabel<L1>, CounterLabel<L2>,
 
         // regroup the counter operations
         std::vector<CounterOperationList> counters;
+        counters.reserve(l.get_operations().size() + r.get_operations().size());
         counters.insert(counters.end(), l.get_operations().begin(), l.get_operations().end());
         counters.insert(counters.end(), r.get_operations().begin(), r.get_operations().end());
 
         // regroup the acceptance conditions, by shifting up those from `r`
-        std::set<std::size_t> accs(l.get_acceptance().begin(), l.get_acceptance().end());
-        std::transform(r.get_acceptance().begin(), r.get_acceptance().end(),
-                       std::inserter(accs, accs.end()),
-                       [this](std::size_t x) { return x + _acceptance_offset; });
+        accs_t accs = l.get_acceptance();
+        for (auto i : r.get_acceptance().sets()) {
+            accs.set(i + _acceptance_offset);
+        }
 
         // rebuild a CounterLabel
-        return CounterLabel<P>(_lhandler.build(l.letter(), r.letter()), counters, accs);
+        return CounterLabel<P>(build_letter(l.letter(), r.letter()), std::move(counters), accs);
     }
 
     bool is_false(const CounterLabel<P> &prod) const override {
-        return _lhandler.is_false(prod.letter());
+        return is_false(prod.letter());
+    }
+
+    bool is_false(const P &letter) const {
+        return _lhandler.is_false(letter);
+    }
+
+    P build_letter(const L1 &l, const L2 &r) const {
+        return _lhandler.build(l, r);
+    }
+
+    accs_t build_acceptance(const accs_t &l, const accs_t &r) const {
+        // regroup the acceptance conditions, by shifting up those from `r`
+        accs_t accs = l;
+        for (auto i : r.sets()) {
+            accs.set(i + _acceptance_offset);
+        }
+        return accs;
+    }
+
+    std::vector<CounterOperationList> build_operations(std::vector<CounterOperationList> &&l,
+                                                       std::vector<CounterOperationList> &&r) const {
+        std::vector<CounterOperationList> result(l.size() + r.size());
+        auto it = std::swap_ranges(l.begin(), l.end(), result.begin());
+        std::swap_ranges(r.begin(), r.end(), it);
+        return result;
     }
 
  private:
     LabelProduct<L1, L2> _lhandler;
     std::size_t _counter_offset;
-    std::size_t _acceptance_offset;
+    unsigned _acceptance_offset;
 };
 
 /// The class CLWrapper.
@@ -192,21 +222,21 @@ struct CLWrapper {
 
 /// Helper struct to enforce (6)
 /// Once again, workaround the impossibility to specialize templated typedef
-template <typename Q, typename S1, typename S2, typename S, template<typename A, typename B> class LP>
+template <typename Q, typename S1, typename S2, typename S, typename D1, typename D2, template<typename A, typename B> class LP>
 struct _TSP {};
 
-template<   typename Q1, typename L1, typename Q2, typename L2,
+template<   typename Q1, typename L1, typename D1, typename Q2, typename L2, typename D2,
             template<typename, typename> class AutLP>
-struct _TSP<StateProd<Q1, Q2>, CounterLabel<L1>, CounterLabel<L2>, typename ALabel<L1, L2, AutLP>::tsprod_label, AutLP> {
-    using type = TransitionSystemProduct<   Q1, CounterLabel<L1>,
-                                            Q2, CounterLabel<L2>,
+struct _TSP<StateProd<Q1, Q2>, CounterLabel<L1>, CounterLabel<L2>, typename ALabel<L1, L2, AutLP>::tsprod_label, D1, D2, AutLP> {
+    using type = TransitionSystemProduct<   Q1, CounterLabel<L1>, D1,
+                                            Q2, CounterLabel<L2>, D2,
                                             CLWrapper<AutLP>::template type>;
 };
 
 /// Final helper to enforce (6), by currying template arguments of _TSP
-template<typename L1, typename L2, template<typename, typename> class LP>
+template<typename L1, typename L2, typename D1, typename D2, template<typename, typename> class LP>
 struct TSP {
-    template<typename Q, typename S> using type = typename _TSP<Q, L1, L2, S, LP>::type;
+    template<typename Q, typename S> using type = typename _TSP<Q, L1, L2, S, D1, D2, LP>::type;
 };
 
 /// Useful alias for the base class of CounterAutomatonProduct
@@ -216,7 +246,7 @@ template<   typename Q1, typename S1, template<typename Q1_, typename S1_> class
             template<typename, typename> class LabelProduct>
 using CAPBase = CounterAutomaton<StateProd<Q1, Q2>,
             typename ALabel<S1, S2, LabelProduct>::autprod_label,
-            TSP<CounterLabel<S1>, CounterLabel<S2>, LabelProduct>::template type>;
+            TSP<CounterLabel<S1>, CounterLabel<S2>, TS1<Q1,CounterLabel<S1>>, TS2<Q2,CounterLabel<S2>>, LabelProduct>::template type>;
 
 /// The class CounterAutomatonProduct
 /// Has a lot of arguments in the general case
@@ -235,14 +265,11 @@ class CounterAutomatonProduct: public CAPBase<Q1, S1, TS1, Q2, S2, TS2, LabelPro
     template<typename... Args>
     explicit CounterAutomatonProduct(CounterAutomaton<Q1, S1, TS1> &lhs,
                                      CounterAutomaton<Q2, S2, TS2> &rhs,
-                                     Args... args)
+                                     std::shared_ptr<Data> d, Args... args)
     : super_type(lhs.num_counters() + rhs.num_counters(),
-                 lhs.num_acceptance_sets() + rhs.num_acceptance_sets()) {
-        super_type::_transition_system =
-            new typename super_type::transition_system_t(
-                lhs.transition_system(),
-                rhs.transition_system(),
-                TSLabelType(lhs.num_counters(), lhs.num_acceptance_sets(), args...));
+                 lhs.num_acceptance_sets() + rhs.num_acceptance_sets(),
+                 lhs.transition_system(), rhs.transition_system(),
+                 TSLabelType(lhs.num_counters(), lhs.num_acceptance_sets(), args...), d) {
         this->set_initial_state(StateProd<Q1, Q2>(*lhs.initial_state(), *rhs.initial_state()));
     }
 
@@ -275,7 +302,6 @@ class _AutLabelProduct<CltlTranslator::FormulaList, CltlTranslator::FormulaList>
                                 CltlTranslator::FormulaList,
                                 CltlTranslator::FormulaList>;
 
-    explicit _AutLabelProduct(): _AutLabelProduct(nullptr) {}
     explicit _AutLabelProduct(CltlFormulaFactory *f): _factory(f) {}
 
     virtual product_type build(const lhs_type &l, const rhs_type &r) const override {
@@ -368,7 +394,6 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
                                 bdd,
                                 CltlTranslator::FormulaList>;
 
-    explicit _AutLabelProduct(): _AutLabelProduct(nullptr, nullptr) {}
     explicit _AutLabelProduct(spot::bdd_dict_ptr d, CltlFormulaFactory *f): _dict(d), _factory(f) {}
 
     ~_AutLabelProduct() {
@@ -379,31 +404,37 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
     virtual product_type build(const lhs_type &l, const rhs_type &r) const override {
         // translate the bdd to a FormulaList
         lhs_type rr;
+        auto it = _bdd2formulalist_cache.find(r);
+        if (it == _bdd2formulalist_cache.end()) {
+            // translate the bdd to a spot LTL formula, and convert it to a spaction formula
+            const spot::ltl::formula *fspot = spot::bdd_to_formula(r, _dict);
+            CltlFormulaPtr fspaction = spot2cltl(fspot, _factory);
 
-        // translate the bdd to a spot LTL formula
-        const spot::ltl::formula *fspot = spot::bdd_to_formula(r, _dict);
-        // convert the spot formula to a spaction formula
-        CltlFormulaPtr fspaction = spot2cltl(fspot, _factory);
+            if (fspaction->formula_type() == CltlFormula::kMultOperator) {
+                const MultOperator *mf = static_cast<const MultOperator*>(fspaction.get());
+                assert(mf);
+                assert(mf->operator_type() == MultOperator::kAnd);
+                rr.insert(rr.end(), mf->childs().begin(), mf->childs().end());
+            } else if (fspaction->formula_type() == CltlFormula::kAtomicProposition) {
+                rr.push_back(fspaction);
+            } else if (fspaction->formula_type() == CltlFormula::kUnaryOperator) {
+                const UnaryOperator *uf = static_cast<const UnaryOperator *>(fspaction.get());
+                assert(uf);
+                assert(uf->operator_type() == UnaryOperator::kNot);
+                rr.push_back(fspaction);
+            } else {
+                throw std::runtime_error("condition should be in CNF...");
+            }
 
-        if (fspaction->formula_type() == CltlFormula::kMultOperator) {
-            const MultOperator *mf = static_cast<const MultOperator*>(fspaction.get());
-            assert(mf);
-            assert(mf->operator_type() == MultOperator::kAnd);
-            rr.insert(rr.end(), mf->childs().begin(), mf->childs().end());
-        } else if (fspaction->formula_type() == CltlFormula::kAtomicProposition) {
-            rr.push_back(fspaction);
-        } else if (fspaction->formula_type() == CltlFormula::kUnaryOperator) {
-            const UnaryOperator *uf = static_cast<const UnaryOperator *>(fspaction.get());
-            assert(uf);
-            assert(uf->operator_type() == UnaryOperator::kNot);
-            rr.push_back(fspaction);
+            // sort the produced list
+            auto compare = CltlTranslator::get_formula_order();
+            std::sort(rr.begin(), rr.end(), compare);
+
+            // store result in cache
+            _bdd2formulalist_cache[r] = rr;
         } else {
-            throw std::runtime_error("condition should be in CNF...");
+            rr = it->second;
         }
-
-        // sort the produced list
-        auto compare = CltlTranslator::get_formula_order();
-        std::sort(rr.begin(), rr.end(), compare);
 
         // call the version to combine two FormulaList
         return _AutLabelProduct<lhs_type, lhs_type>(_factory).build(l, rr);
@@ -435,6 +466,35 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
  private:
     spot::bdd_dict_ptr _dict;
     CltlFormulaFactory *_factory;
+    mutable std::unordered_map<rhs_type, lhs_type, spot::bdd_hash> _bdd2formulalist_cache;
+};
+
+/// A specialization to combine two bdd-based automata
+template<>
+class _AutLabelProduct<bdd, bdd> : public IAutLabelProd<bdd, bdd, bdd> {
+ public:
+    explicit _AutLabelProduct() { }
+    virtual ~_AutLabelProduct() { }
+
+    virtual product_type build(const lhs_type &lhs, const rhs_type &rhs) const override {
+        return bdd_and(lhs, rhs);
+    }
+
+    virtual bool is_false(const product_type &p) const override {
+        return p == bdd_false();
+    }
+
+    /// @todo   these definitions of lhs and rhs may not yield the expected results, but it's rather
+    ///         a problem with the current implementation of UndeterministicTransitionSystem.
+    ///         When asking the succs with label L, we actually want to iterate over all the
+    ///         transition with label compatible with L, rather than L exactly.
+    virtual lhs_type lhs(const product_type &p) const override {
+        return p;
+    }
+    
+    virtual rhs_type rhs(const product_type &p) const override {
+        return p;
+    }
 };
 
 template<typename A, typename B> using AutLabelProduct = _AutLabelProduct<A, B>;
@@ -444,8 +504,9 @@ template<   typename Q1, typename S1, template<typename Q1_, typename S1_> class
             typename Q2, typename S2, template<typename Q2_, typename S2_> class TS2,
             typename... Args>
 CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>
-make_aut_product(CounterAutomaton<Q1, S1, TS1> &l, CounterAutomaton<Q2, S2, TS2> &r, Args... args) {
-    return CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>(l, r, args...);
+make_aut_product(CounterAutomaton<Q1, S1, TS1> &l, CounterAutomaton<Q2, S2, TS2> &r,
+                 std::shared_ptr<Data> d, Args... args) {
+    return CounterAutomatonProduct<Q1, S1, TS1, Q2, S2, TS2, AutLabelProduct>(l, r, d, args...);
 }
 
 }  // namespace automata

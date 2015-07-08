@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+#include "bdd_util.h"
 #include "CltlFormula.h"
 #include "automata/CounterAutomaton.h"
 #include "automata/TransitionSystemPrinter.h"
@@ -55,7 +56,7 @@ class CltlTranslator {
         _automaton.print(dotfile);
     }
     void epsilon_dot(const std::string &dotfile) {
-        TSPrinter<Node*, TransitionLabel*> p(_transition_system);
+        auto p = make_ts_printer(_transition_system);
         p.dump(dotfile);
     }
 
@@ -121,6 +122,11 @@ class CltlTranslator {
     /// the type of the automaton built
     typedef CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem> automaton_type;
     inline automaton_type & get_automaton() { return _automaton; }
+    /// the type of the final automaton
+    /// the final automaton does not use CltlFormula for efficiency
+    typedef CounterAutomaton<unsigned, bdd, UndeterministicTransitionSystem> final_automaton_type;
+    /// creates a new pointer
+    final_automaton_type * get_final_automaton(spot::bdd_dict_ptr dict) const;
 
     static std::function<bool (const CltlFormulaPtr &, const CltlFormulaPtr &)> get_formula_order();
 
@@ -142,9 +148,9 @@ class CltlTranslator {
     /// Stores the actual automaton
     automaton_type _automaton;
 
-    std::size_t _nb_acceptances;
+    unsigned _nb_acceptances;
     /// Associates each Until sub-formula to an acceptance condition
-    std::map<CltlFormulaPtr, std::size_t> _acceptances_maps;
+    std::map<CltlFormulaPtr, unsigned> _acceptances_maps;
     std::size_t _nb_counters;
     /// Associates each Cost sub-formula to a counter
     std::map<CltlFormulaPtr, std::size_t> _counters_maps;

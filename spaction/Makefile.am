@@ -35,6 +35,7 @@ spaction_hdrs     = include/automata/CA2tgba.h \
 										include/automata/TransitionSystemPrinter.h \
 										include/automata/TransitionSystemProduct.h \
 										include/automata/UndeterministicTransitionSystem.h \
+										include/bdd_util.h \
 										include/cltlparse/CLTLScanner.h \
 										include/cltlparse/public.h \
 										include/hash/hash.h \

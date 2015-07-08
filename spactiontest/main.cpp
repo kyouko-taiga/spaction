@@ -52,7 +52,7 @@ void test_counter_automata() {
     // create the automaton
     typedef spaction::automata::CounterAutomaton<qt, st,
         spaction::automata::UndeterministicTransitionSystem> Automaton;
-    Automaton automaton(1, 1);
+    Automaton automaton(1, 1, std::make_shared<spaction::automata::DataVoid>());
 
     // populate the transition system
     automaton.transition_system()->add_state("q");
@@ -60,13 +60,13 @@ void test_counter_automata() {
 
     automaton.transition_system()->add_transition("q", "q",
         automaton.make_label('a', {{CounterOperation::kIncrement,
-                                    CounterOperation::kCheck}}, std::set<std::size_t>()));
+                                    CounterOperation::kCheck}}, spaction::automata::accs_t()));
 
     automaton.transition_system()->add_transition("q", "q",
         automaton.make_label('b', {{CounterOperation::kIncrement,
                                     CounterOperation::kReset}}, {0}));
 
-    spaction::automata::TSPrinter<qt, spaction::automata::CounterLabel<st>> printer(*automaton.transition_system());
+    auto printer = make_ts_printer(*automaton.transition_system());
     // printer.dump("/tmp/counter.dot");
     printer.dump(std::cout);
 }
@@ -127,7 +127,8 @@ void test_product() {
     t1.get_automaton().print("aut1.dot");
     t2.get_automaton().print("aut2.dot");
 
-    auto prod = spaction::automata::make_aut_product(t1.get_automaton(), t2.get_automaton(), f1->creator());
+    auto prod = spaction::automata::make_aut_product(t1.get_automaton(), t2.get_automaton(),
+                                                     std::make_shared<spaction::automata::DataVoid>(), f1->creator());
     prod.print("prod.dot");
 
     std::cerr << "product test ended" << std::endl;

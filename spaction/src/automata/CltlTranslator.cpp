@@ -19,7 +19,11 @@
 
 #include <algorithm>
 
+#include <ltlast/multop.hh>
+#include <twa/formula2bdd.hh>
+
 #include "BinaryOperator.h"
+#include "cltl2spot.h"
 #include "CltlFormulaFactory.h"
 #include "ConstantExpression.h"
 #include "MultOperator.h"
@@ -29,10 +33,16 @@ namespace spaction {
 namespace automata {
 
 CltlTranslator::CltlTranslator(const CltlFormulaPtr &formula) :
-    _formula(formula->to_nnf()), _nb_acceptances(0), _nb_counters(0) {
+    _formula(formula->to_nnf()),
+    _transition_system(std::make_shared<DataVoid>()),
+    _automaton(0, 0, std::make_shared<DataVoid>()),
+    _nb_acceptances(0), _nb_counters(0) {
         assert(_formula->is_nnf());
         this->map_costop_to_counters(_formula);
-        _automaton = CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem>(_nb_counters, _nb_acceptances);
+        // `map_costop_to_counters` computes the appropriate number of acc conditions and counters,
+        // and stores them into attributes `_nb_acceptances` and `_nb_counters`.
+        // It is thus mandatory to update `_automaton`
+        _automaton = automaton_type(_nb_counters, _nb_acceptances, std::make_shared<DataVoid>());
 }
 
 void CltlTranslator::build_automaton() {
@@ -432,15 +442,14 @@ void CltlTranslator::_add_nonepsilon_transition(Node *source, Node *sink,
     }
 
     // build acceptance conditions
-    std::set<std::size_t> accs;
-    // @TODO using std::generate would be better
-    for (std::size_t i = 0 ; i != _nb_acceptances ; ++i) {
-        accs.insert(i);
+    accs_t accs = accs_t();
+    for (unsigned i = 0 ; i != _nb_acceptances ; ++i) {
+        accs.set(i);
     }
     for (auto t : trace) {
         auto it = _acceptances_maps.find(t->postponed);
         if (it != _acceptances_maps.end())
-            accs.erase(it->second);
+            accs.clear(it->second);
     }
 
     // add into the automaton
@@ -529,6 +538,58 @@ const std::string CltlTranslator::TransitionLabel::dump() const {
         result += "\\n";
         result += "PP { " + postponed->dump() + " }";
     }
+    return result;
+}
+
+CltlTranslator::final_automaton_type * CltlTranslator::get_final_automaton(spot::bdd_dict_ptr dict) const {
+    final_automaton_type * result = new final_automaton_type(_automaton.num_counters(),
+                                                             _automaton.num_acceptance_sets(),
+                                                             std::make_shared<DataBddDict>(dict));
+
+    std::map<Node*,unsigned> node_to_int;
+    {
+        unsigned index = 0;
+        for (auto s : _automaton.transition_system()->states()) {
+            result->transition_system()->add_state(index);
+            node_to_int[s] = index++;
+        }
+    }
+
+    std::stack<Node*> todo;
+    std::set<Node*> done;
+    todo.push(*_automaton.initial_state());
+    while (!todo.empty()) {
+        Node* current = todo.top();
+        todo.pop();
+        done.insert(current);
+
+        assert(node_to_int.find(current) != node_to_int.end());
+        unsigned current_index = node_to_int[current];
+
+        for (auto it : (*_automaton.transition_system())(current).successors()) {
+            if (done.find(it->sink()) == done.end()) {
+                todo.push(it->sink());
+            }
+
+            spot::ltl::multop::vec *vector = new spot::ltl::multop::vec();
+            for (auto &f : it->label().letter()) {
+                vector->push_back(cltl2spot(f));
+            }
+            const spot::ltl::formula *fspot = spot::ltl::multop::instance(spot::ltl::multop::And, vector);
+            bdd bdd_letter = spot::formula_to_bdd(fspot, dict, result);
+
+            result->transition_system()->add_transition(
+               current_index,
+               node_to_int[it->sink()],
+               CounterLabel<bdd>(bdd_letter,
+                                 it->label().get_operations(),
+                                 it->label().get_acceptance()));
+        }
+    }
+
+    assert(node_to_int.find(*_automaton.initial_state()) != node_to_int.end());
+    result->set_initial_state(node_to_int[*_automaton.initial_state()]);
+
     return result;
 }
 

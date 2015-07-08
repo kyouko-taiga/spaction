@@ -52,13 +52,12 @@ class SupremumFinder {
         // setup DFS from the initial state
         {
             const MinMaxConfiguration<Q> &init = *_automaton.initial_state();
-            auto insert_res = _h.insert(std::make_pair(init, num));
+            auto insert_res = _h.emplace(init, num);
             assert(insert_res.second);  // ensures insertion did take place
             _root.push(scc_t(num));
-            _arc.push(std::set<std::size_t>());
-            auto itb = (*_automaton.transition_system())(init).successors().begin();
-            auto ite = (*_automaton.transition_system())(init).successors().end();
-            todo.push(state_iter(init, itb, ite));
+            _arc.push(accs_t());
+            auto tmp_init = (*_automaton.transition_system())(init);
+            todo.push(state_iter(init, tmp_init.successors().begin(), tmp_init.successors().end()));
             // inc_depth();  // for stats
         }
 
@@ -116,8 +115,8 @@ class SupremumFinder {
             // inc_transitions();  // for stats
             // Fetch the values (destination state, acceptance conditions
             // of the arc) we are interested in...
-            MinMaxConfiguration<Q> dest = (*succ)->sink();
-            std::set<std::size_t> acc = (*succ)->label().get_acceptance();
+            MinMaxConfiguration<Q> dest = succ.get_sink();
+            accs_t acc = succ.get_acceptance();
 
             //{@logging
 //            std::cerr << " ------- " << std::endl;
@@ -142,19 +141,15 @@ class SupremumFinder {
             }
 
             // Are we going to a new state?
-            auto spit = _h.find(dest);
-
-            if (spit == _h.end())
+            auto spit = _h.emplace(dest, num+1);
+            if (spit.second)
             {
                 // Yes, we are going to a new state.
                 //  Number it, stack it, and register its successors for later processing.
-                auto insert_res = _h.insert(std::make_pair(dest, ++num));
-                assert(insert_res.second);
-                _root.push(scc_t(num));
+                _root.push(scc_t(++num));
                 _arc.push(acc);
-                auto itb = (*_automaton.transition_system())(dest).successors().begin();
-                auto ite = (*_automaton.transition_system())(dest).successors().end();
-                todo.push(state_iter(dest, itb, ite));
+                auto tmp_dest = (*_automaton.transition_system())(dest);
+                todo.push(state_iter(dest, tmp_dest.successors().begin(), tmp_dest.successors().end()));
                 // inc_depth();  // for stats
 
                 continue;
@@ -171,7 +166,7 @@ class SupremumFinder {
             //}
 
             // If we have reached a dead component, ignore it.
-            if (spit->second == -1)
+            if (spit.first->second == -1)
                 continue;
 
             // Now this is the most interesting case.  We have reached a
@@ -185,14 +180,14 @@ class SupremumFinder {
             // ROOT is ascending: we just have to merge all SCCs from the
             // top of ROOT that have an index greater to the one of
             // the SCC of S2 (called the "threshold").
-            int threshold = spit->second;
+            int threshold = spit.first->second;
             std::list<MinMaxConfiguration<Q>> rem;
             while (threshold < _root.top().index)
             {
                 assert(!_root.empty());
                 assert(!_arc.empty());
-                acc.insert(_root.top().conditions.begin(), _root.top().conditions.end());
-                acc.insert(_arc.top().begin(), _arc.top().end());
+                acc |= _root.top().conditions;
+                acc |= _arc.top();
                 rem.splice(rem.end(), _root.top().rem);
                 _root.pop();
                 _arc.pop();
@@ -203,7 +198,7 @@ class SupremumFinder {
             // been merged with a lower SCC.
 
             // Accumulate all acceptance conditions into the merged SCC.
-            _root.top().conditions.insert(acc.begin(), acc.end());
+            _root.top().conditions |= acc;
             _root.top().rem.splice(_root.top().rem.end(), rem);
 
 
@@ -211,7 +206,7 @@ class SupremumFinder {
             //{@logging
 //            std::cerr << "SCC found, is it accepting?" << std::endl;
             //}
-            if (_root.top().conditions.size() == _automaton.num_acceptance_sets())
+            if (_root.top().conditions.count() == _automaton.num_acceptance_sets())
             {
 
                 // Yes, we have found an accepting SCC.
@@ -257,10 +252,10 @@ class SupremumFinder {
     /// a set of accepting conditions
     /// a list of remaining states
     struct scc_t {
-        explicit scc_t(int i = -1): index(i) {}
+        explicit scc_t(int i = -1): index(i), conditions(accs_t()) {}
 
         int index;
-        std::set<unsigned> conditions;
+        accs_t conditions;
         std::list<MinMaxConfiguration<Q>> rem;
     };
 
@@ -268,11 +263,11 @@ class SupremumFinder {
     /// to test whether the iterator is done, we have to store the end iterator as well
     struct state_iter {
         explicit state_iter(const MinMaxConfiguration<Q> &s,
-                            typename MinMaxConfigTS<Q, CounterLabel<S>, TS>::TransitionIterator i,
-                            typename MinMaxConfigTS<Q, CounterLabel<S>, TS>::TransitionIterator ie)
+                            typename MinMaxConfigTS<Q, CounterLabel<S>, TS>::TransitionIterator &&i,
+                            typename MinMaxConfigTS<Q, CounterLabel<S>, TS>::TransitionIterator &&ie)
         : state(s)
-        , iter(i)
-        , iter_end(ie)
+        , iter(std::move(i))
+        , iter_end(std::move(ie))
         {}
 
         MinMaxConfiguration<Q> state;
@@ -283,7 +278,7 @@ class SupremumFinder {
     // a stack of SCC
     std::stack<scc_t> _root;
     // a stack of acceptance conditions between SCC
-    std::stack<std::set<std::size_t>> _arc;
+    std::stack<accs_t> _arc;
     // a hash of states
     std::unordered_map<MinMaxConfiguration<Q>, int> _h;
 
@@ -292,7 +287,7 @@ class SupremumFinder {
     void print_debug(std::ostream &os) {
         os << std::endl;
         std::stack<scc_t> root2;
-        std::stack<std::set<std::size_t>> arc2;
+        std::stack<accs_t> arc2;
         assert(_root.size() == _arc.size());
         while (!_root.empty()) {
             os << "(" << _root.top().index << " ";
@@ -303,10 +298,10 @@ class SupremumFinder {
             }
             os << "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t|";
 
-            for (auto i : _root.top().conditions)
+            for (auto i : _root.top().conditions.sets())
                 os << i << ",";
             os << "\t\tarc : ";
-            for (auto i : _arc.top())
+            for (auto i : _arc.top().sets())
                 os << i << ",";
             os << ")" << std::endl;
 
@@ -356,10 +351,13 @@ class SupremumFinder {
             iterator_type _begin, _end;
 
         public:
-            explicit my_iterator_pair(iterator_type b, iterator_type e): _begin(b), _end(e) {}
+            explicit my_iterator_pair(iterator_type &&b, iterator_type &&e)
+            : _begin(std::move(b))
+            , _end(std::move(e))
+            {}
 
-            iterator_type begin() const { return _begin; }
-            iterator_type end() const { return _end; }
+            iterator_type & begin() { return _begin; }
+            const iterator_type & end() const { return _end; }
         };
         std::stack<my_iterator_pair> to_remove;
 
@@ -377,10 +375,10 @@ class SupremumFinder {
         my_iterator_pair succs(tmp.successors().begin(), tmp.successors().end());
         
         for (;;) {
-            for (auto i : succs) {
+            for (iterator_type &i = succs.begin() ; i != succs.end() ; ++i) {
                 //                inc_transitions();  // for stats
                 
-                MinMaxConfiguration<Q> s = i->sink();
+                MinMaxConfiguration<Q> s = i.get_sink();
                 auto spi = _h.find(s);
                 
                 // This state is not necessarily in H, because if we were doing inclusion checking
@@ -392,14 +390,13 @@ class SupremumFinder {
                 if (spi->second != -1) {
                     spi->second = -1;
                     auto tmp = (*ts)(s);
-                    my_iterator_pair topush(tmp.successors().begin(), tmp.successors().end());
-                    to_remove.push(topush);
+                    to_remove.emplace(tmp.successors().begin(), tmp.successors().end());
                 }
             }
             if (to_remove.empty())
                 break;
-            
-            succs = to_remove.top();
+
+            succs = std::move(to_remove.top());
             to_remove.pop();
         }
     }

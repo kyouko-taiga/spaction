@@ -96,11 +96,11 @@ public:
 
     /// Transforms the letter (conditions) of a CA transition to a spot condition in bdd.
     /// @note       in practice, a condition is a conjunction of atomic propositions
-    /// @param      the transition whose condition is to be converted
-    /// @return     a bdd equivalent to the condition of \a trans
-    bdd get_condition(const TransitionPtr<Q, CounterLabel<S>> &trans) const {
+    /// @param      the condition to be converted
+    /// @return     a bdd equivalent to the letter of \a label
+    bdd get_condition(const S &label) const {
         const spot::ltl::formula * fspot = spot::ltl::constant::true_instance();
-        for (auto f : trans->label().letter()) {
+        for (auto f : label) {
             fspot = spot::ltl::multop::instance(spot::ltl::multop::And, cltl2spot(f), fspot);
         }
         return spot::formula_to_bdd(fspot, _ts->get_dict(), (void*)_ts);
@@ -109,16 +109,37 @@ public:
 private:
     const CA2tgba<Q,S,TS> *_ts;
 };
+/// A specialization for bdd based Counter Automata
+template<typename Q, template<typename, typename> class TS>
+class _succ_helper<Q, bdd, TS> {
+    using S = bdd;
+public:
+    explicit _succ_helper(const CA2tgba<Q,S,TS> *) { }
+
+    /// Transforms the letter (conditions) of a CA transition to a spot condition in bdd.
+    /// @note       in practice, a condition is a conjunction of atomic propositions
+    /// @param      the condition to be converted
+    /// @return     a bdd equivalent to the letter of \a label
+    /// When the original letter is already a bdd, the conversion is trivial
+    inline bdd get_condition(const S &label) const {
+        return label;
+    }
+};
 
 /// A class to embed CA transition iterator as spot TGBA transition iterators
 template<typename Q, typename S, template<typename, typename> class TS>
 class succiter_adapter : public spot::twa_succ_iterator {
 public:
     /// constructor
-    explicit succiter_adapter(const typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator &b,
-                              const typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator &e,
+    explicit succiter_adapter(const typename TS<Q,CounterLabel<S>>::TransitionIterator &b,
+                              const typename TS<Q,CounterLabel<S>>::TransitionIterator &e,
                               const CA2tgba<Q,S,TS> *t)
     : _current(b), _begin(b), _end(e), _ts(t) {}
+    explicit succiter_adapter(typename TS<Q,CounterLabel<S>>::TransitionIterator &&b,
+                              typename TS<Q,CounterLabel<S>>::TransitionIterator &&e,
+                              const CA2tgba<Q,S,TS> *t)
+    // `b` MUST be duplicated, so one copy is unavoidable here
+    : _current(b), _begin(std::move(b)), _end(std::move(e)), _ts(t) {}
     /// destructor @todo make it private?
     ~succiter_adapter() {}
 
@@ -135,24 +156,22 @@ public:
     }
 
     virtual spot::state* current_state() const override {
-        return new state_adapter<Q>((*_current)->sink());
+        return new state_adapter<Q>(_current.get_sink());
     }
 
     virtual bdd current_condition() const override {
-        return _succ_helper<Q, S, TS>(_ts).get_condition(*_current);
+        return _succ_helper<Q, S, TS>(_ts).get_condition(_current.get_letter());
     }
 
     virtual spot::acc_cond::mark_t current_acceptance_conditions() const override {
-        auto accs = (*_current)->label().get_acceptance();
-        spot::acc_cond::mark_t result(accs.begin(), accs.end());
-        return result;
+        return _current.get_acceptance();
     }
 
     TransitionPtr<Q, CounterLabel<S>> get_trans() const { return *_current; }
 
 private:
-    mutable typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator _current;
-    const typename TransitionSystem<Q,CounterLabel<S>>::TransitionIterator _begin, _end;
+    mutable typename TS<Q,CounterLabel<S>>::TransitionIterator _current;
+    const typename TS<Q,CounterLabel<S>>::TransitionIterator _begin, _end;
     const CA2tgba<Q,S,TS> *_ts;
 };
 
@@ -160,8 +179,8 @@ private:
 template<typename Q, typename S, template<typename, typename> class TS>
 class CA2tgba : public spot::twa {
  public:
-    explicit CA2tgba(CounterAutomaton<Q, S, TS> *a, const spot::bdd_dict_ptr &d = nullptr)
-    : twa(d?d:spot::make_bdd_dict())
+    explicit CA2tgba(CounterAutomaton<Q, S, TS> *a, const spot::bdd_dict_ptr &d)
+    : twa(d)
     , _automaton(a) {
         // DO NOT declare all the AP to the bdd dictionnary yet, to be done on the fly
 
@@ -218,7 +237,9 @@ class CA2tgba : public spot::twa {
     run_value value_word(spot::tgba_run_ptr run, unsigned int upper_bound, CltlFormulaFactory *factory) const {
         spot::twa_graph_ptr lasso = spot::tgba_run_to_tgba(this->shared_from_this(), run);
         tgba_ca lasso_ca(lasso);
-        auto prod = make_aut_product(*_automaton, lasso_ca, get_dict(), factory);
+        auto prod = make_aut_product(*_automaton, lasso_ca, std::make_shared<DataBddDict>(lasso_ca.get_dict()));
+        lasso_ca.get_dict()->register_all_propositions_of(_automaton, &prod);
+        lasso_ca.get_dict()->register_all_propositions_of(&lasso_ca, &prod);
 
         /// debug informations
         ///{@
@@ -261,8 +282,8 @@ class CA2tgba : public spot::twa {
 };
 
 template<typename Q, typename S, template<typename, typename> class TS>
-std::shared_ptr<CA2tgba<Q, S, TS>> make_tgba(CounterAutomaton<Q, S, TS> *a) {
-    return std::make_shared<CA2tgba<Q, S, TS>>(a);
+std::shared_ptr<CA2tgba<Q, S, TS>> make_tgba(CounterAutomaton<Q, S, TS> *a, spot::bdd_dict_ptr dict) {
+    return std::make_shared<CA2tgba<Q, S, TS>>(a, dict);
 }
 
 }  // namespace automata

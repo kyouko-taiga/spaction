@@ -21,7 +21,6 @@
 #include <algorithm>
 #include <cassert>
 #include <ostream>
-#include <set>
 #include <unordered_map>
 #include <vector>
 
@@ -31,66 +30,28 @@
 namespace spaction {
 namespace automata {
 
-enum CounterOperation : unsigned int {
-    kIncrement  = 1,
-    kCheck      = 2,
-    kReset      = 4
-};
-
-typedef std::vector<CounterOperation> CounterOperationList;
-template<typename S> class CounterLabel;
-
-inline CounterOperation operator|(const CounterOperation &l, const CounterOperation &r) {
-    return static_cast<CounterOperation>(static_cast<unsigned int>(l) | static_cast<unsigned int>(r));
-}
-inline CounterOperation operator&(const CounterOperation &l, const CounterOperation &r) {
-    return static_cast<CounterOperation>(static_cast<unsigned int>(l) & static_cast<unsigned int>(r));
-}
-
-std::string print_counter_operation(CounterOperation c);
-
-}  // namespace automata
-}  // namespace spaction
-
-namespace std {
-
-/// Hash function for CounterLabel type, so it can be used as a key in map-like STL containers.
-template<typename S>
-struct hash<spaction::automata::CounterLabel<S>> {
-    typedef spaction::automata::CounterLabel<S> argument_type;
-    typedef std::size_t result_type;
-
-    result_type operator()(const argument_type &cl) const {
-        return cl.hash();
-    }
-};
-
-}  // namespace std
-
-namespace spaction {
-namespace automata {
-
-template<typename Q, typename S, template<typename Q_, typename S_> class TransitionSystemType>
+template<typename Q, typename S, template<typename, typename> class TransitionSystemType>
 class CounterAutomaton {
  public:
     typedef TransitionSystemType<Q, CounterLabel<S>> transition_system_t;
     typedef Transition<Q, CounterLabel<S>>           transition_t;
+    typedef typename transition_system_t::TransitionBaseIterator ts_iterator_t;
 
-    explicit CounterAutomaton(std::size_t counters, std::size_t nb_acceptance) :
+    template<class ... Args>
+    explicit CounterAutomaton(std::size_t counters, unsigned nb_acceptance, Args... args) :
         _counters(counters, 0), _nb_acceptance(nb_acceptance), _initial_state(nullptr) {
         // static_cast prevents the template from being incompatible
         _transition_system =
-            static_cast<TransitionSystem<Q, CounterLabel<S>>*>(new transition_system_t());
+            static_cast<TransitionSystem<Q, CounterLabel<S>, transition_system_t, ts_iterator_t>*>(new transition_system_t(args...));
     }
-
-    // a convenient default constructor
-    // @todo restrict its usage?
-    explicit CounterAutomaton(): CounterAutomaton(0, 0) {}
 
     virtual ~CounterAutomaton() {
         // delete the pointer to the initial state, if ever created
         if (_initial_state)
             delete _initial_state;
+
+        if (_transition_system)
+            _transition_system->get_data()->destroy(this);
 
         // delete the transition system
         delete _transition_system;
@@ -123,8 +84,8 @@ class CounterAutomaton {
         return *this;
     }
 
-    inline std::size_t num_counters()        const { return _counters.size(); }
-    inline std::size_t num_acceptance_sets() const { return _nb_acceptance; }
+    inline std::size_t num_counters()       const { return _counters.size(); }
+    inline unsigned num_acceptance_sets()   const { return _nb_acceptance; }
 
     inline transition_system_t *transition_system() const {
         return static_cast<transition_system_t*>(this->_transition_system);
@@ -147,26 +108,26 @@ class CounterAutomaton {
     /// Helper method to create transition labels.
     CounterLabel<S> make_label(const S &letter,
                                const std::vector<CounterOperationList> &operations,
-                               const std::set<std::size_t> &accs) {
+                               const accs_t &accs) {
         assert(operations.size() == this->num_counters());
         return CounterLabel<S>(letter, operations, accs);
     }
 
     void print(const std::string &dotfile) const {
-        TSPrinter<Q, CounterLabel<S>> p(*_transition_system);
+        TSPrinter<Q, CounterLabel<S>, transition_system_t, ts_iterator_t> p(*_transition_system);
         p.dump(dotfile);
     }
 
     void print(std::ostream &os) const {
-        TSPrinter<Q, CounterLabel<S>> p(*_transition_system);
+        TSPrinter<Q, CounterLabel<S>, transition_system_t, ts_iterator_t> p(*_transition_system);
         p.dump(os);
     }
 
  protected:
-    TransitionSystem<Q, CounterLabel<S>> *_transition_system;
+    TransitionSystem<Q, CounterLabel<S>, transition_system_t, ts_iterator_t> *_transition_system;
 
-    std::vector<std::size_t> _counters;
-    std::size_t _nb_acceptance;
+    std::vector<unsigned> _counters;
+    unsigned _nb_acceptance;
 
     const Q *_initial_state;
 };
@@ -174,13 +135,17 @@ class CounterAutomaton {
 template<typename S> class CounterLabel {
  public:
     explicit CounterLabel(const S &letter, std::size_t counters) : _letter(letter),
-        _operations(counters), _hash_dirty(true) {
-    }
+        _operations(counters), _hash_dirty(true) { }
 
     explicit CounterLabel(const S &letter, const std::vector<CounterOperationList> &operations,
-                          const std::set<std::size_t> &accs) :
-        _letter(letter), _operations(operations), _acceptance_conditions(accs), _hash_dirty(true) {
-    }
+                          const accs_t &accs) :
+        _letter(letter), _operations(operations),
+        _acceptance_conditions(accs), _hash_dirty(true) { }
+
+    explicit CounterLabel(const S &letter, std::vector<CounterOperationList> &&operations,
+                          const accs_t &accs) :
+        _letter(letter), _operations(std::move(operations)),
+        _acceptance_conditions(accs), _hash_dirty(true) { }
 
     bool operator==(const CounterLabel<S>& rhs) const {
         return      this->_letter == rhs._letter
@@ -236,12 +201,12 @@ template<typename S> class CounterLabel {
     /// Gets the vector of counter operations.
     const std::vector<CounterOperationList> &get_operations() const { return _operations; }
     /// Gets the set of acceptance conditions.
-    const std::set<std::size_t> &get_acceptance() const { return _acceptance_conditions; }
+    const accs_t &get_acceptance() const { return _acceptance_conditions; }
 
  private:
     const S _letter;
     std::vector<CounterOperationList> _operations;
-    std::set<std::size_t> _acceptance_conditions;
+    accs_t _acceptance_conditions;
 
     /// This flag indicates if the actual hash function must be computed when hash() is called.
     /// @remarks
@@ -265,7 +230,7 @@ std::ostream &operator<<(std::ostream &os, const CounterLabel<S>& label) {
     }
     os << "]" << std::endl;
     // print acceptance conditions
-    for (auto a : label.get_acceptance()) {
+    for (auto a : label.get_acceptance().sets()) {
         os << "Acc(" << a << ")" << std::endl;
     }
     return os;

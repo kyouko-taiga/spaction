@@ -20,7 +20,7 @@
 
 #include <cstddef>
 #include <functional>
-#include <set>
+#include <unordered_set>
 
 namespace spaction {
 namespace automata {
@@ -67,8 +67,7 @@ class RefControlBlock : public ControlBlock<T> {
     }
 
  private:
-    /// @todo use another structure than std::set
-    std::set<const T *> _pool;
+    std::unordered_set<const T *> _pool;
     std::function<void(const T *)> _destroy;
 };
 
