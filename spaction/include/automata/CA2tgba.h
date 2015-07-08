@@ -143,6 +143,18 @@ public:
     /// destructor @todo make it private?
     ~succiter_adapter() {}
 
+    /// so far, only the move semantics is needed.
+    /// copy semantics is deliberately not implemented to force future developers to have them think
+    /// about it...
+    void recycle(typename TS<Q,CounterLabel<S>>::TransitionIterator &&b,
+                 typename TS<Q,CounterLabel<S>>::TransitionIterator &&e,
+                 const CA2tgba<Q,S,TS> *t) {
+        std::swap(_current, b);
+        _begin = _current;  // this copy cannot be avoided
+        std::swap(_end, e);
+        _ts = t;  // raw pointer, OK
+    }
+
     virtual bool first() override {
         _current = _begin;
         return !done();
@@ -171,7 +183,7 @@ public:
 
 private:
     mutable typename TS<Q,CounterLabel<S>>::TransitionIterator _current;
-    const typename TS<Q,CounterLabel<S>>::TransitionIterator _begin, _end;
+    typename TS<Q,CounterLabel<S>>::TransitionIterator _begin, _end;
     const CA2tgba<Q,S,TS> *_ts;
 };
 
@@ -202,6 +214,15 @@ class CA2tgba : public spot::twa {
         assert(dynamic_cast<const state_adapter<Q>*>(local_state));
         const state_adapter<Q> *lstate = static_cast<const state_adapter<Q> *>(local_state);
         const Q &q = lstate->state();
+        // try to recycle the previous iterator
+        if (this->iter_cache_) {
+            auto it = static_cast<succiter_adapter<Q, S, TS>*>(this->iter_cache_);
+            it->recycle((*_automaton->transition_system())(q).successors().begin(),
+                        (*_automaton->transition_system())(q).successors().end(),
+                        this);
+            this->iter_cache_ = nullptr;
+            return it;
+        }
         return new succiter_adapter<Q, S, TS>((*_automaton->transition_system())(q).successors().begin(),
                                               (*_automaton->transition_system())(q).successors().end(),
                                               this);

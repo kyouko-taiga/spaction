@@ -66,7 +66,8 @@ class TGBATSIterator : public ITransitionBaseIterator<Q,S,TGBATSIterator<Q,S>> {
     { if (_it) _it->first(); }
 
     virtual ~TGBATSIterator() {
-        delete _it;
+        if (_ts)
+            _ts->_tgba->release_iter(_it);
     }
 
     explicit TGBATSIterator(const TGBATSIterator &other)
