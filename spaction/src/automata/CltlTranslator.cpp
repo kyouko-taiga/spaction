@@ -45,6 +45,12 @@ CltlTranslator::CltlTranslator(const CltlFormulaPtr &formula) :
         _automaton = automaton_type(_nb_counters, _nb_acceptances, std::make_shared<DataVoid>());
 }
 
+CltlTranslator::~CltlTranslator() {
+    for (auto n : _nodes) {
+        delete n;
+    }
+}
+
 void CltlTranslator::build_automaton() {
     _build_transition_system();
     _build_automaton();
@@ -126,7 +132,7 @@ CltlTranslator::Node *CltlTranslator::_build_node(const FormulaList &terms) {
 
 CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
     // take the formula with the highest height out of the subset to be reduced
-    CltlFormulaPtr f = 0;
+    CltlFormulaPtr f = nullptr;
     FormulaList leftover(node->terms());
 
     for (long i = node->terms().size() - 1; i >= 0; --i) {
@@ -156,7 +162,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
                 for (auto &c: mo->childs()) {
                     Node *s0 = _build_node(_insert(leftover, {c}));
                     if (s0->is_consistent()) {
-                        _transition_system.add_transition(node, s0, new TransitionLabel({}, CounterOperationList(_nb_counters)));
+                        _transition_system.add_transition(node, s0, std::make_shared<TransitionLabel>(FormulaList(), CounterOperationList(_nb_counters)));
                         successors.push_back(s0);
                     }
                 }
@@ -167,7 +173,7 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
             case MultOperator::kAnd: {
                 Node *s0 = _build_node(_insert(leftover, mo->childs().begin(), mo->childs().end()));
                 if (s0->is_consistent()) {
-                    _transition_system.add_transition(node, s0, new TransitionLabel({}, CounterOperationList(_nb_counters)));
+                    _transition_system.add_transition(node, s0, std::make_shared<TransitionLabel>(FormulaList(), CounterOperationList(_nb_counters)));
                     successors.push_back(s0);
                 }
                 
@@ -185,13 +191,13 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
             case BinaryOperator::kUntil: {
                 Node *s0 = _build_node(_insert(leftover, {bo->right()}));
                 if (s0->is_consistent()) {
-                    _transition_system.add_transition(node, s0, new TransitionLabel({}, CounterOperationList(_nb_counters)));
+                    _transition_system.add_transition(node, s0, std::make_shared<TransitionLabel>(FormulaList(), CounterOperationList(_nb_counters)));
                     successors.push_back(s0);
                 }
 
                 Node *s1 = _build_node(_insert(leftover, {bo->left(), bo->creator()->make_next(f)}));
                 if (s1->is_consistent()) {
-                    _transition_system.add_transition(node, s1, new TransitionLabel({}, CounterOperationList(_nb_counters), f));
+                    _transition_system.add_transition(node, s1, std::make_shared<TransitionLabel>(FormulaList(), CounterOperationList(_nb_counters), f));
                     successors.push_back(s1);
                 }
 
@@ -203,13 +209,13 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
             case BinaryOperator::kRelease: {
                 Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
                 if (s0->is_consistent()) {
-                    _transition_system.add_transition(node, s0, new TransitionLabel({}, CounterOperationList(_nb_counters)));
+                    _transition_system.add_transition(node, s0, std::make_shared<TransitionLabel>(FormulaList(), CounterOperationList(_nb_counters)));
                     successors.push_back(s0);
                 }
 
                 Node *s1 = _build_node(_insert(leftover, {bo->right(), bo->creator()->make_next(f)}));
                 if (s1->is_consistent()) {
-                    _transition_system.add_transition(node, s1, new TransitionLabel({}, CounterOperationList(_nb_counters)));
+                    _transition_system.add_transition(node, s1, std::make_shared<TransitionLabel>(FormulaList(), CounterOperationList(_nb_counters)));
                     successors.push_back(s1);
                 }
 
@@ -226,21 +232,21 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
                 Node *s0 = _build_node(_insert(leftover, {bo->right()}));
                 if (s0->is_consistent()) {
                     counters[current_counter] = _r();
-                    _transition_system.add_transition(node, s0, new TransitionLabel({}, counters));
+                    _transition_system.add_transition(node, s0, std::make_shared<TransitionLabel>(FormulaList(), counters));
                     successors.push_back(s0);
                 }
 
                 Node *s1 = _build_node(_insert(leftover, {bo->left(), bo->creator()->make_next(f)}));
                 if (s1->is_consistent()) {
                     counters[current_counter] = _e();
-                    _transition_system.add_transition(node, s1, new TransitionLabel({}, counters, f));
+                    _transition_system.add_transition(node, s1, std::make_shared<TransitionLabel>(FormulaList(), counters, f));
                     successors.push_back(s1);
                 }
 
                 Node *s2 = _build_node(_insert(leftover, {bo->creator()->make_next(f)}));
                 if (s2->is_consistent()) {
                     counters[current_counter] = _ic();
-                    _transition_system.add_transition(node, s2, new TransitionLabel({}, counters, f));
+                    _transition_system.add_transition(node, s2, std::make_shared<TransitionLabel>(FormulaList(), counters, f));
                     successors.push_back(s2);
                 }
 
@@ -257,21 +263,21 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
                 Node *s0 = _build_node(_insert(leftover, {bo->left(), bo->right()}));
                 if (s0->is_consistent()) {
                     counters[current_counter] = _cr();
-                    _transition_system.add_transition(node, s0, new TransitionLabel({}, counters));
+                    _transition_system.add_transition(node, s0, std::make_shared<TransitionLabel>(FormulaList(), counters));
                     successors.push_back(s0);
                 }
 
                 Node *s1 = _build_node(_insert(leftover, {bo->right(), bo->creator()->make_next(f)}));
                 if (s1->is_consistent()) {
                     counters[current_counter] = _e();
-                    _transition_system.add_transition(node, s1, new TransitionLabel({}, counters));
+                    _transition_system.add_transition(node, s1, std::make_shared<TransitionLabel>(FormulaList(), counters));
                     successors.push_back(s1);
                 }
 
                 Node *s2 = _build_node(_insert(leftover, {bo->left(), bo->right(), bo->creator()->make_next(f)}));
                 if (s2->is_consistent()) {
                     counters[current_counter] = _i();
-                    _transition_system.add_transition(node, s2, new TransitionLabel({}, counters));
+                    _transition_system.add_transition(node, s2, std::make_shared<TransitionLabel>(FormulaList(), counters));
                     successors.push_back(s2);
                 }
 
@@ -305,7 +311,7 @@ CltlTranslator::Node *CltlTranslator::_build_actual_successor(Node *node) {
     }
 
     Node *suc = _build_node(successor_terms);
-    _transition_system.add_transition(node, suc, new TransitionLabel(propositions, CounterOperationList(_nb_counters)));
+    _transition_system.add_transition(node, suc, std::make_shared<TransitionLabel>(propositions, CounterOperationList(_nb_counters)));
     return suc;
 }
 
@@ -380,11 +386,11 @@ void CltlTranslator::_process_remove_epsilon() {
 }
 
 void CltlTranslator::_process_remove_epsilon(Node *source, Node *s,
-                                             const std::vector<TransitionLabel*> &trace) {
+                                             const std::vector<std::shared_ptr<TransitionLabel>> &trace) {
     // base case
     if (s->is_reduced()) {
         for (auto succ : _transition_system(s).successors()) {
-            std::vector<TransitionLabel*> new_trace = trace;
+            std::vector<std::shared_ptr<TransitionLabel>> new_trace = trace;
             new_trace.push_back(succ->label());
             _add_nonepsilon_transition(source, succ->sink(), new_trace);
             if (_done_remove_epsilon.count(succ->sink()) == 0) {
@@ -396,14 +402,14 @@ void CltlTranslator::_process_remove_epsilon(Node *source, Node *s,
 
     // recursive case
     for (auto succ : _transition_system(s).successors()) {
-        std::vector<TransitionLabel*> new_trace = trace;
+        std::vector<std::shared_ptr<TransitionLabel>> new_trace = trace;
         new_trace.push_back(succ->label());
         _process_remove_epsilon(source, succ->sink(), new_trace);
     }
 }
 
 void CltlTranslator::_add_nonepsilon_transition(Node *source, Node *sink,
-                                                const std::vector<TransitionLabel*> &trace) {
+                                                const std::vector<std::shared_ptr<TransitionLabel>> &trace) {
     // add source and sink to the transition system
     _automaton.transition_system()->add_state(source);
     _automaton.transition_system()->add_state(sink);
@@ -424,11 +430,11 @@ void CltlTranslator::_add_nonepsilon_transition(Node *source, Node *sink,
     // only the last element should have a proposition (thank you, lambda functions)
     assert([&trace](void) {
         auto it = std::find_if(trace.begin(), trace.end(),
-                               [](TransitionLabel *t) { return !(t->propositions.empty()); });
+                               [](const std::shared_ptr<TransitionLabel> &t) { return !(t->propositions.empty()); });
         return (it == trace.end()) or (++it == trace.end()); } ());
 
     auto it = std::find_if(trace.begin(), trace.end(),
-                           [](TransitionLabel *t) { return !(t->propositions.empty()); } );
+                           [](const std::shared_ptr<TransitionLabel> &t) { return !(t->propositions.empty()); } );
     FormulaList props;
     if (it != trace.end())
         props = (*it)->propositions;
@@ -577,6 +583,7 @@ CltlTranslator::final_automaton_type * CltlTranslator::get_final_automaton(spot:
             }
             const spot::ltl::formula *fspot = spot::ltl::multop::instance(spot::ltl::multop::And, vector);
             bdd bdd_letter = spot::formula_to_bdd(fspot, dict, result);
+            fspot->destroy();
 
             result->transition_system()->add_transition(
                current_index,

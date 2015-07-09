@@ -453,6 +453,10 @@ unsigned int find_bound_max(const CltlFormulaPtr &formula, const std::string &mo
             break;
     }
 
+    for (auto &f : atomic_propositions) {
+        f->destroy();
+    }
+
     if (result.infinite)
         return -1;
     else

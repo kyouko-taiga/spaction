@@ -44,11 +44,7 @@ class CltlTranslator {
 
     explicit CltlTranslator(const CltlFormulaPtr &formula);
 
-    /// @note
-    ///     Both Node and TransitionLabel objects might create memory leaks once the translator
-    ///     that built them goes out of scope. Consider using std::unique_ptr or std::shared_ptr
-    ///     to manage these objects.
-    ~CltlTranslator() { }
+    ~CltlTranslator();
 
     void build_automaton();
 
@@ -144,7 +140,7 @@ class CltlTranslator {
     NodeList _nodes;
 
     /// Stores the temporar transition system that is used to build the automata.
-    UndeterministicTransitionSystem<Node*, TransitionLabel*> _transition_system;
+    UndeterministicTransitionSystem<Node*, std::shared_ptr<TransitionLabel>> _transition_system;
     /// Stores the actual automaton
     automaton_type _automaton;
 
@@ -196,9 +192,9 @@ class CltlTranslator {
     /// Builds the actual automaton by removing epsilon-transitions
     void _build_automaton();
     void _process_remove_epsilon();
-    void _process_remove_epsilon(Node *source, Node *s, const std::vector<TransitionLabel*> &trace);
+    void _process_remove_epsilon(Node *source, Node *s, const std::vector<std::shared_ptr<TransitionLabel>> &trace);
     void _add_nonepsilon_transition(Node *source, Node *sink,
-                                    const std::vector<TransitionLabel*> &trace);
+                                    const std::vector<std::shared_ptr<TransitionLabel>> &trace);
 
     /// Helper method that inserts a formula into a FormulaList and keeps the result sorted.
     template<class Iterator>
