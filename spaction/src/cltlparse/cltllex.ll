@@ -23,10 +23,8 @@ typedef yy::parser::token token;
 
 %}
 
-%option c++
 %option outfile="lex.yy.c"
 %option noyywrap warn 8bit batch
-%option yyclass="CLTLScanner"
 
 %%
 
@@ -60,3 +58,49 @@ typedef yy::parser::token token;
                         return token::ATOM; }
 
 %%
+
+#include "cltlparse/public.h"
+
+namespace spaction {
+namespace cltlparse {
+
+CltlFormulaPtr parse_formula(const std::string &ltl_string) {
+    CltlFormulaPtr f = nullptr;
+    parse_error_list error_list;
+    {
+        auto yy_buffer = yy_scan_string(ltl_string.c_str());
+        yy::parser p(f, error_list);
+        p.parse();
+        yy_delete_buffer(yy_buffer);
+    }
+
+    // code copied from SPOT
+    bool printed = false;
+    parse_error_list::const_iterator it;
+    for (it = error_list.begin(); it != error_list.end(); ++it)
+    {
+        std::cerr << ">>> " << ltl_string << std::endl;
+        const yy::location& l = it->first;
+
+        unsigned n = 1;
+        for (; n < 4 + l.begin.column; ++n)
+            std::cerr << ' ';
+        // Write at least one '^', even if begin==end.
+        std::cerr << '^';
+        ++n;
+        for (; n < 4 + l.end.column; ++n)
+            std::cerr << '^';
+        std::cerr << std::endl << it->second << std::endl << std::endl;
+        printed = true;
+    }
+    // end code from SPOT
+
+    if (printed) {
+        f = nullptr;
+    }
+
+    return f;
+}
+
+}  // namespace cltlparse
+}  // namespace spaction

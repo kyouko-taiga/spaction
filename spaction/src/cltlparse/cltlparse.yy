@@ -40,7 +40,7 @@ struct union_tag {
 #define YYSTYPE union_tag
 
 // custom lex function
-static int yylex(YYSTYPE*, spaction::cltlparse::CLTLScanner &);
+static int yylex(YYSTYPE*);
 
 // NOTE error handling is copied from SPOT LTL parser
 /// \brief A parse diagnostic with its location.
@@ -50,10 +50,7 @@ typedef std::list<parse_error> parse_error_list;
 
 %}
 
-%lex-param {spaction::cltlparse::CLTLScanner &scanner}
-
 %parse-param {spaction::CltlFormulaPtr &result}
-%parse-param {spaction::cltlparse::CLTLScanner &scanner}
 %parse-param {parse_error_list &error_list}
 
 /* token types */
@@ -149,55 +146,6 @@ spaction::CltlFormulaFactory & _factory() {
     return f;
 }
 
-int yylex(YYSTYPE *yylval, spaction::cltlparse::CLTLScanner &scanner) {
-    return scanner.yylex(yylval);
+int yylex(YYSTYPE *yylval) {
+    return spaction::cltlparse::yylex(yylval);
 }
-
-#include <sstream>
-
-#include "cltlparse/public.h"
-
-namespace spaction {
-namespace cltlparse {
-
-CltlFormulaPtr parse_formula(const std::string &ltl_string) {
-    CltlFormulaPtr f = nullptr;
-    std::istringstream in = std::istringstream(ltl_string);
-    parse_error_list error_list;
-    CLTLScanner s(&in);
-    yy::parser p(f, s, error_list);
-    p.parse();
-
-    // code copied from SPOT
-    bool printed = false;
-    parse_error_list::const_iterator it;
-    for (it = error_list.begin(); it != error_list.end(); ++it)
-    {
-        std::cerr << ">>> " << ltl_string << std::endl;
-        const yy::location& l = it->first;
-
-        unsigned n = 1;
-        for (; n < 4 + l.begin.column; ++n)
-            std::cerr << ' ';
-        // Write at least one '^', even if begin==end.
-        std::cerr << '^';
-        ++n;
-        for (; n < 4 + l.end.column; ++n)
-            std::cerr << '^';
-        std::cerr << std::endl << it->second << std::endl << std::endl;
-    printed = true;
-    }
-    // end code from SPOT
-
-    if (printed) {
-        //delete f;
-        f = nullptr;
-    }
-
-    return f;
-}
-
-}  // namespace cltlparse
-}  // namespace spaction
-
-

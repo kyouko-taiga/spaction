@@ -18,12 +18,8 @@
 #ifndef SPACTION_INCLUDE_CLTLPARSE_CLTLSCANNER_H_
 #define SPACTION_INCLUDE_CLTLPARSE_CLTLSCANNER_H_
 
-#if ! defined(yyFlexLexerOnce)
-#include <FlexLexer.h>
-#endif
-
 #undef YY_DECL
-#define YY_DECL int spaction::cltlparse::CLTLScanner::yylex()
+#define YY_DECL int spaction::cltlparse::yylex(struct union_tag *yylval)
 
 #include "cltlparse.hh"
 
@@ -32,19 +28,7 @@ struct union_tag;
 namespace spaction {
 namespace cltlparse {
 
-class CLTLScanner : public yyFlexLexer {
- public:
-    explicit CLTLScanner(std::istream *in): yyFlexLexer(in) {}
-
-    int yylex(struct union_tag *lval) {
-        yylval = lval;
-        return yylex();
-    }
-
- private:
-    struct union_tag *yylval;
-    int yylex();
-};
+int yylex(struct union_tag *yylval);
 
 }  // namespace cltlparse
 }  // namespace spaction
