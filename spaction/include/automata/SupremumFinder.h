@@ -56,8 +56,8 @@ class SupremumFinder {
             assert(insert_res.second);  // ensures insertion did take place
             _root.push(scc_t(num));
             _arc.push(accs_t());
-            auto tmp_init = (*_automaton.transition_system())(init);
-            todo.push(state_iter(init, tmp_init.successors().begin(), tmp_init.successors().end()));
+            auto tmp_init = (*_automaton.transition_system())(init).successors();
+            todo.push(state_iter(init, tmp_init.begin(), tmp_init.end()));
             // inc_depth();  // for stats
         }
 
@@ -148,8 +148,8 @@ class SupremumFinder {
                 //  Number it, stack it, and register its successors for later processing.
                 _root.push(scc_t(++num));
                 _arc.push(acc);
-                auto tmp_dest = (*_automaton.transition_system())(dest);
-                todo.push(state_iter(dest, tmp_dest.successors().begin(), tmp_dest.successors().end()));
+                auto tmp_dest = (*_automaton.transition_system())(dest).successors();
+                todo.push(state_iter(dest, tmp_dest.begin(), tmp_dest.end()));
                 // inc_depth();  // for stats
 
                 continue;
@@ -371,8 +371,8 @@ class SupremumFinder {
         assert(spit->second != -1);
         spit->second = -1;
         auto ts = _automaton.transition_system();
-        auto tmp = (*ts)(from);
-        my_iterator_pair succs(tmp.successors().begin(), tmp.successors().end());
+        auto tmp = (*ts)(from).successors();
+        my_iterator_pair succs(tmp.begin(), tmp.end());
         
         for (;;) {
             for (iterator_type &i = succs.begin() ; i != succs.end() ; ++i) {
@@ -389,8 +389,8 @@ class SupremumFinder {
                 
                 if (spi->second != -1) {
                     spi->second = -1;
-                    auto tmp = (*ts)(s);
-                    to_remove.emplace(tmp.successors().begin(), tmp.successors().end());
+                    auto tmp = (*ts)(s).successors();
+                    to_remove.emplace(tmp.begin(), tmp.end());
                 }
             }
             if (to_remove.empty())

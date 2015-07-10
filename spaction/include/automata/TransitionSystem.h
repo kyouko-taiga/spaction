@@ -209,11 +209,11 @@ template<typename Q, typename S, typename Derived, typename Iterator> class Tran
         const Q &state() const { return _state; }
 
         SuccessorContainer successors() {
-            return SuccessorContainer(this);
+            return SuccessorContainer(*this);
         }
 
         SuccessorContainer successors(const S& label) {
-            return SuccessorContainer(this, &label);
+            return SuccessorContainer(*this, &label);
         }
 
         /// @note This method is not implemented yet.
@@ -223,7 +223,7 @@ template<typename Q, typename S, typename Derived, typename Iterator> class Tran
 
      private:
         TransitionSystem *_transition_system;
-        const Q _state;
+        const Q &_state;
     };
 
     class _TransitionIterator {
@@ -348,35 +348,35 @@ template<typename Q, typename S, typename Derived, typename Iterator> class Tran
 
     class RelationshipContainer {
      public:
-        explicit RelationshipContainer(StateWrapper *state_wrapper, const S* label = nullptr) :
+        explicit RelationshipContainer(const StateWrapper &state_wrapper, const S* label = nullptr) :
             _state_wrapper(state_wrapper), _label(label) { }
         virtual ~RelationshipContainer() { }
 
-        const StateWrapper *state() const { return _state_wrapper; }
+        const StateWrapper &state() const { return _state_wrapper; }
         const S *label() const { return _label; }
 
         virtual _TransitionIterator begin() const = 0;
         virtual _TransitionIterator end() const = 0;
 
      protected:
-        StateWrapper *_state_wrapper;
+        StateWrapper _state_wrapper;
         const S *_label;
     };
 
     class SuccessorContainer : public RelationshipContainer {
      public:
-        explicit SuccessorContainer(StateWrapper *state_wrapper, const S* label = nullptr) :
+        explicit SuccessorContainer(const StateWrapper &state_wrapper, const S* label = nullptr) :
             RelationshipContainer(state_wrapper, label) { }
 
         _TransitionIterator begin() const {
-            TransitionSystem<Q, S, Derived, Iterator> *ts = this->_state_wrapper->transition_system();
-            return _TransitionIterator(ts->_successor_begin(this->_state_wrapper->state(),
+            TransitionSystem<Q, S, Derived, Iterator> *ts = this->_state_wrapper.transition_system();
+            return _TransitionIterator(ts->_successor_begin(this->_state_wrapper.state(),
                                                             this->_label));
         }
 
         _TransitionIterator end() const {
-            TransitionSystem<Q, S, Derived, Iterator> *ts = this->_state_wrapper->transition_system();
-            return _TransitionIterator(ts->_successor_end(this->_state_wrapper->state()));
+            TransitionSystem<Q, S, Derived, Iterator> *ts = this->_state_wrapper.transition_system();
+            return _TransitionIterator(ts->_successor_end(this->_state_wrapper.state()));
         }
     };
 
