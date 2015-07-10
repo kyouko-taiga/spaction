@@ -18,6 +18,7 @@
 #ifndef SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEM_H_
 #define SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEM_H_
 
+#include <memory>
 #include <typeinfo>
 
 #include <twa/acc.hh>

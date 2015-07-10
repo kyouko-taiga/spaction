@@ -54,7 +54,7 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     /// A hash
     virtual std::size_t hash() const = 0;
     /// Returns whether or not `rhs` is syntactically equivalent to this formula.
-    virtual inline bool syntactic_eq(const CltlFormula &rhs) const = 0;
+    virtual bool syntactic_eq(const CltlFormula &rhs) const = 0;
 
     /// Returns a equivalent formula in negation normal form.
     virtual inline CltlFormulaPtr to_nnf() { return shared_from_this(); }
