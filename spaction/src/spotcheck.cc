@@ -256,6 +256,7 @@ automata::value_t find_max_cegar(const CltlFormulaPtr &formula,
         LOG_INFO << "formula translated to CA" << std::endl;
 
         for (auto state : translator.get_automaton().transition_system()->states()) {
+            (void) state;
             ++formula_aut_size;
         }
     }
@@ -386,6 +387,7 @@ automata::value_t find_max_direct(const CltlFormulaPtr &formula,
     // compute formula automaton size (number of nodes)
     unsigned int formula_aut_size = 0;
     for (auto state : translator.get_automaton().transition_system()->states()) {
+        (void) state;
         ++formula_aut_size;
     }
 

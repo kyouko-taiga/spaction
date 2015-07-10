@@ -284,12 +284,11 @@ CltlTranslator::NodeList CltlTranslator::_build_epsilon_successors(Node *node) {
                 return successors;
             }
         }
-    } else {
-        // unreachable code
-        throw std::runtime_error("epsilon transitions should occur only on Binary and MultOp formulae");
-        // return something to silence compiler warning
-        return successors;
     }
+    // unreachable code
+    throw std::runtime_error("epsilon transitions should occur only on Binary and MultOp formulae");
+    // return something to silence compiler warning
+    return successors;
 }
 
 CltlTranslator::Node *CltlTranslator::_build_actual_successor(Node *node) {

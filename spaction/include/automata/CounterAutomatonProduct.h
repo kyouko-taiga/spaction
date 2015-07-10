@@ -418,9 +418,7 @@ class _AutLabelProduct<CltlTranslator::FormulaList, bdd> :
             } else if (fspaction->formula_type() == CltlFormula::kAtomicProposition) {
                 rr.push_back(fspaction);
             } else if (fspaction->formula_type() == CltlFormula::kUnaryOperator) {
-                const UnaryOperator *uf = static_cast<const UnaryOperator *>(fspaction.get());
-                assert(uf);
-                assert(uf->operator_type() == UnaryOperator::kNot);
+                assert(static_cast<const UnaryOperator *>(fspaction.get())->operator_type() == UnaryOperator::kNot);
                 rr.push_back(fspaction);
             } else {
                 throw std::runtime_error("condition should be in CNF...");

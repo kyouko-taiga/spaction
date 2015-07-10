@@ -52,8 +52,7 @@ class SupremumFinder {
         // setup DFS from the initial state
         {
             const MinMaxConfiguration<Q> &init = *_automaton.initial_state();
-            auto insert_res = _h.emplace(init, num);
-            assert(insert_res.second);  // ensures insertion did take place
+            _h.emplace(init, num);
             _root.push(scc_t(num));
             _arc.push(accs_t());
             auto tmp_init = (*_automaton.transition_system())(init).successors();

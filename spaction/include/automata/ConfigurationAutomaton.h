@@ -386,11 +386,9 @@ class MinMaxConfigTS : public TransitionSystem<MinMaxConfiguration<Q>, S, MinMax
                 }
                 if (it != _todo.front().end) {
                     auto c = (*it)->sink();
-                    auto ins_res = _seen.insert(c);
-                    assert(ins_res.second);  // ensures the insertion did take place
-                    auto tmpb = (*_ts)(c).successors().begin();
-                    auto tmpe = (*_ts)(c).successors().end();
-                    _todo.push_front({ tmpb, tmpe });
+                    _seen.insert(c);
+                    auto tmp = (*_ts)(c).successors();
+                    _todo.push_front({ tmp.begin(), tmp.end() });
                     ++it;
                 } else {
                     _todo.pop_front();
