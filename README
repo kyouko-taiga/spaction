@@ -1,6 +1,6 @@
 This is the installation instructions of spaction.
 Requirements:
-  - A C++11 compiler (such as GCC 4.8 or higher, Clang 3.5 or higher)
+  - A C++11 compiler (such as GCC 4.9 or higher, Clang 3.5 or higher)
   - SPOT 1.99.1 (incompatible with older versions)
   - Divine (runtime requirement, not necessary to compile spaction)
     Spot 1.99.1 also supports Promela models compiled by Spin, which should be easier to install than Divine, but has not been tested with spaction yet.
@@ -8,6 +8,14 @@ Requirements:
 If you build spaction after cloning the git repository, you additionally require:
   - automake (1.14 or higher, untested with previous versions)
   - autoconf (2.69 or higher, untested with previous versions)
+
+
+NOTE ON GCC 4.8
+
+Despite claimed complete support for C++11, GCC 4.8 is not able to compile spaction, due to incomplete support for C++11 features in the libstdc++.
+
+GCC 4.9 works fine (tested GCC 4.9.3).
+GCC 5.1 works fine.
 
 
 INSTALLING SPOT
@@ -33,7 +41,9 @@ No other version of gcc was tried, but clang (built-in Apple version of 10.9) wa
   git clone http://fmt.cs.utwente.nl/tools/scm/divine2.git
   cd divine2
   mkdir _build && cd _build
-  cmake .. -DCMAKE_CXX_COMPILER={absolute path to g++4.8} -DCMAKE_C_COMPILER={absolute path to gcc4.8} -DGUI=OFF -DRX_PATH= -DMURPHI=OFF -DCMAKE_INSTALL_PREFIX={prefix to install, should be in path when running spaction} -DHOARD=OFF
+  cmake .. -DCMAKE_CXX_COMPILER={absolute path to g++4.8} -DCMAKE_C_COMPILER={absolute path to gcc4.8} -DGUI=OFF -DRX_PATH= -DMURPHI=OFF -DCMAKE_INSTALL_PREFIX={prefix to install, should be in path when running spaction} -DHOARD=OFF 
+  make
+  make install
 
 The executable should then be in the path when running spaction.
 Depending on the used prefix, you may have to 
