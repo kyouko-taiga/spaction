@@ -38,11 +38,19 @@ AC_CONFIG_MACRO_DIR([m4])
 test -z "$CFLAGS" && CFLAGS=
 test -z "$CXXFLAGS" && CXXFLAGS=
 
-CXXFLAGS=-std=c++11
+# we use c++11
+CXXFLAGS="$CXXFLAGS -std=c++11"
+
+# beautiful error messages from compiler
+CXXFLAGS="$CXXFLAGS -fdiagnostics-color"
+
+# use with gcc (4.9) in debug mode (-O0)
+#CXXFLAGS="$CXXFLAGS -fabi-version=3"
 
 # debugging symbols
 AC_ARG_ENABLE([debug],
-              [AC_HELP_STRING([--enable-debug],[enable debugging symbols])])
+              [AC_HELP_STRING([--enable-debug],[enable debugging symbols])],
+              enable_debug=yes, enable_debug=no)
 case "${enable_debug}" in
   yes)
     AC_DEFINE([DEBUG],1,[Define if you want debugging code.])
