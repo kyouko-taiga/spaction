@@ -168,6 +168,15 @@ class MinMaxConfiguration {
         }
     }
 
+    void cap_at(unsigned int bound) {
+        for (auto &i : _counter_values) {
+            assert(is_bounded() ? i <= current_value() : true);
+            if (i > bound) {
+                i = bound+1;
+            }
+        }
+    }
+
  private:
     // the state of the automaton
     const Q _state;
