@@ -166,8 +166,8 @@ class TGBATransitionSystem<spot::state*, CounterLabel<bdd>>:
     using Q = spot::state*;
     using S = CounterLabel<bdd>;
  public:
-    using TransitionBaseIterator = TGBATSIterator<spot::state*, CounterLabel<bdd>>;
-    friend class TGBATSIterator<spot::state*, CounterLabel<bdd>>;
+    using TransitionBaseIterator = TGBATSIterator<Q, S>;
+    friend class TGBATSIterator<Q, S>;
     using TransitionIterator = typename super_type::TransitionIterator;
     /// constructor
     explicit TGBATransitionSystem(spot::const_twa_ptr t)
