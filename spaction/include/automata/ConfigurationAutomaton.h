@@ -51,8 +51,8 @@ struct mycompare<unsigned int> {
 
 /// specialization for spot::state*
 template<>
-struct mycompare<spot::state*> {
-    int operator()(spot::state *lhs, spot::state *rhs) const {
+struct mycompare<const spot::state*> {
+    int operator()(const spot::state *lhs, const spot::state *rhs) const {
         assert(lhs);
         return lhs->compare(rhs);
     }

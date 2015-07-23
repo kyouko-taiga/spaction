@@ -33,8 +33,8 @@
 namespace std {
 
 template<>
-struct hash<spot::state *> {
-    typedef spot::state * argument_type;
+struct hash<const spot::state *> {
+    typedef const spot::state * argument_type;
     typedef std::size_t result_type;
 
     result_type operator()(const argument_type &s) const {

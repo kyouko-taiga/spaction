@@ -58,7 +58,7 @@ class TGBATSIterator : public ITransitionBaseIterator<Q,S,TGBATSIterator<Q,S>> {
  public:
     explicit TGBATSIterator(): TGBATSIterator(nullptr, nullptr, nullptr) {}
     /// the iterator does not acquire the source state, but does acquire the iterator
-    explicit TGBATSIterator(spot::state *s, spot::twa_succ_iterator *t, TGBATransitionSystem<Q,S> *ts)
+    explicit TGBATSIterator(const spot::state *s, spot::twa_succ_iterator *t, TGBATransitionSystem<Q,S> *ts)
     : _source(s)
     , _it(t)
     , _ts(ts)
@@ -152,18 +152,18 @@ class TGBATSIterator : public ITransitionBaseIterator<Q,S,TGBATSIterator<Q,S>> {
     }
 
  private:
-    spot::state *_source;
+    const spot::state *_source;
     spot::twa_succ_iterator *_it;
     TGBATransitionSystem<Q,S> *_ts;
     unsigned _n;
 };
 
 template<>
-class TGBATransitionSystem<spot::state*, CounterLabel<bdd>>:
-    public TransitionSystem<spot::state*, CounterLabel<bdd>, TGBATransitionSystem<spot::state*, CounterLabel<bdd>>, TGBATSIterator<spot::state*, CounterLabel<bdd>>> {
+class TGBATransitionSystem<const spot::state*, CounterLabel<bdd>>:
+    public TransitionSystem<const spot::state*, CounterLabel<bdd>, TGBATransitionSystem<const spot::state*, CounterLabel<bdd>>, TGBATSIterator<const spot::state*, CounterLabel<bdd>>> {
     /// useful typedefs
-    using super_type = TransitionSystem<spot::state*, CounterLabel<bdd>, TGBATransitionSystem<spot::state*, CounterLabel<bdd>>, TGBATSIterator<spot::state*, CounterLabel<bdd>>>;
-    using Q = spot::state*;
+    using super_type = TransitionSystem<const spot::state*, CounterLabel<bdd>, TGBATransitionSystem<const spot::state*, CounterLabel<bdd>>, TGBATSIterator<const spot::state*, CounterLabel<bdd>>>;
+    using Q = const spot::state*;
     using S = CounterLabel<bdd>;
  public:
     using TransitionBaseIterator = TGBATSIterator<Q, S>;
@@ -297,8 +297,8 @@ private:
     StateBaseIterator *_state_end() override { return new StateBaseIterator(_tgba, true); }
 };
 
-class tgba_ca : public CounterAutomaton<spot::state*, bdd, TGBATransitionSystem> {
-    using Q = spot::state *;
+class tgba_ca : public CounterAutomaton<const spot::state*, bdd, TGBATransitionSystem> {
+    using Q = const spot::state *;
     using S = bdd;
 public:
     /// constructor
