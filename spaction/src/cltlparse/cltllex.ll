@@ -23,41 +23,56 @@
 
 typedef yy::parser::token token;
 
+// The location of the current token.
+static yy::location loc;
+
 %}
 
-%option outfile="lex.yy.c"
+%option outfile="cltllex.cc"
 %option noyywrap warn 8bit batch
+
+%{
+// Code run each time a pattern is matched.
+#define YY_USER_ACTION  loc.columns (yyleng);
+%}
 
 %%
 
-"("                 {   return token::LPAR; }
-")"                 {   return token::RPAR; }
+%{
+// Code run each time yylex is called.
+loc.step ();
+%}
 
-"true"              {   return token::TRUE; }
-"false"             {   return token::FALSE; }
+"("                 {   return yy::parser::make_LPAR(loc); }
+")"                 {   return yy::parser::make_RPAR(loc); }
 
-"&&"                {   return token::AND; }
-"||"                {   return token::OR; }
-"!"                 {   return token::NOT; }
-"->"                {   return token::IMPLY; }
+"true"              {   return yy::parser::make_TRUE(loc); }
+"false"             {   return yy::parser::make_FALSE(loc); }
 
-"F"                 {   return token::FINALLY; }
-"G"                 {   return token::GLOBALLY; }
-"U"                 {   return token::UNTIL; }
-"R"                 {   return token::RELEASE; }
-"X"                 {   return token::NEXT; }
+"&&"                {   return yy::parser::make_AND(loc); }
+"||"                {   return yy::parser::make_OR(loc); }
+"!"                 {   return yy::parser::make_NOT(loc); }
+"->"                {   return yy::parser::make_IMPLY(loc); }
 
-"UN"                {   return token::COSTUNTIL; }
-"RN"                {   return token::COSTRELEASE; }
+"F"                 {   return yy::parser::make_FINALLY(loc); }
+"G"                 {   return yy::parser::make_GLOBALLY(loc); }
+"U"                 {   return yy::parser::make_UNTIL(loc); }
+"R"                 {   return yy::parser::make_RELEASE(loc); }
+"X"                 {   return yy::parser::make_NEXT(loc); }
 
-"FN"                {   return token::COSTFINALLY; }
-"GN"                {   return token::COSTGLOBALLY; }
+"UN"                {   return yy::parser::make_COSTUNTIL(loc); }
+"RN"                {   return yy::parser::make_COSTRELEASE(loc); }
 
-\"[a-zA-Z0-9_\.]+\"    {   yylval->apval = yytext;
+"FN"                {   return yy::parser::make_COSTFINALLY(loc); }
+"GN"                {   return yy::parser::make_COSTGLOBALLY(loc); }
+
+\"[a-zA-Z0-9_\.]+\" {   std::string tmp = yytext;
                         // remove double quotes around the atom
-                        auto it = std::remove(yylval->apval.begin(), yylval->apval.end(), '"');
-                        yylval->apval = std::string(yylval->apval.begin(), it);
-                        return token::ATOM; }
+                        auto it = std::remove(tmp.begin(), tmp.end(), '"');
+                        tmp = std::string(tmp.begin(), it);
+                        return yy::parser::make_ATOM(tmp, loc); }
+
+<<EOF>>             {   return yy::parser::make_END(loc); }
 
 %%
 

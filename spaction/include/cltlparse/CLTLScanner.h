@@ -19,16 +19,15 @@
 #define SPACTION_INCLUDE_CLTLPARSE_CLTLSCANNER_H_
 
 #undef YY_DECL
-#define YY_DECL int spaction::cltlparse::yylex(struct union_tag *yylval)
+#define YY_DECL yy::parser::symbol_type spaction::cltlparse::yylex()
 
 #include "cltlparse.hh"
-
-struct union_tag;
 
 namespace spaction {
 namespace cltlparse {
 
-int yylex(struct union_tag *yylval);
+// prototype for yylex
+yy::parser::symbol_type yylex();
 
 }  // namespace cltlparse
 }  // namespace spaction

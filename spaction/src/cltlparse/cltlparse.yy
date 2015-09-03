@@ -15,32 +15,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+%require "3.0.4"
+
 %skeleton "lalr1.cc"    /* -*- use C++ -*- */
 
-%{
+%defines
+%define api.value.type variant
+%define api.token.constructor
+%locations
+
+%code requires {
 #include <list>
 #include <string>
 #include "CltlFormula.h"
 #include "CltlFormulaFactory.h"
-#include "cltlparse/CLTLScanner.h"
 
 // wrap a static default factory for CLTL formulae
 static spaction::CltlFormulaFactory & _factory();
 
-// A struct (instead of an union) to handle the various return types
-struct union_tag {
-    std::string apval;
-    spaction::CltlFormulaPtr form;
-    spaction::UnaryOperator::UnaryOperatorType u_type;
-    spaction::BinaryOperator::BinaryOperatorType b_type;
-    spaction::MultOperator::MultOperatorType m_type;
-};
-
-// tell bison to use our custom struct for return values
-#define YYSTYPE union_tag
-
-// custom lex function
-static int yylex(YYSTYPE*);
+#include "location.hh"
 
 // NOTE error handling is copied from SPOT LTL parser
 /// \brief A parse diagnostic with its location.
@@ -48,38 +41,46 @@ typedef std::pair<yy::location, std::string> parse_error;
 /// \brief A list of parser diagnostics, as filled by parse.
 typedef std::list<parse_error> parse_error_list;
 
-%}
+}
+
+%code {
+#include "cltlparse/CLTLScanner.h"
+
+static yy::parser::symbol_type yylex() {
+    return spaction::cltlparse::yylex();
+}
+}
 
 %parse-param {spaction::CltlFormulaPtr &result}
 %parse-param {parse_error_list &error_list}
 
 /* token types */
-%type   <form>                      formula
-%type   <form>                      atomic
-%type   <form>                      constant
-%type   <u_type>                    unary
-%type   <b_type>                    binary
-%type   <m_type>                    mult
+%type   <spaction::CltlFormulaPtr>                      formula
+%type   <spaction::CltlFormulaPtr>                      atomic
+%type   <spaction::CltlFormulaPtr>                      constant
+%type   <spaction::UnaryOperator::UnaryOperatorType>    unary
+%type   <spaction::BinaryOperator::BinaryOperatorType>  binary
+%type   <spaction::MultOperator::MultOperatorType>      mult
 
-%token                              END         0
-%token                              LPAR
-%token                              RPAR
-%token                              TRUE
-%token                              FALSE
-%token                              NOT
-%token                              NEXT
-%token                              AND
-%token                              OR
-%token                              IMPLY
-%token                              UNTIL
-%token                              RELEASE
-%token                              FINALLY
-%token                              GLOBALLY
-%token                              COSTUNTIL
-%token                              COSTRELEASE
-%token                              COSTFINALLY
-%token                              COSTGLOBALLY
-%token  <apval>                     ATOM
+%token                                                  END         0
+%token                                                  LPAR
+%token                                                  RPAR
+%token                                                  TRUE
+%token                                                  FALSE
+%token                                                  NOT
+%token                                                  NEXT
+%token                                                  AND
+%token                                                  OR
+%token                                                  IMPLY
+%token                                                  UNTIL
+%token                                                  RELEASE
+%token                                                  FINALLY
+%token                                                  GLOBALLY
+%token                                                  COSTUNTIL
+%token                                                  COSTRELEASE
+%token                                                  COSTFINALLY
+%token                                                  COSTGLOBALLY
+%token  <std::string>                                   ATOM
 
 /* Priorities */
 
@@ -144,8 +145,4 @@ void yy::parser::error(const location_type &location, const std::string &message
 spaction::CltlFormulaFactory & _factory() {
     static spaction::CltlFormulaFactory f = spaction::CltlFormulaFactory();
     return f;
-}
-
-int yylex(YYSTYPE *yylval) {
-    return spaction::cltlparse::yylex(yylval);
 }

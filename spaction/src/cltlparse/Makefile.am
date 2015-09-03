@@ -33,7 +33,7 @@ BUILT_SOURCES = \
 
 MAINTAINERCLEANFILES = $(BUILT_SOURCES)
 
-AM_YFLAGS = "-d"
+AM_YFLAGS = -d
 
 libcltlparser_la_CPPFLAGS = -I../../include/
 libcltlparser_la_SOURCES = \
