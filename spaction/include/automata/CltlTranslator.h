@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 
+#include "bdd_util.h"
 #include "CltlFormula.h"
 #include "automata/CounterAutomaton.h"
 #include "automata/TransitionSystemPrinter.h"
@@ -43,11 +44,7 @@ class CltlTranslator {
 
     explicit CltlTranslator(const CltlFormulaPtr &formula);
 
-    /// @note
-    ///     Both Node and TransitionLabel objects might create memory leaks once the translator
-    ///     that built them goes out of scope. Consider using std::unique_ptr or std::shared_ptr
-    ///     to manage these objects.
-    ~CltlTranslator() { }
+    ~CltlTranslator();
 
     void build_automaton();
 
@@ -55,7 +52,7 @@ class CltlTranslator {
         _automaton.print(dotfile);
     }
     void epsilon_dot(const std::string &dotfile) {
-        TSPrinter<Node*, TransitionLabel*> p(_transition_system);
+        auto p = make_ts_printer(_transition_system);
         p.dump(dotfile);
     }
 
@@ -121,6 +118,11 @@ class CltlTranslator {
     /// the type of the automaton built
     typedef CounterAutomaton<Node*, FormulaList, UndeterministicTransitionSystem> automaton_type;
     inline automaton_type & get_automaton() { return _automaton; }
+    /// the type of the final automaton
+    /// the final automaton does not use CltlFormula for efficiency
+    typedef CounterAutomaton<unsigned, bdd, UndeterministicTransitionSystem> final_automaton_type;
+    /// creates a new pointer
+    final_automaton_type * get_final_automaton(spot::bdd_dict_ptr dict) const;
 
     static std::function<bool (const CltlFormulaPtr &, const CltlFormulaPtr &)> get_formula_order();
 
@@ -138,13 +140,13 @@ class CltlTranslator {
     NodeList _nodes;
 
     /// Stores the temporar transition system that is used to build the automata.
-    UndeterministicTransitionSystem<Node*, TransitionLabel*> _transition_system;
+    UndeterministicTransitionSystem<Node*, std::shared_ptr<TransitionLabel>> _transition_system;
     /// Stores the actual automaton
     automaton_type _automaton;
 
-    std::size_t _nb_acceptances;
+    unsigned _nb_acceptances;
     /// Associates each Until sub-formula to an acceptance condition
-    std::map<CltlFormulaPtr, std::size_t> _acceptances_maps;
+    std::map<CltlFormulaPtr, unsigned> _acceptances_maps;
     std::size_t _nb_counters;
     /// Associates each Cost sub-formula to a counter
     std::map<CltlFormulaPtr, std::size_t> _counters_maps;
@@ -190,11 +192,15 @@ class CltlTranslator {
     /// Builds the actual automaton by removing epsilon-transitions
     void _build_automaton();
     void _process_remove_epsilon();
-    void _process_remove_epsilon(Node *source, Node *s, const std::vector<TransitionLabel*> &trace);
+    void _process_remove_epsilon(Node *source, Node *s, const std::vector<std::shared_ptr<TransitionLabel>> &trace);
     void _add_nonepsilon_transition(Node *source, Node *sink,
-                                    const std::vector<TransitionLabel*> &trace);
+                                    const std::vector<std::shared_ptr<TransitionLabel>> &trace);
 
     /// Helper method that inserts a formula into a FormulaList and keeps the result sorted.
+    template<class Iterator>
+    FormulaList _insert(const FormulaList &list,
+                        const Iterator &begin,
+                        const Iterator &end) const;
     FormulaList _insert(const FormulaList &list,
                         const std::initializer_list<CltlFormulaPtr> &add_list) const;
 };

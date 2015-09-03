@@ -22,12 +22,18 @@
 
 #include "CltlFormulaFactory.h"
 #include "CltlFormulaVisitor.h"
+#include "hash/hash.h"
 
 namespace spaction {
 
 BinaryOperator::BinaryOperator(BinaryOperatorType type, const CltlFormulaPtr &left,
                                const CltlFormulaPtr &right, CltlFormulaFactory *creator) :
     CltlFormula(creator), _type(type), _left(left), _right(right) {
+}
+
+std::size_t BinaryOperator::hash() const {
+    std::vector<std::size_t> tmp = { (std::size_t)_type, _left->hash(), _right->hash() };
+    return std::hash<std::vector<std::size_t>>()(tmp);
 }
 
 bool BinaryOperator::syntactic_eq(const CltlFormula &rhs) const {
@@ -38,100 +44,35 @@ bool BinaryOperator::syntactic_eq(const CltlFormula &rhs) const {
     if (bo._type != _type)
         return false;
 
-    switch (bo.operator_type()) {
-        case BinaryOperator::kOr:
-        case BinaryOperator::kAnd:
-            return _leaves() == bo._leaves();
-        case BinaryOperator::kUntil:
-        case BinaryOperator::kRelease:
-        case BinaryOperator::kCostUntil:
-        case BinaryOperator::kCostRelease:
-            return ((bo._left == _left) and (bo._right == _right));
-    }
+    return ((bo._left == _left) and (bo._right == _right));
 }
 
 CltlFormulaPtr BinaryOperator::to_nnf() {
     return _creator->make_binary(_type, _left->to_nnf(), _right->to_nnf());
 }
 
-CltlFormulaPtr BinaryOperator::to_dnf() {
-    // get the negative normal form of itself
-    CltlFormulaPtr &&nnf_self = this->to_nnf();
-
-    // check if `nnf_self` is a binary operator
-    if (nnf_self->formula_type() == CltlFormula::kBinaryOperator) {
-        // recursively transform operands
-        BinaryOperator *bo_self = static_cast<BinaryOperator*>(nnf_self.get());
-        const CltlFormulaPtr &left = bo_self->left()->to_dnf();
-        const CltlFormulaPtr &right = bo_self->right()->to_dnf();
-
-        // check if `nnf_self` is of the form (x && y)
-        if (bo_self->operator_type() == BinaryOperator::kAnd) {
-            if (right->formula_type() == CltlFormula::kBinaryOperator) {
-                BinaryOperator *bo_right = static_cast<BinaryOperator*>(right.get());
-                if (bo_right->operator_type() == BinaryOperator::kOr) {
-                    // distribute a * (b + c)
-                    const CltlFormulaPtr &a = _creator->make_and(left, bo_right->left());
-                    const CltlFormulaPtr &b = _creator->make_and(left, bo_right->right());
-                    return _creator->make_or(a, b)->to_dnf();
-                }
-            } else if (left->formula_type() == CltlFormula::kBinaryOperator) {
-                BinaryOperator *bo_left = static_cast<BinaryOperator*>(left.get());
-                if (bo_left->operator_type() == BinaryOperator::kOr) {
-                    // distribute (a + b) * c
-                    const CltlFormulaPtr &a = _creator->make_and(right, bo_left->left());
-                    const CltlFormulaPtr &b = _creator->make_and(right, bo_left->right());
-                    return _creator->make_or(a, b)->to_dnf();
-                }
-            }
-        } else {
-            // returns a binary operator with transformed operands
-            return _creator->make_binary(bo_self->operator_type(), left, right);
-        }
+bool BinaryOperator::is_infltl() const {
+    if (_type == kCostRelease) {
+        return false;
+    } else {
+        return _left->is_infltl() and _right->is_infltl();
     }
-
-    // no further transformation to be performed since `nnf_self` is not a binary operator
-    return nnf_self;
 }
 
-std::unordered_multiset<const CltlFormula*> BinaryOperator::_leaves() const {
-    std::unordered_multiset<const CltlFormula*> leaves;
-    std::stack<const BinaryOperator*> stack({this});
-    bool is_leaf;
-
-    // unfold the operator such that we get the set of leaves
-    while (!stack.empty()) {
-        const BinaryOperator *current = stack.top();
-        stack.pop();
-
-        // push the right member on the stack, unless it is not a compatible operation
-        is_leaf = true;
-        if (current->right()->formula_type() == CltlFormula::kBinaryOperator) {
-            BinaryOperator *bo = static_cast<BinaryOperator*>(current->right().get());
-            if (bo->operator_type() == _type) {
-                stack.push(bo);
-                is_leaf = false;
-            }
-        }
-        if (is_leaf) {
-            leaves.insert(current->right().get());
-        }
-
-        // push the left member on the stack, unless it is not a compatible operation
-        is_leaf = true;
-        if (current->left()->formula_type() == CltlFormula::kBinaryOperator) {
-            BinaryOperator *bo = static_cast<BinaryOperator*>(current->left().get());
-            if (bo->operator_type() == _type) {
-                stack.push(bo);
-                is_leaf = false;
-            }
-        }
-        if (is_leaf) {
-            leaves.insert(current->left().get());
-        }
+bool BinaryOperator::is_supltl() const {
+    if (_type == kCostUntil) {
+        return false;
+    } else {
+        return _left->is_supltl() and _right->is_supltl();
     }
+}
 
-    return leaves;
+bool BinaryOperator::is_propositional() const {
+    return false;
+}
+
+bool BinaryOperator::is_nnf() const {
+    return _left->is_nnf() and _right->is_nnf();
 }
 
 void BinaryOperator::accept(CltlFormulaVisitor &visitor) {
@@ -145,12 +86,6 @@ std::string BinaryOperator::dump() const {
     result += _left->dump();
     result += ") ";
     switch (_type) {
-        case kOr:
-            result += "||";
-            break;
-        case kAnd:
-            result += "&&";
-            break;
         case kUntil:
             result += "U";
             break;

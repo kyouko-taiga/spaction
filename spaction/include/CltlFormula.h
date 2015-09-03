@@ -36,7 +36,8 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
         kAtomicProposition,
         kConstantExpression,
         kUnaryOperator,
-        kBinaryOperator
+        kBinaryOperator,
+        kMultOperator
     };
 
     /// Returns a pointer to the factory that created this formula.
@@ -50,14 +51,13 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     /// Returns whether or not `rhs` is not the same formula.
     virtual inline bool operator!=(const CltlFormula &rhs) const { return !(*this == rhs); }
 
+    /// A hash
+    virtual std::size_t hash() const = 0;
     /// Returns whether or not `rhs` is syntactically equivalent to this formula.
-    virtual inline bool syntactic_eq(const CltlFormula &rhs) const = 0;
+    virtual bool syntactic_eq(const CltlFormula &rhs) const = 0;
 
     /// Returns a equivalent formula in negation normal form.
     virtual inline CltlFormulaPtr to_nnf() { return shared_from_this(); }
-
-    /// Returns a equivalent formula in disjunctive normal form.
-    virtual inline CltlFormulaPtr to_dnf() { return this->to_nnf(); }
 
     /// @note
     ///     We could make this method constant, but it would require to pass a
@@ -70,6 +70,17 @@ class CltlFormula : public std::enable_shared_from_this<CltlFormula> {
     /// Height of a formula is `1` for an atomic proposition, or the highest height within its
     /// subformulae + `1`.
     virtual std::size_t height() const = 0;
+
+    /// Indicates whether the formula is LTL[<=]
+    virtual bool is_infltl() const = 0;
+    /// Indicates whether the formula is LTL[>]
+    virtual bool is_supltl() const = 0;
+    /// Indicates whether the formula is LTL (i.e. both LTL[<=] and LTL[>])
+    bool is_ltl() const { return is_infltl() and is_supltl(); }
+    /// Indicates whether the formula is propositional (i.e. has no temporal operator)
+    virtual bool is_propositional() const = 0;
+    /// Indicates whether the formula is in NNF
+    virtual bool is_nnf() const = 0;
 
     /// Returns a string representation of the formula.
     virtual std::string dump() const = 0;

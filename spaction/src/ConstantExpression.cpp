@@ -15,6 +15,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <functional>
+
 #include "ConstantExpression.h"
 #include "CltlFormulaVisitor.h"
 
@@ -22,6 +24,10 @@ namespace spaction {
 
 ConstantExpression::ConstantExpression(bool value, CltlFormulaFactory *creator) :
     CltlFormula(creator), _value(value) {
+}
+
+std::size_t ConstantExpression::hash() const {
+    return std::hash<bool>()(_value);
 }
 
 bool ConstantExpression::syntactic_eq(const CltlFormula &rhs) const {

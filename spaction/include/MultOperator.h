@@ -15,8 +15,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_ATOMICPROPOSITION_H_
-#define SPACTION_INCLUDE_ATOMICPROPOSITION_H_
+#ifndef SPACTION_INCLUDE_MULTOPERATOR_H_
+#define SPACTION_INCLUDE_MULTOPERATOR_H_
+
+#include <vector>
 
 #include "CltlFormula.h"
 
@@ -25,42 +27,52 @@ namespace spaction {
 class CltlFormulaFactory;
 class CltlFormulaVisitor;
 
-class AtomicProposition : public CltlFormula {
+class MultOperator : public CltlFormula {
  public:
+    enum MultOperatorType : char {
+        kOr,
+        kAnd
+    };
+
     /// Copy construction is forbidden.
-    AtomicProposition(const AtomicProposition &) = delete;
+    MultOperator(const MultOperator &) = delete;
     /// Copy assignement is forbidden.
-    AtomicProposition &operator=(const AtomicProposition &) = delete;
+    MultOperator &operator=(const MultOperator &) = delete;
 
-    inline const FormulaType formula_type() const override { return kAtomicProposition; }
+    inline const FormulaType formula_type() const override { return kMultOperator; }
+    MultOperatorType operator_type() const { return _type; }
 
+    inline const std::vector<CltlFormulaPtr> &childs() const { return _childs; }
+
+    std::size_t hash() const override;
     /// Returns whether or not `rhs` is syntactically equivalent to this formula.
     virtual bool syntactic_eq(const CltlFormula &rhs) const;
-    std::size_t hash() const override;
-
-    /// Returns the string identifying this atomic proposition.
-    inline const std::string &value() const { return _value; }
 
     void accept(CltlFormulaVisitor &visitor) override;
 
-    inline std::size_t height() const { return 1; }
+    std::size_t height() const;
 
-    inline bool is_infltl() const { return true; }
-    inline bool is_supltl() const { return true; }
-    inline bool is_propositional() const { return true; }
-    inline bool is_nnf() const { return true; }
+    bool is_infltl() const;
+    bool is_supltl() const;
+    bool is_propositional() const;
+    bool is_nnf() const;
+
+    virtual CltlFormulaPtr to_nnf() override;
 
     std::string dump() const override;
 
  protected:
-    explicit AtomicProposition(const std::string &value, CltlFormulaFactory *creator);
-    ~AtomicProposition() { }
+    explicit MultOperator(MultOperatorType type, const std::vector<CltlFormulaPtr> &childs,
+                          CltlFormulaFactory *creator);
+    ~MultOperator() { }
 
  private:
     friend class CltlFormulaFactory;
-    std::string _value;
+
+    MultOperatorType _type;
+    const std::vector<CltlFormulaPtr> _childs;
 };
 
 }  // namespace spaction
 
-#endif  // SPACTION_INCLUDE_ATOMICPROPOSITION_H_
+#endif  // SPACTION_INCLUDE_MULTOPERATOR_H_

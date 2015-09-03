@@ -18,16 +18,147 @@
 #ifndef SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEM_H_
 #define SPACTION_INCLUDE_AUTOMATA_TRANSITIONSYSTEM_H_
 
+#include <memory>
 #include <typeinfo>
+
+#include <twa/acc.hh>
+
+#include "automata/ControlBlock.h"
+
+namespace spaction {
+namespace automata {
+
+enum CounterOperation : unsigned int {
+    kIncrement  = 1,
+    kCheck      = 2,
+    kReset      = 4
+};
+
+typedef std::vector<CounterOperation> CounterOperationList;
+template<typename S> class CounterLabel;
+
+template<typename S> struct is_counter_label {
+    static constexpr bool value = false;
+};
+template<typename S> struct is_counter_label<CounterLabel<S>> {
+    static constexpr bool value = true;
+};
+template<typename S> struct LetterType {
+    using type = void;
+};
+template<typename S> struct LetterType<CounterLabel<S>> {
+    using type = S;
+};
+
+inline CounterOperation operator|(const CounterOperation &l, const CounterOperation &r) {
+    return static_cast<CounterOperation>(static_cast<unsigned int>(l) | static_cast<unsigned int>(r));
+}
+inline CounterOperation operator&(const CounterOperation &l, const CounterOperation &r) {
+    return static_cast<CounterOperation>(static_cast<unsigned int>(l) & static_cast<unsigned int>(r));
+}
+
+std::string print_counter_operation(CounterOperation c);
+
+/// spot already implements acceptance conditions as bitsets
+typedef spot::acc_cond::mark_t accs_t;
+
+}  // namespace automata
+}  // namespace spaction
+
+namespace std {
+
+/// Hash function for CounterLabel type, so it can be used as a key in map-like STL containers.
+template<typename S>
+struct hash<spaction::automata::CounterLabel<S>> {
+    typedef spaction::automata::CounterLabel<S> argument_type;
+    typedef std::size_t result_type;
+    
+    result_type operator()(const argument_type &cl) const {
+        return cl.hash();
+    }
+};
+    
+}  // namespace std
 
 namespace spaction {
 namespace automata {
 
 template<typename Q, typename S> class Transition;
-template<typename T> class ControlBlock;
 template<typename Q, typename S> class TransitionPtr;
 
-template<typename Q, typename S> class TransitionSystem {
+/// A dummy struct, for most TS that store nothing in their extra field.
+class Data {
+ public:
+    virtual ~Data() { }
+    virtual void destroy(void*) = 0;
+};
+
+class DataVoid final: public Data {
+ public:
+    void destroy(void*) {}
+};
+
+template<typename Q, typename S, typename DerivedIterator>
+class ITransitionBaseIterator {
+ public:
+    virtual ~ITransitionBaseIterator() { }
+
+    bool operator!=(const ITransitionBaseIterator& rhs) const {
+        // unfortunately, using rtti here is probably better than other alternative
+        // see http://stackoverflow.com/questions/11332075
+        return (typeid(*this) != typeid(rhs)) or !is_equal(rhs);
+    }
+
+    virtual bool is_equal(const ITransitionBaseIterator& rhs) const = 0;
+    virtual ITransitionBaseIterator *clone() const = 0;
+
+    //@note rather inefficient, try to use direct accessor to the letter instead
+    virtual TransitionPtr<Q, S> operator*() = 0;
+    virtual const ITransitionBaseIterator& operator++() = 0;
+
+    //@todo should the accessors be const?
+    //@todo add an accessor to the acceptance conditions
+    virtual S get_label() const = 0;
+    virtual const Q get_source() const = 0;
+    virtual const Q get_sink() const = 0;
+    // separate the counter ops from the acceptance conditions from the letters
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, typename LetterType<S>::type>::type get_letter() const {
+        return static_cast<const DerivedIterator *>(this)->_get_letter();
+    }
+    /// Gets the vector of counter operations.
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, std::vector<CounterOperationList>>::type get_operations() const {
+        return static_cast<const DerivedIterator *>(this)->_get_operations();
+    }
+    /// Gets the set of acceptance conditions.
+    template<bool U = is_counter_label<S>::value>
+    typename std::enable_if<U, accs_t>::type get_acceptance() const {
+        return static_cast<const DerivedIterator *>(this)->_get_acceptance();
+    }
+};
+
+template<typename Q, typename S>
+class IStateBaseIterator {
+public:
+    virtual ~IStateBaseIterator() { }
+
+    bool operator!=(const IStateBaseIterator& rhs) const {
+        // unfortunately, using rtti here is probably better than other alternative
+        // see http://stackoverflow.com/questions/11332075
+        return (typeid(*this) != typeid(rhs)) or !is_equal(rhs);
+    }
+
+    virtual bool is_equal(const IStateBaseIterator& rhs) const = 0;
+    virtual IStateBaseIterator *clone() const = 0;
+
+    virtual Q operator*() = 0;
+    virtual const IStateBaseIterator& operator++() = 0;
+};
+
+/// Q       is the type of the states
+/// S       is the type of the labels
+template<typename Q, typename S, typename Derived, typename Iterator> class TransitionSystem {
  protected:
     class _TransitionIterator;
     class _StateIterator;
@@ -39,9 +170,13 @@ template<typename Q, typename S> class TransitionSystem {
  public:
     typedef _TransitionIterator TransitionIterator;
     typedef _StateIterator StateIterator;
+    typedef ITransitionBaseIterator<Q, S, Iterator> TransitionBaseIterator;
 
-    explicit TransitionSystem(ControlBlock<Transition<Q, S>> *cb): _control_block(cb) {}
-    virtual ~TransitionSystem() { delete _control_block; }
+    explicit TransitionSystem(ControlBlock<Transition<Q, S>> *cb, std::shared_ptr<Data> d)
+        : _control_block(cb), _data(d) {}
+    virtual ~TransitionSystem() {
+        delete _control_block;
+    }
 
     virtual void add_state(const Q &state) = 0;
     virtual void remove_state(const Q &state) = 0;
@@ -54,43 +189,16 @@ template<typename Q, typename S> class TransitionSystem {
     virtual void remove_transition(const Q &source, const Q &sink, const S &label) = 0;
 
     virtual ControlBlock<Transition<Q, S>> *get_control_block() const { return _control_block; }
+    inline std::shared_ptr<Data> get_data() const { return _data; }
+
+    virtual void print_state(std::ostream &os, const Q &q) const = 0;
+    virtual void print_label(std::ostream &os, const S &s) const = 0;
 
  protected:
     ControlBlock<Transition<Q, S>> *_control_block;
+    std::shared_ptr<Data> _data;
 
-    class TransitionBaseIterator {
-     public:
-        virtual ~TransitionBaseIterator() { }
-
-        bool operator!=(const TransitionBaseIterator& rhs) const {
-            // unfortunately, using rtti here is probably better than other alternative
-            // see http://stackoverflow.com/questions/11332075
-            return (typeid(*this) != typeid(rhs)) or !is_equal(rhs);
-        }
-
-        virtual bool is_equal(const TransitionBaseIterator& rhs) const = 0;
-        virtual TransitionBaseIterator *clone() const = 0;
-
-        virtual TransitionPtr<Q, S> operator*() = 0;
-        virtual const TransitionBaseIterator& operator++() = 0;
-    };
-
-    class StateBaseIterator {
-     public:
-        virtual ~StateBaseIterator() { }
-
-        bool operator!=(const StateBaseIterator& rhs) const {
-            // unfortunately, using rtti here is probably better than other alternative
-            // see http://stackoverflow.com/questions/11332075
-            return (typeid(*this) != typeid(rhs)) or !is_equal(rhs);
-        }
-
-        virtual bool is_equal(const StateBaseIterator& rhs) const = 0;
-        virtual StateBaseIterator *clone() const = 0;
-
-        virtual Q operator*() = 0;
-        virtual const StateBaseIterator& operator++() = 0;
-    };
+    typedef IStateBaseIterator<Q,S> StateBaseIterator;
 
     class StateWrapper {
      public:
@@ -101,11 +209,11 @@ template<typename Q, typename S> class TransitionSystem {
         const Q &state() const { return _state; }
 
         SuccessorContainer successors() {
-            return SuccessorContainer(this);
+            return SuccessorContainer(*this);
         }
 
         SuccessorContainer successors(const S& label) {
-            return SuccessorContainer(this, &label);
+            return SuccessorContainer(*this, &label);
         }
 
         /// @note This method is not implemented yet.
@@ -115,12 +223,12 @@ template<typename Q, typename S> class TransitionSystem {
 
      private:
         TransitionSystem *_transition_system;
-        const Q _state;
+        const Q &_state;
     };
 
     class _TransitionIterator {
      public:
-        explicit _TransitionIterator(TransitionBaseIterator *base_iterator) :
+        explicit _TransitionIterator(ITransitionBaseIterator<Q, S, Iterator> *base_iterator):
             _base_iterator(base_iterator) { }
         virtual ~_TransitionIterator() { delete _base_iterator; }
 
@@ -131,9 +239,23 @@ template<typename Q, typename S> class TransitionSystem {
         // copy assignment operator
         _TransitionIterator &operator=(const _TransitionIterator &other) {
             if (this != &other) {
-                delete _base_iterator;
-                _base_iterator = other._base_iterator->clone();
+                // take advantage of the CRTP to avoid memory deallocation/allocation, copy in place
+                assert(_base_iterator != other._base_iterator);
+                Iterator *tmp = static_cast<Iterator*>(_base_iterator);
+                *tmp = *static_cast<Iterator*>(other._base_iterator);
             }
+            return *this;
+        }
+
+        // move constructor
+        _TransitionIterator(_TransitionIterator &&other) :
+            _base_iterator(other._base_iterator) {
+            other._base_iterator = nullptr;
+        }
+
+        // move assignment operator
+        _TransitionIterator &operator=(_TransitionIterator &&other) {
+            std::swap(_base_iterator, other._base_iterator);
             return *this;
         }
 
@@ -148,6 +270,24 @@ template<typename Q, typename S> class TransitionSystem {
         ///         Note that the pointed Transition is const, so consider TransitionPtr<Q,S> as if
         ///         of type 'const Transition<Q,S> *'
         TransitionPtr<Q, S> operator*() { return **_base_iterator; }
+        S get_label() const { return _base_iterator->get_label(); }
+        const Q get_source() const { return _base_iterator->get_source(); }
+        const Q get_sink() const { return _base_iterator->get_sink(); }
+        // separate the counter ops from the acceptance conditions from the letters
+        template<bool U = is_counter_label<S>::value>
+        typename std::enable_if<U, typename LetterType<S>::type>::type get_letter() const {
+            return _base_iterator->get_letter();
+        }
+        /// Gets the vector of counter operations.
+        template<bool U = is_counter_label<S>::value>
+        typename std::enable_if<U, std::vector<CounterOperationList>>::type get_operations() const {
+            return _base_iterator->get_operations();
+        }
+        /// Gets the set of acceptance conditions.
+        template<bool U = is_counter_label<S>::value>
+        typename std::enable_if<U, accs_t>::type get_acceptance() const {
+            return _base_iterator->get_acceptance();
+        }
 
         const _TransitionIterator& operator++() {
             ++(*_base_iterator);
@@ -155,7 +295,7 @@ template<typename Q, typename S> class TransitionSystem {
         }
 
      private:
-        TransitionBaseIterator *_base_iterator;
+        ITransitionBaseIterator<Q, S, Iterator> *_base_iterator;
     };
 
     class _StateIterator {
@@ -192,7 +332,7 @@ template<typename Q, typename S> class TransitionSystem {
 
     class StateContainer {
      public:
-        StateContainer(TransitionSystem<Q, S> *ts): _ts(ts) {}
+        StateContainer(TransitionSystem<Q, S, Derived, Iterator> *ts): _ts(ts) {}
         virtual ~StateContainer() {}
 
         _StateIterator begin() const {
@@ -203,40 +343,40 @@ template<typename Q, typename S> class TransitionSystem {
         }
 
      private:
-        TransitionSystem<Q, S> *_ts;
+        TransitionSystem<Q, S, Derived, Iterator> *_ts;
     };
 
     class RelationshipContainer {
      public:
-        explicit RelationshipContainer(StateWrapper *state_wrapper, const S* label = nullptr) :
+        explicit RelationshipContainer(const StateWrapper &state_wrapper, const S* label = nullptr) :
             _state_wrapper(state_wrapper), _label(label) { }
         virtual ~RelationshipContainer() { }
 
-        const StateWrapper *state() const { return _state_wrapper; }
+        const StateWrapper &state() const { return _state_wrapper; }
         const S *label() const { return _label; }
 
         virtual _TransitionIterator begin() const = 0;
         virtual _TransitionIterator end() const = 0;
 
      protected:
-        StateWrapper *_state_wrapper;
+        StateWrapper _state_wrapper;
         const S *_label;
     };
 
     class SuccessorContainer : public RelationshipContainer {
      public:
-        explicit SuccessorContainer(StateWrapper *state_wrapper, const S* label = nullptr) :
+        explicit SuccessorContainer(const StateWrapper &state_wrapper, const S* label = nullptr) :
             RelationshipContainer(state_wrapper, label) { }
 
         _TransitionIterator begin() const {
-            TransitionSystem<Q, S> *ts = this->_state_wrapper->transition_system();
-            return _TransitionIterator(ts->_successor_begin(this->_state_wrapper->state(),
+            TransitionSystem<Q, S, Derived, Iterator> *ts = this->_state_wrapper.transition_system();
+            return _TransitionIterator(ts->_successor_begin(this->_state_wrapper.state(),
                                                             this->_label));
         }
 
         _TransitionIterator end() const {
-            TransitionSystem<Q, S> *ts = this->_state_wrapper->transition_system();
-            return _TransitionIterator(ts->_successor_end(this->_state_wrapper->state()));
+            TransitionSystem<Q, S, Derived, Iterator> *ts = this->_state_wrapper.transition_system();
+            return _TransitionIterator(ts->_successor_end(this->_state_wrapper.state()));
         }
     };
 
@@ -260,11 +400,11 @@ template<typename Q, typename S> class TransitionSystem {
         delete t;
     }
 
-    virtual TransitionBaseIterator *_successor_begin(const Q &state, const S *label) = 0;
-    virtual TransitionBaseIterator *_successor_end(const Q &state) = 0;
+    virtual ITransitionBaseIterator<Q,S,Iterator> *_successor_begin(const Q &state, const S *label) = 0;
+    virtual ITransitionBaseIterator<Q,S,Iterator> *_successor_end(const Q &state) = 0;
 
-    virtual TransitionBaseIterator *_predecessor_begin(const Q &state, const S *label) = 0;
-    virtual TransitionBaseIterator *_predecessor_end(const Q &state) = 0;
+    virtual ITransitionBaseIterator<Q,S,Iterator> *_predecessor_begin(const Q &state, const S *label) = 0;
+    virtual ITransitionBaseIterator<Q,S,Iterator> *_predecessor_end(const Q &state) = 0;
 
     virtual StateBaseIterator *_state_begin() = 0;
     virtual StateBaseIterator *_state_end() = 0;
@@ -279,7 +419,8 @@ template <typename Q, typename S> class Transition {
 
  protected:
     /// A Transition may only be built and destroyed from the related TransitionSystem.
-    friend class TransitionSystem<Q, S>;
+    template<typename, typename, typename, typename>
+    friend class TransitionSystem;
 
     const Q _source;
     const Q _sink;
@@ -305,41 +446,6 @@ bool operator==(const spaction::automata::Transition<Q, S> &lhs,
                 const spaction::automata::Transition<Q, S> &rhs) {
     return lhs.source() == rhs.source() and lhs.sink() == rhs.sink() and lhs.label() == rhs.label();
 }
-
-/// Control block interface.
-/// Acts as the real memory manager: pass it newly acquired pointers,
-/// and tell it to destroy the pointer when ref count reaches 0.
-template<typename T>
-class ControlBlock {
-public:
-    virtual ~ControlBlock() { }
-
-    /// Called when an object starts being managed.
-    virtual void declare(const T *t) = 0;
-    /// Called when an object is no longer managed.
-    virtual void release(const T *t) = 0;
-};
-
-/// The structure actually stored by the smart pointer (see below).
-template<typename T>
-struct SmartBlock {
-    // are all default ctors, dtor, copy and move semantics OK?
-    std::size_t _refcount;
-    const T * const _pointer;
-    ControlBlock<T> * const _control;
-
-    /// constructor
-    explicit SmartBlock(size_t r, const T *p, ControlBlock<T> *cb):
-    _refcount(r), _pointer(p), _control(cb) {
-        // declare the newly managed pointer to the controller
-        _control->declare(_pointer);
-    }
-    /// destructor
-    ~SmartBlock() {
-        _control->release(_pointer);
-    }
-};
-
 
 /// A smart pointer class to handle class Transition outside of a TransitionSystem
 /// It more or less acts as a std::shared_ptr with a privileged owner. When this privileged owner

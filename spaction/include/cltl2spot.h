@@ -15,30 +15,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_CLTLFORMULAVISITOR_H_
-#define SPACTION_INCLUDE_CLTLFORMULAVISITOR_H_
+#ifndef SPACTION_INCLUDE_CLTL2SPOT_H_
+#define SPACTION_INCLUDE_CLTL2SPOT_H_
+
+#include <spot/ltlast/formula.hh>
 
 #include "CltlFormula.h"
 
 namespace spaction {
 
-class AtomicProposition;
-class ConstantExpression;
-class UnaryOperator;
-class BinaryOperator;
-class MultOperator;
+/// a function that converts a LTL formula in spaction representation to spot representation
+/// @param      a LTL formula
+/// @return     the same \a formula in spot format
+const spot::ltl::formula *cltl2spot(const CltlFormulaPtr &formula);
 
-class CltlFormulaVisitor {
- public:
-    virtual ~CltlFormulaVisitor() { }
-
-    virtual void visit(const std::shared_ptr<AtomicProposition> &formula) = 0;
-    virtual void visit(const std::shared_ptr<ConstantExpression> &formula) = 0;
-    virtual void visit(const std::shared_ptr<UnaryOperator> &formula) = 0;
-    virtual void visit(const std::shared_ptr<BinaryOperator> &formula) = 0;
-    virtual void visit(const std::shared_ptr<MultOperator> &formula) = 0;
-};
+/// a function that converts a LTL formula in spot representation to spaction representation
+/// @param      a LTL formula
+/// @param      a factory for the spaction formula
+/// @return     the same \a formula in spaction format
+CltlFormulaPtr spot2cltl(const spot::ltl::formula *formula, CltlFormulaFactory *factory);
 
 }  // namespace spaction
 
-#endif  // SPACTION_INCLUDE_CLTLFORMULAVISITOR_H_
+#endif  // SPACTION_INCLUDE_CLTL2SPOT_H_

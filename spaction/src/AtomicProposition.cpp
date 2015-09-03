@@ -24,6 +24,10 @@ AtomicProposition::AtomicProposition(const std::string &value, CltlFormulaFactor
     CltlFormula(creator), _value(value) {
 }
 
+std::size_t AtomicProposition::hash() const {
+    return std::hash<std::string>()(_value);
+}
+
 bool AtomicProposition::syntactic_eq(const CltlFormula &rhs) const {
     if (rhs.formula_type() != CltlFormula::kAtomicProposition)
         return false;

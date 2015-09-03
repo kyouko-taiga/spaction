@@ -33,13 +33,14 @@ struct union_tag {
     spaction::CltlFormulaPtr form;
     spaction::UnaryOperator::UnaryOperatorType u_type;
     spaction::BinaryOperator::BinaryOperatorType b_type;
+    spaction::MultOperator::MultOperatorType m_type;
 };
 
 // tell bison to use our custom struct for return values
 #define YYSTYPE union_tag
 
 // custom lex function
-static int yylex(YYSTYPE*, spaction::cltlparse::CLTLScanner &);
+static int yylex(YYSTYPE*);
 
 // NOTE error handling is copied from SPOT LTL parser
 /// \brief A parse diagnostic with its location.
@@ -49,10 +50,7 @@ typedef std::list<parse_error> parse_error_list;
 
 %}
 
-%lex-param {spaction::cltlparse::CLTLScanner &scanner}
-
 %parse-param {spaction::CltlFormulaPtr &result}
-%parse-param {spaction::cltlparse::CLTLScanner &scanner}
 %parse-param {parse_error_list &error_list}
 
 /* token types */
@@ -61,6 +59,7 @@ typedef std::list<parse_error> parse_error_list;
 %type   <form>                      constant
 %type   <u_type>                    unary
 %type   <b_type>                    binary
+%type   <m_type>                    mult
 
 %token                              END         0
 %token                              LPAR
@@ -104,6 +103,7 @@ formula
 | unary formula             { $$ = _factory().make_unary($1, $2); }
 | formula IMPLY formula     { $$ = _factory().make_imply($1, $3); }
 | formula binary formula    { $$ = _factory().make_binary($2, $1, $3); }
+| formula mult formula      { $$ = _factory().make_nary($2, $1, $3); }
 | LPAR formula RPAR         { $$ = $2; }
 | FINALLY formula           { $$ = _factory().make_finally($2); }
 | GLOBALLY formula          { $$ = _factory().make_globally($2); }
@@ -123,10 +123,13 @@ unary
 | NEXT                      { $$ = spaction::UnaryOperator::kNext; }
 ;
 
+mult
+: AND                       { $$ = spaction::MultOperator::kAnd; }
+| OR                        { $$ = spaction::MultOperator::kOr; }
+;
+
 binary
-: AND                       { $$ = spaction::BinaryOperator::kAnd; }
-| OR                        { $$ = spaction::BinaryOperator::kOr; }
-| UNTIL                     { $$ = spaction::BinaryOperator::kUntil; }
+: UNTIL                     { $$ = spaction::BinaryOperator::kUntil; }
 | RELEASE                   { $$ = spaction::BinaryOperator::kRelease; }
 | COSTUNTIL                 { $$ = spaction::BinaryOperator::kCostUntil; }
 | COSTRELEASE               { $$ = spaction::BinaryOperator::kCostRelease; }
@@ -143,55 +146,6 @@ spaction::CltlFormulaFactory & _factory() {
     return f;
 }
 
-int yylex(YYSTYPE *yylval, spaction::cltlparse::CLTLScanner &scanner) {
-    return scanner.yylex(yylval);
+int yylex(YYSTYPE *yylval) {
+    return spaction::cltlparse::yylex(yylval);
 }
-
-#include <sstream>
-
-#include "cltlparse/public.h"
-
-namespace spaction {
-namespace cltlparse {
-
-CltlFormulaPtr parse_formula(const std::string &ltl_string) {
-    CltlFormulaPtr f = nullptr;
-    std::istringstream in = std::istringstream(ltl_string);
-    parse_error_list error_list;
-    CLTLScanner s(&in);
-    yy::parser p(f, s, error_list);
-    p.parse();
-
-    // code copied from SPOT
-    bool printed = false;
-    parse_error_list::const_iterator it;
-    for (it = error_list.begin(); it != error_list.end(); ++it)
-    {
-        std::cerr << ">>> " << ltl_string << std::endl;
-        const yy::location& l = it->first;
-
-        unsigned n = 1;
-        for (; n < 4 + l.begin.column; ++n)
-            std::cerr << ' ';
-        // Write at least one '^', even if begin==end.
-        std::cerr << '^';
-        ++n;
-        for (; n < 4 + l.end.column; ++n)
-            std::cerr << '^';
-        std::cerr << std::endl << it->second << std::endl << std::endl;
-    printed = true;
-    }
-    // end code from SPOT
-
-    if (printed) {
-        //delete f;
-        f = nullptr;
-    }
-
-    return f;
-}
-
-}  // namespace cltlparse
-}  // namespace spaction
-
-

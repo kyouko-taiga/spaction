@@ -40,6 +40,7 @@ class UnaryOperator : public CltlFormula {
     inline const FormulaType formula_type() const override { return kUnaryOperator; };
     UnaryOperatorType operator_type() const { return _type; }
 
+    std::size_t hash() const override;
     /// Returns whether or not `rhs` is syntactically equivalent to this formula.
     virtual bool syntactic_eq(const CltlFormula &rhs) const;
 
@@ -51,6 +52,11 @@ class UnaryOperator : public CltlFormula {
     void accept(CltlFormulaVisitor &visitor) override;
 
     inline std::size_t height() const { return 1 + _operand->height(); }
+
+    bool is_infltl() const;
+    bool is_supltl() const;
+    bool is_propositional() const;
+    bool is_nnf() const;
 
     std::string dump() const override;
 

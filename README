@@ -1,11 +1,67 @@
-This requires Divine installed in the PATH.
+This is the installation instructions of spaction.
+Requirements:
+  - A C++11 compiler (such as GCC 4.9 or higher, Clang 3.5 or higher)
+  - SPOT 1.99.1 (incompatible with older versions)
+  - Divine (runtime requirement, not necessary to compile spaction)
+    Spot 1.99.1 also supports Promela models compiled by Spin, which should be easier to install than Divine, but has not been tested with spaction yet.
+
+If you build spaction after cloning the git repository, you additionally require:
+  - automake (1.14 or higher, untested with previous versions)
+  - autoconf (2.69 or higher, untested with previous versions)
+
+
+NOTE ON GCC 4.8
+
+Despite claimed complete support for C++11, GCC 4.8 is not able to compile spaction, due to incomplete support for C++11 features in the libstdc++.
+
+GCC 4.9 works fine (tested GCC 4.9.3).
+GCC 5.1 works fine.
+
+
+INSTALLING SPOT
+
+Spaction currently requires Spot 1.99.1 (older versions are incompatible, more recent versions are untested).
+You can retrieve Spot at this address: http://www.lrde.epita.fr/dload/spot/spot-1.99.1.tar.gz
+Untar the archive, then in the spot directory run:
+  ./configure --prefix=/path/to/install/spot/to
+  make
+  make install
+
+Please refer to the documentation of Spot for finer options.
+
+
+INSTALLING DIVINE
+
 On MAC OS (10.9), getting Divine to compile is a bit cumbersome.
 The method described below should work.
 It uses a patched version by LTSmin team.
 It requires gcc 4.8 (tested with 4.8.2 installed through macport).
 No other version of gcc was tried, but clang (built-in Apple version of 10.9) was and it miserably failed.
 
-git clone http://fmt.cs.utwente.nl/tools/scm/divine2.git
-cd divine2
-mkdir _build && cd _build
-cmake .. -DCMAKE_CXX_COMPILER={absolute path to g++4.8} -DCMAKE_C_COMPILER={absolute path to gcc4.8} -DGUI=OFF -DRX_PATH= -DMURPHI=OFF -DCMAKE_INSTALL_PREFIX={prefix to install, should be in path when running spaction} -DHOARD=OFF
+  git clone http://fmt.cs.utwente.nl/tools/scm/divine2.git
+  cd divine2
+  mkdir _build && cd _build
+  cmake .. -DCMAKE_CXX_COMPILER={absolute path to g++4.8} -DCMAKE_C_COMPILER={absolute path to gcc4.8} -DGUI=OFF -DRX_PATH= -DMURPHI=OFF -DCMAKE_INSTALL_PREFIX={prefix to install, should be in path when running spaction} -DHOARD=OFF 
+  make
+  make install
+
+The executable should then be in the path when running spaction.
+Depending on the used prefix, you may have to 
+  export PATH=/divine/installation/path:$PATH
+
+
+INSTALLING SPACTION
+
+If you got spaction by cloning the git repository, first run autoconf:
+  autoreconf -vfi
+
+Then, or if you got spaction as a tarball, in the spaction directory run:
+  ./configure --prefix=/path/to/install/spaction/to
+  make
+  make install
+
+If you installed spot in a non-standard directory, you can indicate SPOT path:
+  ./configure --with-spot=/path/to/spot --prefix=/path/to/install/spaction/to
+
+To get debug symbols and deactivate compiler optimizations, use the flag --enable-debug when running configure.
+

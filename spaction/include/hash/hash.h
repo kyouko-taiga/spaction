@@ -20,6 +20,8 @@
 
 #include <vector>
 
+#include <misc/bddlt.hh>
+
 namespace std {
 
 /// hash combination and magic numbers are taken from Boost `hash_combine_impl`
@@ -35,6 +37,32 @@ struct hash<std::vector<S>> {
             res ^= h(s) + 0x9e3779b9 + (res << 6) + (res >> 2);
         }
         return res;
+    }
+};
+
+/// hash combination and magic numbers are taken from Boost `hash_combine_impl`
+template<typename A, typename B>
+struct hash<std::pair<A,B>> {
+    typedef std::pair<A,B> argument_type;
+    typedef std::size_t result_type;
+
+    result_type operator()(const argument_type &p) const {
+        hash<A> ha;
+        hash<B> hb;
+        result_type res = 0;
+        res ^= ha(p.first) + 0x9e3779b9 + (res << 6) + (res >> 2);
+        res ^= hb(p.second) + 0x9e3779b9 + (res << 6) + (res >> 2);
+        return res;
+    }
+};
+
+template<>
+struct hash<bdd> {
+    typedef bdd argument_type;
+    typedef std::size_t result_type;
+
+    result_type operator()(const argument_type &b) const {
+        return spot::bdd_hash()(b);
     }
 };
 

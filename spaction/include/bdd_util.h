@@ -15,22 +15,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef SPACTION_INCLUDE_CLTLPARSE_CLTLSCANNER_H_
-#define SPACTION_INCLUDE_CLTLPARSE_CLTLSCANNER_H_
+#ifndef SPACTION_INCLUDE_BDD_UTIL_H_
+#define SPACTION_INCLUDE_BDD_UTIL_H_
 
-#undef YY_DECL
-#define YY_DECL int spaction::cltlparse::yylex(struct union_tag *yylval)
+#include <twa/bdddict.hh>
 
-#include "cltlparse.hh"
-
-struct union_tag;
+#include "automata/TransitionSystem.h"
 
 namespace spaction {
-namespace cltlparse {
+namespace automata {
 
-int yylex(struct union_tag *yylval);
+class DataBddDict final: public Data {
+ public:
+    explicit DataBddDict(spot::bdd_dict_ptr d): _dict(d) { }
 
-}  // namespace cltlparse
+    void destroy(void *for_me) {
+        _dict->unregister_all_my_variables(for_me);
+    }
+
+ private:
+    spot::bdd_dict_ptr _dict;
+};
+
+}  // namespace automata
 }  // namespace spaction
 
-#endif  // SPACTION_INCLUDE_CLTLPARSE_CLTLSCANNER_H_
+#endif  // SPACTION_INCLUDE_BDD_UTIL_H_
